@@ -1,0 +1,224 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/backend/lib/prisma'
+import { z } from 'zod'
+
+// Validation schema for crime incident
+const crimeIncidentSchema = z.object({
+  // Required fields
+  barangay: z.string().min(1, 'Barangay is required'),
+  dateReported: z.string().datetime('Invalid date reported format'),
+  timeReported: z.string().min(1, 'Time reported is required'),
+  dateCommitted: z.string().datetime('Invalid date committed format'),
+  timeCommitted: z.string().min(1, 'Time committed is required'),
+  incidentType: z.string().min(1, 'Incident type is required'),
+  
+  // Optional fields
+  ppo: z.string().optional(),
+  stn: z.string().optional(),
+  pcp: z.string().optional(),
+  region: z.string().optional(),
+  province: z.string().optional(),
+  municipal: z.string().optional(),
+  street: z.string().optional(),
+  typeOfPlace: z.string().optional(),
+  isCrime: z.boolean().optional().default(true),
+  modeReporting: z.string().optional(),
+  stageOfFelony: z.string().optional(),
+  offense: z.string().optional(),
+  offenseType: z.string().optional(),
+  section: z.string().optional(),
+  modus: z.string().optional(),
+  suspectMotive: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
+})
+
+// GET /api/crimes - Fetch all crime incidents with optional filters
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const barangay = searchParams.get('barangay')
+    const region = searchParams.get('region')
+    const province = searchParams.get('province')
+    const municipal = searchParams.get('municipal')
+    const incidentType = searchParams.get('incidentType')
+    const startDateReported = searchParams.get('startDateReported')
+    const endDateReported = searchParams.get('endDateReported')
+    const startDateCommitted = searchParams.get('startDateCommitted')
+    const endDateCommitted = searchParams.get('endDateCommitted')
+    const modeReporting = searchParams.get('modeReporting')
+    const stageOfFelony = searchParams.get('stageOfFelony')
+    const offenseType = searchParams.get('offenseType')
+    const modus = searchParams.get('modus')
+    const typeOfPlace = searchParams.get('typeOfPlace')
+    const limit = searchParams.get('limit')
+
+    const where: any = {}
+
+    if (barangay) {
+      where.barangay = {
+        contains: barangay,
+        mode: 'insensitive'
+      }
+    }
+
+    if (region) {
+      where.region = {
+        contains: region,
+        mode: 'insensitive'
+      }
+    }
+
+    if (province) {
+      where.province = {
+        contains: province,
+        mode: 'insensitive'
+      }
+    }
+
+    if (municipal) {
+      where.municipal = {
+        contains: municipal,
+        mode: 'insensitive'
+      }
+    }
+
+    if (incidentType) {
+      where.incidentType = {
+        contains: incidentType,
+        mode: 'insensitive'
+      }
+    }
+
+    if (startDateReported && endDateReported) {
+      where.dateReported = {
+        gte: new Date(startDateReported),
+        lte: new Date(endDateReported)
+      }
+    }
+
+    if (startDateCommitted && endDateCommitted) {
+      where.dateCommitted = {
+        gte: new Date(startDateCommitted),
+        lte: new Date(endDateCommitted)
+      }
+    }
+
+    if (modeReporting) {
+      where.modeReporting = {
+        contains: modeReporting,
+        mode: 'insensitive'
+      }
+    }
+
+    if (stageOfFelony) {
+      where.stageOfFelony = {
+        contains: stageOfFelony,
+        mode: 'insensitive'
+      }
+    }
+
+    if (offenseType) {
+      where.offenseType = {
+        contains: offenseType,
+        mode: 'insensitive'
+      }
+    }
+
+    if (modus) {
+      where.modus = {
+        contains: modus,
+        mode: 'insensitive'
+      }
+    }
+
+    if (typeOfPlace) {
+      where.typeOfPlace = {
+        contains: typeOfPlace,
+        mode: 'insensitive'
+      }
+    }
+
+    const crimes = await prisma.crimeIncident.findMany({
+      where,
+      orderBy: {
+        dateCommitted: 'desc'
+      },
+      take: limit ? parseInt(limit) : undefined
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: crimes,
+      count: crimes.length
+    })
+  } catch (error) {
+    console.error('Error fetching crimes:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch crime data' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST /api/crimes - Create a new crime incident
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // Validate the request body
+    const validatedData = crimeIncidentSchema.parse(body)
+
+    const crime = await prisma.crimeIncident.create({
+      data: {
+        barangay: validatedData.barangay,
+        dateReported: new Date(validatedData.dateReported),
+        timeReported: validatedData.timeReported,
+        dateCommitted: new Date(validatedData.dateCommitted),
+        timeCommitted: validatedData.timeCommitted,
+        incidentType: validatedData.incidentType,
+        ppo: validatedData.ppo,
+        stn: validatedData.stn,
+        pcp: validatedData.pcp,
+        region: validatedData.region,
+        province: validatedData.province,
+        municipal: validatedData.municipal,
+        street: validatedData.street,
+        typeOfPlace: validatedData.typeOfPlace,
+        isCrime: validatedData.isCrime ?? true,
+        modeReporting: validatedData.modeReporting,
+        stageOfFelony: validatedData.stageOfFelony,
+        offense: validatedData.offense,
+        offenseType: validatedData.offenseType,
+        section: validatedData.section,
+        modus: validatedData.modus,
+        suspectMotive: validatedData.suspectMotive,
+        latitude: validatedData.latitude,
+        longitude: validatedData.longitude,
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: crime,
+      message: 'Crime incident created successfully'
+    }, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Validation failed',
+          details: error.errors
+        },
+        { status: 400 }
+      )
+    }
+
+    console.error('Error creating crime:', error)
+    return NextResponse.json(
+      { success: false, error: 'Failed to create crime incident' },
+      { status: 500 }
+    )
+  }
+}

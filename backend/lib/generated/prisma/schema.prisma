@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model CrimeIncident {
+  id String @id @default(cuid())
+
+  // Police Organization Structure
+  ppo String? @map("police_provincial_office") // Police Provincial Office
+  stn String? @map("station") // Police Station
+  pcp String? @map("police_community_precinct") // Police Community Precinct
+
+  // Administrative Location
+  region    String?
+  province  String?
+  municipal String? @map("municipality")
+  barangay  String
+  street    String?
+
+  // Location Details
+  typeOfPlace String? @map("type_of_place") // Type of place where incident occurred
+
+  // Reporting Information
+  dateReported DateTime @map("date_reported")
+  timeReported String   @map("time_reported") // HH:MM:SS format
+
+  // Incident Information
+  dateCommitted DateTime @map("date_committed")
+  timeCommitted String   @map("time_committed") // HH:MM:SS format
+  incidentType  String   @map("incident_type") // Type of incident
+  isCrime       Boolean  @default(true) @map("is_crime") // YES/NO from iscime column
+
+  // Process Information
+  modeReporting String? @map("mode_reporting") // How the crime was reported
+  stageOfFelony String? @map("stage_of_felony") // Stage of the felony
+
+  // Legal Information
+  offense     String? // Legal offense description
+  offenseType String? @map("offense_type") // Type of offense (Republic Act, etc.)
+  section     String? // Legal section reference
+
+  // Crime Details
+  modus         String? // Method of operation
+  suspectMotive String? @map("suspect_motive") // Motive of the suspect
+
+  // Geographic Coordinates
+  latitude  Float? @map("lat")
+  longitude Float? @map("lng")
+
+  // System Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([barangay])
+  @@index([dateCommitted])
+  @@index([incidentType])
+  @@index([region, province, municipal])
+  @@index([latitude, longitude])
+  @@map("crime_incidents")
+}
+
+model Barangay {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  coordinates Json? // Store GeoJSON coordinates if needed
+  population  Int?
+  area        Float? // Area in square kilometers
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("barangays")
+}
