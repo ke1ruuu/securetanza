@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from "react";
+import L from "leaflet";
 import { BARANGAY_NAMES, generateBarangayData, getHotspotSectorForDate } from "../constants/dummy";
 
 interface MapContextType {
@@ -16,6 +17,12 @@ interface MapContextType {
   hotspotMonth: string;
   hotspotYear: string;
   hoveredThreatLevel: string | null;
+  mapRef: React.MutableRefObject<L.Map | null>;
+  timeFilterDate: Date | null;
+  timeFilterHour: number | null;
+  timeFilterHourCrimeCount: number;
+  isTimeFilterActive: boolean;
+  selectedCrimeType: string | null;
   
   // Actions
   setSelectedBarangay: (name: string | null) => void;
@@ -26,6 +33,9 @@ interface MapContextType {
   setHotspotMode: (value: boolean) => void;
   setHotspotDate: (month: string, year: string) => void;
   setHoveredThreatLevel: (level: string | null) => void;
+  setTimeFilter: (date: Date | null, hour: number | null, hourCrimeCount?: number) => void;
+  setIsTimeFilterActive: (isActive: boolean) => void;
+  setSelectedCrimeType: (crimeType: string | null) => void;
   onFlyToStationComplete: () => void;
 }
 
@@ -44,10 +54,22 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const [hotspotYear, setHotspotYear] = useState("2026");
   const [hoveredThreatLevel, setHoveredThreatLevel] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [timeFilterDate, setTimeFilterDate] = useState<Date | null>(null);
+  const [timeFilterHour, setTimeFilterHour] = useState<number | null>(null);
+  const [timeFilterHourCrimeCount, setTimeFilterHourCrimeCount] = useState<number>(0);
+  const [isTimeFilterActive, setIsTimeFilterActive] = useState(false);
+  const [selectedCrimeType, setSelectedCrimeType] = useState<string | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   const setHotspotDate = useCallback((month: string, year: string) => {
     setHotspotMonth(month);
     setHotspotYear(year);
+  }, []);
+
+  const setTimeFilter = useCallback((date: Date | null, hour: number | null, hourCrimeCount: number = 0) => {
+    setTimeFilterDate(date);
+    setTimeFilterHour(hour);
+    setTimeFilterHourCrimeCount(hourCrimeCount);
   }, []);
 
   const hotspotBarangay = hotspotMode ? getHotspotSectorForDate(hotspotMonth, hotspotYear) : null;
@@ -84,6 +106,12 @@ export function MapProvider({ children }: { children: ReactNode }) {
     hotspotYear,
     hotspotBarangay,
     hoveredThreatLevel,
+    timeFilterDate,
+    timeFilterHour,
+    timeFilterHourCrimeCount,
+    isTimeFilterActive,
+    selectedCrimeType,
+    mapRef,
     setSelectedBarangay,
     setHoveredBarangay,
     setFlyToStation,
@@ -92,6 +120,9 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setHotspotMode,
     setHotspotDate,
     setHoveredThreatLevel,
+    setTimeFilter,
+    setIsTimeFilterActive,
+    setSelectedCrimeType,
     onFlyToStationComplete,
   };
 

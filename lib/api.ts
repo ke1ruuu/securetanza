@@ -2,6 +2,9 @@
 
 export interface CrimeIncident {
   id: string
+  blotterNo?: string
+  dateEncoded?: string
+  pro?: string
   ppo?: string
   stn?: string
   pcp?: string
@@ -24,6 +27,24 @@ export interface CrimeIncident {
   section?: string
   modus?: string
   suspectMotive?: string
+  suspectSubMotive?: string
+  heinous?: boolean
+  sensational?: boolean
+  threatGrp?: boolean
+  grpAffiliation?: string
+  incidentTypeThreatGrp?: string
+  mrs?: string
+  suspectIsEGO?: boolean
+  suspectEGOPosition?: string
+  suspectEGOClass?: string
+  suspectCount?: number
+  victimIsEGO?: boolean
+  victimEGOPosition?: string
+  victimEGOClass?: string
+  victimCount?: number
+  caseStatus?: string
+  investigator?: string
+  headInves?: string
   latitude?: number
   longitude?: number
   createdAt: string
@@ -64,12 +85,18 @@ export async function fetchCrimes(params?: {
   barangay?: string
   limit?: number
   incidentType?: string
+  startDateCommitted?: string
+  endDateCommitted?: string
+  startHour?: number
+  endHour?: number
 }): Promise<CrimeIncident[]> {
   try {
     const searchParams = new URLSearchParams()
     if (params?.barangay) searchParams.set('barangay', params.barangay)
     if (params?.limit) searchParams.set('limit', params.limit.toString())
     if (params?.incidentType) searchParams.set('incidentType', params.incidentType)
+    if (params?.startDateCommitted) searchParams.set('startDateCommitted', params.startDateCommitted)
+    if (params?.endDateCommitted) searchParams.set('endDateCommitted', params.endDateCommitted)
 
     const response = await fetch(`/api/crimes?${searchParams}`)
     const result: ApiResponse<CrimeIncident[]> = await response.json()
@@ -78,7 +105,18 @@ export async function fetchCrimes(params?: {
       throw new Error(result.error || 'Failed to fetch crimes')
     }
     
-    return result.data
+    // Filter by hour if specified
+    let crimes = result.data
+    if (params?.startHour !== undefined || params?.endHour !== undefined) {
+      crimes = crimes.filter(crime => {
+        const hour = new Date(crime.dateCommitted).getHours()
+        if (params.startHour !== undefined && hour < params.startHour) return false
+        if (params.endHour !== undefined && hour > params.endHour) return false
+        return true
+      })
+    }
+    
+    return crimes
   } catch (error) {
     console.error('Error fetching crimes:', error)
     return []
@@ -136,30 +174,53 @@ export function transformCrimeToIncident(crime: CrimeIncident): {
   id: string
   type: string
   date: string
-  status: "Active" | "Solved" | "Investigating" | "Pending"
+  status: "Cleared" | "Under Investigation" | "Filed in Court" | "Archived" | "Pending"
   severity: "High" | "Medium" | "Low"
   location: string
+  timeReported?: string
+  dateCommitted?: string
+  timeCommitted?: string
 } {
-  // Determine status based on stage of felony
-  let status: "Active" | "Solved" | "Investigating" | "Pending" = "Active"
-  if (crime.stageOfFelony === 'Consummated' || crime.stageOfFelony === 'Solved' || crime.stageOfFelony === 'Closed') {
-    status = "Solved"
-  } else if (crime.stageOfFelony === 'Attempted' || crime.stageOfFelony === 'Frustrated') {
-    status = "Investigating"
-  } else if (crime.stageOfFelony === 'Preparatory Acts') {
-    status = "Pending"
+  // Determine status based on caseStatus field (primary) or stageOfFelony (fallback)
+  let status: "Cleared" | "Under Investigation" | "Filed in Court" | "Archived" | "Pending" = "Pending"
+  
+  if (crime.caseStatus) {
+    const caseStatusLower = crime.caseStatus.toLowerCase()
+    if (caseStatusLower.includes('cleared') || caseStatusLower.includes('solved')) {
+      status = "Cleared"
+    } else if (caseStatusLower.includes('investigation') || caseStatusLower.includes('investigating')) {
+      status = "Under Investigation"
+    } else if (caseStatusLower.includes('filed') || caseStatusLower.includes('court')) {
+      status = "Filed in Court"
+    } else if (caseStatusLower.includes('archived') || caseStatusLower.includes('closed')) {
+      status = "Archived"
+    }
+  } else if (crime.stageOfFelony) {
+    // Fallback to stageOfFelony if caseStatus is not available
+    const stageLower = crime.stageOfFelony.toLowerCase()
+    if (stageLower.includes('consummated') || stageLower.includes('solved') || stageLower.includes('closed')) {
+      status = "Cleared"
+    } else if (stageLower.includes('attempted') || stageLower.includes('frustrated')) {
+      status = "Under Investigation"
+    }
   }
 
-  // Determine severity based on incident type
+  // Determine severity based on incident type and heinous flag
   let severity: "High" | "Medium" | "Low" = "Medium"
-  const highSeverityTypes = ['murder', 'homicide', 'rape', 'robbery', 'kidnapping', 'arson']
-  const lowSeverityTypes = ['theft', 'vandalism', 'trespass', 'public disorder']
   
-  const incidentTypeLower = crime.incidentType.toLowerCase()
-  if (highSeverityTypes.some(type => incidentTypeLower.includes(type))) {
+  // Check heinous flag first
+  if (crime.heinous) {
     severity = "High"
-  } else if (lowSeverityTypes.some(type => incidentTypeLower.includes(type))) {
-    severity = "Low"
+  } else {
+    const highSeverityTypes = ['murder', 'homicide', 'rape', 'robbery', 'kidnapping', 'arson']
+    const lowSeverityTypes = ['theft', 'vandalism', 'trespass', 'public disorder', 'alarm']
+    
+    const incidentTypeLower = crime.incidentType.toLowerCase()
+    if (highSeverityTypes.some(type => incidentTypeLower.includes(type))) {
+      severity = "High"
+    } else if (lowSeverityTypes.some(type => incidentTypeLower.includes(type))) {
+      severity = "Low"
+    }
   }
 
   // Format date
@@ -184,6 +245,9 @@ export function transformCrimeToIncident(crime: CrimeIncident): {
     date: dateString,
     status,
     severity,
-    location: crime.barangay
+    location: crime.barangay,
+    timeReported: crime.timeReported,
+    dateCommitted: crime.dateCommitted,
+    timeCommitted: crime.timeCommitted
   }
 }

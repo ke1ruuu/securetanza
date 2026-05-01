@@ -1,4 +1,7 @@
-import 'dotenv/config'
+// Load environment variables FIRST before any imports
+import { config } from 'dotenv'
+config({ path: '.env.local' })
+
 import { prisma } from '../lib/prisma'
 import * as XLSX from 'xlsx'
 import * as fs from 'fs'
@@ -104,30 +107,96 @@ function readExcelFile(filePath: string): any[] {
 
 function processExcelRow(row: any): any {
   try {
+    // Helper function to parse boolean from YES/NO or Yes/No
+    const parseBoolean = (value: string | null | undefined): boolean => {
+      if (!value) return false;
+      return value.toString().toUpperCase() === 'YES';
+    };
+
+    // Helper function to parse date encoded
+    const parseDateEncoded = (value: string | null | undefined): Date | null => {
+      if (!value) return null;
+      try {
+        return new Date(value);
+      } catch {
+        return null;
+      }
+    };
+
     // Map Excel columns to our database fields
     return {
+      // Blotter Information
+      blotterNo: row.blotterno || null,
+      dateEncoded: parseDateEncoded(row.dateEncoded),
+      
+      // Police Organization Structure
+      pro: row.pro || null,
       ppo: row.ppo || '',
       stn: row.stn || '',
-      pcp: row.pcp || '',
+      pcp: row.pcp || null,
+      
+      // Administrative Location
       region: row.region || '',
       province: row.province || '',
       municipal: row.municipal || '',
       barangay: normalizeBarangayName(row.barangay || ''),
-      street: row.street || '',
+      street: row.street || null,
+      
+      // Location Details
       typeOfPlace: row.typeofPlace || '',
+      
+      // Reporting Information
       dateReported: row.dateReported,
       timeReported: row.timeReported,
+      
+      // Incident Information
       dateCommitted: row.dateCommitted,
       timeCommitted: row.timeCommitted,
       incidentType: extractIncidentType(row.incidentType || ''),
-      isCrime: (row.iscime || '').toUpperCase() === 'YES',
+      isCrime: parseBoolean(row.iscime),
+      
+      // Process Information
       modeReporting: row.mode_reporting || '',
       stageOfFelony: row.stageoffelony || '',
+      
+      // Legal Information
       offense: row.offense || '',
       offenseType: row.offenseType || '',
-      section: row.section || '',
+      section: row.section || null,
+      
+      // Crime Details
       modus: row.modus || '',
-      suspectMotive: row.suspectMotive || '',
+      suspectMotive: row.suspectMotive || null,
+      suspectSubMotive: row.suspectSubMotive || null,
+      
+      // Crime Classification
+      heinous: parseBoolean(row.heinous),
+      sensational: parseBoolean(row.sensational),
+      
+      // Threat Group Information
+      threatGrp: parseBoolean(row.threatGrp),
+      grpAffiliation: row.grpAffiliation || null,
+      incidentTypeThreatGrp: row.incidenttypethreatgrp || null,
+      mrs: row.mrs || null,
+      
+      // Suspect Information
+      suspectIsEGO: parseBoolean(row.suspectisEGO),
+      suspectEGOPosition: row.suspectEGOPosition || null,
+      suspectEGOClass: row.suspectEGOClass || null,
+      suspectCount: row.suspectCount ? parseInt(row.suspectCount) : null,
+      
+      // Victim Information
+      victimIsEGO: parseBoolean(row.victimisEGO),
+      victimEGOPosition: row.victimEGOPosition || null,
+      victimEGOClass: row.victimEGOClass || null,
+      victimCount: row.victimCount ? parseInt(row.victimCount) : null,
+      
+      // Case Management
+      caseStatus: row.casestatus || null,
+      investigator: row.investigator || null,
+      headInves: row.headInves || null,
+      
+      // Geographic Coordinates
       latitude: parseFloat(row.lat) || null,
       longitude: parseFloat(row.lng) || null,
     }
@@ -143,6 +212,7 @@ async function main() {
   try {
     // Look for Excel file in the project root or data directory
     const possiblePaths = [
+      'public/incidentrep_20160100448_2026-01-01-2026-04-15.xlsx',
       'PROJECT-MAPPING.xlsx',
       'data/PROJECT-MAPPING.xlsx',
       'backend/data/PROJECT-MAPPING.xlsx',
@@ -207,28 +277,78 @@ async function main() {
 
         await prisma.crimeIncident.create({
           data: {
+            // Blotter Information
+            blotterNo: processedData.blotterNo,
+            dateEncoded: processedData.dateEncoded,
+            
+            // Police Organization Structure
+            pro: processedData.pro,
             ppo: processedData.ppo,
             stn: processedData.stn,
-            pcp: processedData.pcp || null,
+            pcp: processedData.pcp,
+            
+            // Administrative Location
             region: processedData.region,
             province: processedData.province,
             municipal: processedData.municipal,
             barangay: processedData.barangay,
-            street: processedData.street || null,
+            street: processedData.street,
+            
+            // Location Details
             typeOfPlace: processedData.typeOfPlace,
+            
+            // Reporting Information
             dateReported: parseDateTime(processedData.dateReported, processedData.timeReported),
             timeReported: processedData.timeReported,
+            
+            // Incident Information
             dateCommitted: parseDateTime(processedData.dateCommitted, processedData.timeCommitted),
             timeCommitted: processedData.timeCommitted,
             incidentType: processedData.incidentType,
             isCrime: processedData.isCrime,
+            
+            // Process Information
             modeReporting: processedData.modeReporting,
             stageOfFelony: processedData.stageOfFelony,
+            
+            // Legal Information
             offense: processedData.offense,
             offenseType: processedData.offenseType,
-            section: processedData.section || null,
+            section: processedData.section,
+            
+            // Crime Details
             modus: processedData.modus,
-            suspectMotive: processedData.suspectMotive || null,
+            suspectMotive: processedData.suspectMotive,
+            suspectSubMotive: processedData.suspectSubMotive,
+            
+            // Crime Classification
+            heinous: processedData.heinous,
+            sensational: processedData.sensational,
+            
+            // Threat Group Information
+            threatGrp: processedData.threatGrp,
+            grpAffiliation: processedData.grpAffiliation,
+            incidentTypeThreatGrp: processedData.incidentTypeThreatGrp,
+            mrs: processedData.mrs,
+            
+            // Suspect Information
+            suspectIsEGO: processedData.suspectIsEGO,
+            suspectEGOPosition: processedData.suspectEGOPosition,
+            suspectEGOClass: processedData.suspectEGOClass,
+            suspectCount: processedData.suspectCount,
+            
+            // Victim Information
+            victimIsEGO: processedData.victimIsEGO,
+            victimEGOPosition: processedData.victimEGOPosition,
+            victimEGOClass: processedData.victimEGOClass,
+            victimCount: processedData.victimCount,
+            
+            // Case Management
+            caseStatus: processedData.caseStatus,
+            investigator: processedData.investigator,
+            headInves: processedData.headInves,
+            
+            // Geographic Coordinates
             latitude: processedData.latitude,
             longitude: processedData.longitude,
           }

@@ -970,17 +970,24 @@ export namespace Prisma {
   }
 
   export type CrimeIncidentAvgAggregateOutputType = {
+    suspectCount: number | null
+    victimCount: number | null
     latitude: number | null
     longitude: number | null
   }
 
   export type CrimeIncidentSumAggregateOutputType = {
+    suspectCount: number | null
+    victimCount: number | null
     latitude: number | null
     longitude: number | null
   }
 
   export type CrimeIncidentMinAggregateOutputType = {
     id: string | null
+    blotterNo: string | null
+    dateEncoded: Date | null
+    pro: string | null
     ppo: string | null
     stn: string | null
     pcp: string | null
@@ -1003,6 +1010,24 @@ export namespace Prisma {
     section: string | null
     modus: string | null
     suspectMotive: string | null
+    suspectSubMotive: string | null
+    heinous: boolean | null
+    sensational: boolean | null
+    threatGrp: boolean | null
+    grpAffiliation: string | null
+    incidentTypeThreatGrp: string | null
+    mrs: string | null
+    suspectIsEGO: boolean | null
+    suspectEGOPosition: string | null
+    suspectEGOClass: string | null
+    suspectCount: number | null
+    victimIsEGO: boolean | null
+    victimEGOPosition: string | null
+    victimEGOClass: string | null
+    victimCount: number | null
+    caseStatus: string | null
+    investigator: string | null
+    headInves: string | null
     latitude: number | null
     longitude: number | null
     createdAt: Date | null
@@ -1011,6 +1036,9 @@ export namespace Prisma {
 
   export type CrimeIncidentMaxAggregateOutputType = {
     id: string | null
+    blotterNo: string | null
+    dateEncoded: Date | null
+    pro: string | null
     ppo: string | null
     stn: string | null
     pcp: string | null
@@ -1033,6 +1061,24 @@ export namespace Prisma {
     section: string | null
     modus: string | null
     suspectMotive: string | null
+    suspectSubMotive: string | null
+    heinous: boolean | null
+    sensational: boolean | null
+    threatGrp: boolean | null
+    grpAffiliation: string | null
+    incidentTypeThreatGrp: string | null
+    mrs: string | null
+    suspectIsEGO: boolean | null
+    suspectEGOPosition: string | null
+    suspectEGOClass: string | null
+    suspectCount: number | null
+    victimIsEGO: boolean | null
+    victimEGOPosition: string | null
+    victimEGOClass: string | null
+    victimCount: number | null
+    caseStatus: string | null
+    investigator: string | null
+    headInves: string | null
     latitude: number | null
     longitude: number | null
     createdAt: Date | null
@@ -1041,6 +1087,9 @@ export namespace Prisma {
 
   export type CrimeIncidentCountAggregateOutputType = {
     id: number
+    blotterNo: number
+    dateEncoded: number
+    pro: number
     ppo: number
     stn: number
     pcp: number
@@ -1063,6 +1112,24 @@ export namespace Prisma {
     section: number
     modus: number
     suspectMotive: number
+    suspectSubMotive: number
+    heinous: number
+    sensational: number
+    threatGrp: number
+    grpAffiliation: number
+    incidentTypeThreatGrp: number
+    mrs: number
+    suspectIsEGO: number
+    suspectEGOPosition: number
+    suspectEGOClass: number
+    suspectCount: number
+    victimIsEGO: number
+    victimEGOPosition: number
+    victimEGOClass: number
+    victimCount: number
+    caseStatus: number
+    investigator: number
+    headInves: number
     latitude: number
     longitude: number
     createdAt: number
@@ -1072,17 +1139,24 @@ export namespace Prisma {
 
 
   export type CrimeIncidentAvgAggregateInputType = {
+    suspectCount?: true
+    victimCount?: true
     latitude?: true
     longitude?: true
   }
 
   export type CrimeIncidentSumAggregateInputType = {
+    suspectCount?: true
+    victimCount?: true
     latitude?: true
     longitude?: true
   }
 
   export type CrimeIncidentMinAggregateInputType = {
     id?: true
+    blotterNo?: true
+    dateEncoded?: true
+    pro?: true
     ppo?: true
     stn?: true
     pcp?: true
@@ -1105,6 +1179,24 @@ export namespace Prisma {
     section?: true
     modus?: true
     suspectMotive?: true
+    suspectSubMotive?: true
+    heinous?: true
+    sensational?: true
+    threatGrp?: true
+    grpAffiliation?: true
+    incidentTypeThreatGrp?: true
+    mrs?: true
+    suspectIsEGO?: true
+    suspectEGOPosition?: true
+    suspectEGOClass?: true
+    suspectCount?: true
+    victimIsEGO?: true
+    victimEGOPosition?: true
+    victimEGOClass?: true
+    victimCount?: true
+    caseStatus?: true
+    investigator?: true
+    headInves?: true
     latitude?: true
     longitude?: true
     createdAt?: true
@@ -1113,6 +1205,9 @@ export namespace Prisma {
 
   export type CrimeIncidentMaxAggregateInputType = {
     id?: true
+    blotterNo?: true
+    dateEncoded?: true
+    pro?: true
     ppo?: true
     stn?: true
     pcp?: true
@@ -1135,6 +1230,24 @@ export namespace Prisma {
     section?: true
     modus?: true
     suspectMotive?: true
+    suspectSubMotive?: true
+    heinous?: true
+    sensational?: true
+    threatGrp?: true
+    grpAffiliation?: true
+    incidentTypeThreatGrp?: true
+    mrs?: true
+    suspectIsEGO?: true
+    suspectEGOPosition?: true
+    suspectEGOClass?: true
+    suspectCount?: true
+    victimIsEGO?: true
+    victimEGOPosition?: true
+    victimEGOClass?: true
+    victimCount?: true
+    caseStatus?: true
+    investigator?: true
+    headInves?: true
     latitude?: true
     longitude?: true
     createdAt?: true
@@ -1143,6 +1256,9 @@ export namespace Prisma {
 
   export type CrimeIncidentCountAggregateInputType = {
     id?: true
+    blotterNo?: true
+    dateEncoded?: true
+    pro?: true
     ppo?: true
     stn?: true
     pcp?: true
@@ -1165,6 +1281,24 @@ export namespace Prisma {
     section?: true
     modus?: true
     suspectMotive?: true
+    suspectSubMotive?: true
+    heinous?: true
+    sensational?: true
+    threatGrp?: true
+    grpAffiliation?: true
+    incidentTypeThreatGrp?: true
+    mrs?: true
+    suspectIsEGO?: true
+    suspectEGOPosition?: true
+    suspectEGOClass?: true
+    suspectCount?: true
+    victimIsEGO?: true
+    victimEGOPosition?: true
+    victimEGOClass?: true
+    victimCount?: true
+    caseStatus?: true
+    investigator?: true
+    headInves?: true
     latitude?: true
     longitude?: true
     createdAt?: true
@@ -1260,6 +1394,9 @@ export namespace Prisma {
 
   export type CrimeIncidentGroupByOutputType = {
     id: string
+    blotterNo: string | null
+    dateEncoded: Date | null
+    pro: string | null
     ppo: string | null
     stn: string | null
     pcp: string | null
@@ -1282,6 +1419,24 @@ export namespace Prisma {
     section: string | null
     modus: string | null
     suspectMotive: string | null
+    suspectSubMotive: string | null
+    heinous: boolean
+    sensational: boolean
+    threatGrp: boolean
+    grpAffiliation: string | null
+    incidentTypeThreatGrp: string | null
+    mrs: string | null
+    suspectIsEGO: boolean
+    suspectEGOPosition: string | null
+    suspectEGOClass: string | null
+    suspectCount: number | null
+    victimIsEGO: boolean
+    victimEGOPosition: string | null
+    victimEGOClass: string | null
+    victimCount: number | null
+    caseStatus: string | null
+    investigator: string | null
+    headInves: string | null
     latitude: number | null
     longitude: number | null
     createdAt: Date
@@ -1309,6 +1464,9 @@ export namespace Prisma {
 
   export type CrimeIncidentSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    blotterNo?: boolean
+    dateEncoded?: boolean
+    pro?: boolean
     ppo?: boolean
     stn?: boolean
     pcp?: boolean
@@ -1331,6 +1489,24 @@ export namespace Prisma {
     section?: boolean
     modus?: boolean
     suspectMotive?: boolean
+    suspectSubMotive?: boolean
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: boolean
+    incidentTypeThreatGrp?: boolean
+    mrs?: boolean
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: boolean
+    suspectEGOClass?: boolean
+    suspectCount?: boolean
+    victimIsEGO?: boolean
+    victimEGOPosition?: boolean
+    victimEGOClass?: boolean
+    victimCount?: boolean
+    caseStatus?: boolean
+    investigator?: boolean
+    headInves?: boolean
     latitude?: boolean
     longitude?: boolean
     createdAt?: boolean
@@ -1339,6 +1515,9 @@ export namespace Prisma {
 
   export type CrimeIncidentSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    blotterNo?: boolean
+    dateEncoded?: boolean
+    pro?: boolean
     ppo?: boolean
     stn?: boolean
     pcp?: boolean
@@ -1361,6 +1540,24 @@ export namespace Prisma {
     section?: boolean
     modus?: boolean
     suspectMotive?: boolean
+    suspectSubMotive?: boolean
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: boolean
+    incidentTypeThreatGrp?: boolean
+    mrs?: boolean
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: boolean
+    suspectEGOClass?: boolean
+    suspectCount?: boolean
+    victimIsEGO?: boolean
+    victimEGOPosition?: boolean
+    victimEGOClass?: boolean
+    victimCount?: boolean
+    caseStatus?: boolean
+    investigator?: boolean
+    headInves?: boolean
     latitude?: boolean
     longitude?: boolean
     createdAt?: boolean
@@ -1369,6 +1566,9 @@ export namespace Prisma {
 
   export type CrimeIncidentSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    blotterNo?: boolean
+    dateEncoded?: boolean
+    pro?: boolean
     ppo?: boolean
     stn?: boolean
     pcp?: boolean
@@ -1391,6 +1591,24 @@ export namespace Prisma {
     section?: boolean
     modus?: boolean
     suspectMotive?: boolean
+    suspectSubMotive?: boolean
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: boolean
+    incidentTypeThreatGrp?: boolean
+    mrs?: boolean
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: boolean
+    suspectEGOClass?: boolean
+    suspectCount?: boolean
+    victimIsEGO?: boolean
+    victimEGOPosition?: boolean
+    victimEGOClass?: boolean
+    victimCount?: boolean
+    caseStatus?: boolean
+    investigator?: boolean
+    headInves?: boolean
     latitude?: boolean
     longitude?: boolean
     createdAt?: boolean
@@ -1399,6 +1617,9 @@ export namespace Prisma {
 
   export type CrimeIncidentSelectScalar = {
     id?: boolean
+    blotterNo?: boolean
+    dateEncoded?: boolean
+    pro?: boolean
     ppo?: boolean
     stn?: boolean
     pcp?: boolean
@@ -1421,19 +1642,40 @@ export namespace Prisma {
     section?: boolean
     modus?: boolean
     suspectMotive?: boolean
+    suspectSubMotive?: boolean
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: boolean
+    incidentTypeThreatGrp?: boolean
+    mrs?: boolean
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: boolean
+    suspectEGOClass?: boolean
+    suspectCount?: boolean
+    victimIsEGO?: boolean
+    victimEGOPosition?: boolean
+    victimEGOClass?: boolean
+    victimCount?: boolean
+    caseStatus?: boolean
+    investigator?: boolean
+    headInves?: boolean
     latitude?: boolean
     longitude?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type CrimeIncidentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "ppo" | "stn" | "pcp" | "region" | "province" | "municipal" | "barangay" | "street" | "typeOfPlace" | "dateReported" | "timeReported" | "dateCommitted" | "timeCommitted" | "incidentType" | "isCrime" | "modeReporting" | "stageOfFelony" | "offense" | "offenseType" | "section" | "modus" | "suspectMotive" | "latitude" | "longitude" | "createdAt" | "updatedAt", ExtArgs["result"]["crimeIncident"]>
+  export type CrimeIncidentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "blotterNo" | "dateEncoded" | "pro" | "ppo" | "stn" | "pcp" | "region" | "province" | "municipal" | "barangay" | "street" | "typeOfPlace" | "dateReported" | "timeReported" | "dateCommitted" | "timeCommitted" | "incidentType" | "isCrime" | "modeReporting" | "stageOfFelony" | "offense" | "offenseType" | "section" | "modus" | "suspectMotive" | "suspectSubMotive" | "heinous" | "sensational" | "threatGrp" | "grpAffiliation" | "incidentTypeThreatGrp" | "mrs" | "suspectIsEGO" | "suspectEGOPosition" | "suspectEGOClass" | "suspectCount" | "victimIsEGO" | "victimEGOPosition" | "victimEGOClass" | "victimCount" | "caseStatus" | "investigator" | "headInves" | "latitude" | "longitude" | "createdAt" | "updatedAt", ExtArgs["result"]["crimeIncident"]>
 
   export type $CrimeIncidentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "CrimeIncident"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: string
+      blotterNo: string | null
+      dateEncoded: Date | null
+      pro: string | null
       ppo: string | null
       stn: string | null
       pcp: string | null
@@ -1456,6 +1698,24 @@ export namespace Prisma {
       section: string | null
       modus: string | null
       suspectMotive: string | null
+      suspectSubMotive: string | null
+      heinous: boolean
+      sensational: boolean
+      threatGrp: boolean
+      grpAffiliation: string | null
+      incidentTypeThreatGrp: string | null
+      mrs: string | null
+      suspectIsEGO: boolean
+      suspectEGOPosition: string | null
+      suspectEGOClass: string | null
+      suspectCount: number | null
+      victimIsEGO: boolean
+      victimEGOPosition: string | null
+      victimEGOClass: string | null
+      victimCount: number | null
+      caseStatus: string | null
+      investigator: string | null
+      headInves: string | null
       latitude: number | null
       longitude: number | null
       createdAt: Date
@@ -1884,6 +2144,9 @@ export namespace Prisma {
    */
   interface CrimeIncidentFieldRefs {
     readonly id: FieldRef<"CrimeIncident", 'String'>
+    readonly blotterNo: FieldRef<"CrimeIncident", 'String'>
+    readonly dateEncoded: FieldRef<"CrimeIncident", 'DateTime'>
+    readonly pro: FieldRef<"CrimeIncident", 'String'>
     readonly ppo: FieldRef<"CrimeIncident", 'String'>
     readonly stn: FieldRef<"CrimeIncident", 'String'>
     readonly pcp: FieldRef<"CrimeIncident", 'String'>
@@ -1906,6 +2169,24 @@ export namespace Prisma {
     readonly section: FieldRef<"CrimeIncident", 'String'>
     readonly modus: FieldRef<"CrimeIncident", 'String'>
     readonly suspectMotive: FieldRef<"CrimeIncident", 'String'>
+    readonly suspectSubMotive: FieldRef<"CrimeIncident", 'String'>
+    readonly heinous: FieldRef<"CrimeIncident", 'Boolean'>
+    readonly sensational: FieldRef<"CrimeIncident", 'Boolean'>
+    readonly threatGrp: FieldRef<"CrimeIncident", 'Boolean'>
+    readonly grpAffiliation: FieldRef<"CrimeIncident", 'String'>
+    readonly incidentTypeThreatGrp: FieldRef<"CrimeIncident", 'String'>
+    readonly mrs: FieldRef<"CrimeIncident", 'String'>
+    readonly suspectIsEGO: FieldRef<"CrimeIncident", 'Boolean'>
+    readonly suspectEGOPosition: FieldRef<"CrimeIncident", 'String'>
+    readonly suspectEGOClass: FieldRef<"CrimeIncident", 'String'>
+    readonly suspectCount: FieldRef<"CrimeIncident", 'Int'>
+    readonly victimIsEGO: FieldRef<"CrimeIncident", 'Boolean'>
+    readonly victimEGOPosition: FieldRef<"CrimeIncident", 'String'>
+    readonly victimEGOClass: FieldRef<"CrimeIncident", 'String'>
+    readonly victimCount: FieldRef<"CrimeIncident", 'Int'>
+    readonly caseStatus: FieldRef<"CrimeIncident", 'String'>
+    readonly investigator: FieldRef<"CrimeIncident", 'String'>
+    readonly headInves: FieldRef<"CrimeIncident", 'String'>
     readonly latitude: FieldRef<"CrimeIncident", 'Float'>
     readonly longitude: FieldRef<"CrimeIncident", 'Float'>
     readonly createdAt: FieldRef<"CrimeIncident", 'DateTime'>
@@ -3357,6 +3638,9 @@ export namespace Prisma {
 
   export const CrimeIncidentScalarFieldEnum: {
     id: 'id',
+    blotterNo: 'blotterNo',
+    dateEncoded: 'dateEncoded',
+    pro: 'pro',
     ppo: 'ppo',
     stn: 'stn',
     pcp: 'pcp',
@@ -3379,6 +3663,24 @@ export namespace Prisma {
     section: 'section',
     modus: 'modus',
     suspectMotive: 'suspectMotive',
+    suspectSubMotive: 'suspectSubMotive',
+    heinous: 'heinous',
+    sensational: 'sensational',
+    threatGrp: 'threatGrp',
+    grpAffiliation: 'grpAffiliation',
+    incidentTypeThreatGrp: 'incidentTypeThreatGrp',
+    mrs: 'mrs',
+    suspectIsEGO: 'suspectIsEGO',
+    suspectEGOPosition: 'suspectEGOPosition',
+    suspectEGOClass: 'suspectEGOClass',
+    suspectCount: 'suspectCount',
+    victimIsEGO: 'victimIsEGO',
+    victimEGOPosition: 'victimEGOPosition',
+    victimEGOClass: 'victimEGOClass',
+    victimCount: 'victimCount',
+    caseStatus: 'caseStatus',
+    investigator: 'investigator',
+    headInves: 'headInves',
     latitude: 'latitude',
     longitude: 'longitude',
     createdAt: 'createdAt',
@@ -3483,6 +3785,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
    * Reference to a field of type 'Float'
    */
   export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
@@ -3508,20 +3824,6 @@ export namespace Prisma {
    */
   export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
     
-
-
-  /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
   /**
    * Deep Input Types
    */
@@ -3532,6 +3834,9 @@ export namespace Prisma {
     OR?: CrimeIncidentWhereInput[]
     NOT?: CrimeIncidentWhereInput | CrimeIncidentWhereInput[]
     id?: StringFilter<"CrimeIncident"> | string
+    blotterNo?: StringNullableFilter<"CrimeIncident"> | string | null
+    dateEncoded?: DateTimeNullableFilter<"CrimeIncident"> | Date | string | null
+    pro?: StringNullableFilter<"CrimeIncident"> | string | null
     ppo?: StringNullableFilter<"CrimeIncident"> | string | null
     stn?: StringNullableFilter<"CrimeIncident"> | string | null
     pcp?: StringNullableFilter<"CrimeIncident"> | string | null
@@ -3554,6 +3859,24 @@ export namespace Prisma {
     section?: StringNullableFilter<"CrimeIncident"> | string | null
     modus?: StringNullableFilter<"CrimeIncident"> | string | null
     suspectMotive?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectSubMotive?: StringNullableFilter<"CrimeIncident"> | string | null
+    heinous?: BoolFilter<"CrimeIncident"> | boolean
+    sensational?: BoolFilter<"CrimeIncident"> | boolean
+    threatGrp?: BoolFilter<"CrimeIncident"> | boolean
+    grpAffiliation?: StringNullableFilter<"CrimeIncident"> | string | null
+    incidentTypeThreatGrp?: StringNullableFilter<"CrimeIncident"> | string | null
+    mrs?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectIsEGO?: BoolFilter<"CrimeIncident"> | boolean
+    suspectEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectCount?: IntNullableFilter<"CrimeIncident"> | number | null
+    victimIsEGO?: BoolFilter<"CrimeIncident"> | boolean
+    victimEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
+    victimEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
+    victimCount?: IntNullableFilter<"CrimeIncident"> | number | null
+    caseStatus?: StringNullableFilter<"CrimeIncident"> | string | null
+    investigator?: StringNullableFilter<"CrimeIncident"> | string | null
+    headInves?: StringNullableFilter<"CrimeIncident"> | string | null
     latitude?: FloatNullableFilter<"CrimeIncident"> | number | null
     longitude?: FloatNullableFilter<"CrimeIncident"> | number | null
     createdAt?: DateTimeFilter<"CrimeIncident"> | Date | string
@@ -3562,6 +3885,9 @@ export namespace Prisma {
 
   export type CrimeIncidentOrderByWithRelationInput = {
     id?: SortOrder
+    blotterNo?: SortOrderInput | SortOrder
+    dateEncoded?: SortOrderInput | SortOrder
+    pro?: SortOrderInput | SortOrder
     ppo?: SortOrderInput | SortOrder
     stn?: SortOrderInput | SortOrder
     pcp?: SortOrderInput | SortOrder
@@ -3584,6 +3910,24 @@ export namespace Prisma {
     section?: SortOrderInput | SortOrder
     modus?: SortOrderInput | SortOrder
     suspectMotive?: SortOrderInput | SortOrder
+    suspectSubMotive?: SortOrderInput | SortOrder
+    heinous?: SortOrder
+    sensational?: SortOrder
+    threatGrp?: SortOrder
+    grpAffiliation?: SortOrderInput | SortOrder
+    incidentTypeThreatGrp?: SortOrderInput | SortOrder
+    mrs?: SortOrderInput | SortOrder
+    suspectIsEGO?: SortOrder
+    suspectEGOPosition?: SortOrderInput | SortOrder
+    suspectEGOClass?: SortOrderInput | SortOrder
+    suspectCount?: SortOrderInput | SortOrder
+    victimIsEGO?: SortOrder
+    victimEGOPosition?: SortOrderInput | SortOrder
+    victimEGOClass?: SortOrderInput | SortOrder
+    victimCount?: SortOrderInput | SortOrder
+    caseStatus?: SortOrderInput | SortOrder
+    investigator?: SortOrderInput | SortOrder
+    headInves?: SortOrderInput | SortOrder
     latitude?: SortOrderInput | SortOrder
     longitude?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -3595,6 +3939,9 @@ export namespace Prisma {
     AND?: CrimeIncidentWhereInput | CrimeIncidentWhereInput[]
     OR?: CrimeIncidentWhereInput[]
     NOT?: CrimeIncidentWhereInput | CrimeIncidentWhereInput[]
+    blotterNo?: StringNullableFilter<"CrimeIncident"> | string | null
+    dateEncoded?: DateTimeNullableFilter<"CrimeIncident"> | Date | string | null
+    pro?: StringNullableFilter<"CrimeIncident"> | string | null
     ppo?: StringNullableFilter<"CrimeIncident"> | string | null
     stn?: StringNullableFilter<"CrimeIncident"> | string | null
     pcp?: StringNullableFilter<"CrimeIncident"> | string | null
@@ -3617,6 +3964,24 @@ export namespace Prisma {
     section?: StringNullableFilter<"CrimeIncident"> | string | null
     modus?: StringNullableFilter<"CrimeIncident"> | string | null
     suspectMotive?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectSubMotive?: StringNullableFilter<"CrimeIncident"> | string | null
+    heinous?: BoolFilter<"CrimeIncident"> | boolean
+    sensational?: BoolFilter<"CrimeIncident"> | boolean
+    threatGrp?: BoolFilter<"CrimeIncident"> | boolean
+    grpAffiliation?: StringNullableFilter<"CrimeIncident"> | string | null
+    incidentTypeThreatGrp?: StringNullableFilter<"CrimeIncident"> | string | null
+    mrs?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectIsEGO?: BoolFilter<"CrimeIncident"> | boolean
+    suspectEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
+    suspectCount?: IntNullableFilter<"CrimeIncident"> | number | null
+    victimIsEGO?: BoolFilter<"CrimeIncident"> | boolean
+    victimEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
+    victimEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
+    victimCount?: IntNullableFilter<"CrimeIncident"> | number | null
+    caseStatus?: StringNullableFilter<"CrimeIncident"> | string | null
+    investigator?: StringNullableFilter<"CrimeIncident"> | string | null
+    headInves?: StringNullableFilter<"CrimeIncident"> | string | null
     latitude?: FloatNullableFilter<"CrimeIncident"> | number | null
     longitude?: FloatNullableFilter<"CrimeIncident"> | number | null
     createdAt?: DateTimeFilter<"CrimeIncident"> | Date | string
@@ -3625,6 +3990,9 @@ export namespace Prisma {
 
   export type CrimeIncidentOrderByWithAggregationInput = {
     id?: SortOrder
+    blotterNo?: SortOrderInput | SortOrder
+    dateEncoded?: SortOrderInput | SortOrder
+    pro?: SortOrderInput | SortOrder
     ppo?: SortOrderInput | SortOrder
     stn?: SortOrderInput | SortOrder
     pcp?: SortOrderInput | SortOrder
@@ -3647,6 +4015,24 @@ export namespace Prisma {
     section?: SortOrderInput | SortOrder
     modus?: SortOrderInput | SortOrder
     suspectMotive?: SortOrderInput | SortOrder
+    suspectSubMotive?: SortOrderInput | SortOrder
+    heinous?: SortOrder
+    sensational?: SortOrder
+    threatGrp?: SortOrder
+    grpAffiliation?: SortOrderInput | SortOrder
+    incidentTypeThreatGrp?: SortOrderInput | SortOrder
+    mrs?: SortOrderInput | SortOrder
+    suspectIsEGO?: SortOrder
+    suspectEGOPosition?: SortOrderInput | SortOrder
+    suspectEGOClass?: SortOrderInput | SortOrder
+    suspectCount?: SortOrderInput | SortOrder
+    victimIsEGO?: SortOrder
+    victimEGOPosition?: SortOrderInput | SortOrder
+    victimEGOClass?: SortOrderInput | SortOrder
+    victimCount?: SortOrderInput | SortOrder
+    caseStatus?: SortOrderInput | SortOrder
+    investigator?: SortOrderInput | SortOrder
+    headInves?: SortOrderInput | SortOrder
     latitude?: SortOrderInput | SortOrder
     longitude?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -3663,6 +4049,9 @@ export namespace Prisma {
     OR?: CrimeIncidentScalarWhereWithAggregatesInput[]
     NOT?: CrimeIncidentScalarWhereWithAggregatesInput | CrimeIncidentScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"CrimeIncident"> | string
+    blotterNo?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    dateEncoded?: DateTimeNullableWithAggregatesFilter<"CrimeIncident"> | Date | string | null
+    pro?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     ppo?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     stn?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     pcp?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
@@ -3685,6 +4074,24 @@ export namespace Prisma {
     section?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     modus?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     suspectMotive?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    suspectSubMotive?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    heinous?: BoolWithAggregatesFilter<"CrimeIncident"> | boolean
+    sensational?: BoolWithAggregatesFilter<"CrimeIncident"> | boolean
+    threatGrp?: BoolWithAggregatesFilter<"CrimeIncident"> | boolean
+    grpAffiliation?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    incidentTypeThreatGrp?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    mrs?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    suspectIsEGO?: BoolWithAggregatesFilter<"CrimeIncident"> | boolean
+    suspectEGOPosition?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    suspectEGOClass?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    suspectCount?: IntNullableWithAggregatesFilter<"CrimeIncident"> | number | null
+    victimIsEGO?: BoolWithAggregatesFilter<"CrimeIncident"> | boolean
+    victimEGOPosition?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    victimEGOClass?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    victimCount?: IntNullableWithAggregatesFilter<"CrimeIncident"> | number | null
+    caseStatus?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    investigator?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
+    headInves?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     latitude?: FloatNullableWithAggregatesFilter<"CrimeIncident"> | number | null
     longitude?: FloatNullableWithAggregatesFilter<"CrimeIncident"> | number | null
     createdAt?: DateTimeWithAggregatesFilter<"CrimeIncident"> | Date | string
@@ -3757,6 +4164,9 @@ export namespace Prisma {
 
   export type CrimeIncidentCreateInput = {
     id?: string
+    blotterNo?: string | null
+    dateEncoded?: Date | string | null
+    pro?: string | null
     ppo?: string | null
     stn?: string | null
     pcp?: string | null
@@ -3779,6 +4189,24 @@ export namespace Prisma {
     section?: string | null
     modus?: string | null
     suspectMotive?: string | null
+    suspectSubMotive?: string | null
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: string | null
+    incidentTypeThreatGrp?: string | null
+    mrs?: string | null
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: string | null
+    suspectEGOClass?: string | null
+    suspectCount?: number | null
+    victimIsEGO?: boolean
+    victimEGOPosition?: string | null
+    victimEGOClass?: string | null
+    victimCount?: number | null
+    caseStatus?: string | null
+    investigator?: string | null
+    headInves?: string | null
     latitude?: number | null
     longitude?: number | null
     createdAt?: Date | string
@@ -3787,6 +4215,9 @@ export namespace Prisma {
 
   export type CrimeIncidentUncheckedCreateInput = {
     id?: string
+    blotterNo?: string | null
+    dateEncoded?: Date | string | null
+    pro?: string | null
     ppo?: string | null
     stn?: string | null
     pcp?: string | null
@@ -3809,6 +4240,24 @@ export namespace Prisma {
     section?: string | null
     modus?: string | null
     suspectMotive?: string | null
+    suspectSubMotive?: string | null
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: string | null
+    incidentTypeThreatGrp?: string | null
+    mrs?: string | null
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: string | null
+    suspectEGOClass?: string | null
+    suspectCount?: number | null
+    victimIsEGO?: boolean
+    victimEGOPosition?: string | null
+    victimEGOClass?: string | null
+    victimCount?: number | null
+    caseStatus?: string | null
+    investigator?: string | null
+    headInves?: string | null
     latitude?: number | null
     longitude?: number | null
     createdAt?: Date | string
@@ -3817,6 +4266,9 @@ export namespace Prisma {
 
   export type CrimeIncidentUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    blotterNo?: NullableStringFieldUpdateOperationsInput | string | null
+    dateEncoded?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pro?: NullableStringFieldUpdateOperationsInput | string | null
     ppo?: NullableStringFieldUpdateOperationsInput | string | null
     stn?: NullableStringFieldUpdateOperationsInput | string | null
     pcp?: NullableStringFieldUpdateOperationsInput | string | null
@@ -3839,6 +4291,24 @@ export namespace Prisma {
     section?: NullableStringFieldUpdateOperationsInput | string | null
     modus?: NullableStringFieldUpdateOperationsInput | string | null
     suspectMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectSubMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    heinous?: BoolFieldUpdateOperationsInput | boolean
+    sensational?: BoolFieldUpdateOperationsInput | boolean
+    threatGrp?: BoolFieldUpdateOperationsInput | boolean
+    grpAffiliation?: NullableStringFieldUpdateOperationsInput | string | null
+    incidentTypeThreatGrp?: NullableStringFieldUpdateOperationsInput | string | null
+    mrs?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    victimCount?: NullableIntFieldUpdateOperationsInput | number | null
+    caseStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    investigator?: NullableStringFieldUpdateOperationsInput | string | null
+    headInves?: NullableStringFieldUpdateOperationsInput | string | null
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -3847,6 +4317,9 @@ export namespace Prisma {
 
   export type CrimeIncidentUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    blotterNo?: NullableStringFieldUpdateOperationsInput | string | null
+    dateEncoded?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pro?: NullableStringFieldUpdateOperationsInput | string | null
     ppo?: NullableStringFieldUpdateOperationsInput | string | null
     stn?: NullableStringFieldUpdateOperationsInput | string | null
     pcp?: NullableStringFieldUpdateOperationsInput | string | null
@@ -3869,6 +4342,24 @@ export namespace Prisma {
     section?: NullableStringFieldUpdateOperationsInput | string | null
     modus?: NullableStringFieldUpdateOperationsInput | string | null
     suspectMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectSubMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    heinous?: BoolFieldUpdateOperationsInput | boolean
+    sensational?: BoolFieldUpdateOperationsInput | boolean
+    threatGrp?: BoolFieldUpdateOperationsInput | boolean
+    grpAffiliation?: NullableStringFieldUpdateOperationsInput | string | null
+    incidentTypeThreatGrp?: NullableStringFieldUpdateOperationsInput | string | null
+    mrs?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    victimCount?: NullableIntFieldUpdateOperationsInput | number | null
+    caseStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    investigator?: NullableStringFieldUpdateOperationsInput | string | null
+    headInves?: NullableStringFieldUpdateOperationsInput | string | null
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -3877,6 +4368,9 @@ export namespace Prisma {
 
   export type CrimeIncidentCreateManyInput = {
     id?: string
+    blotterNo?: string | null
+    dateEncoded?: Date | string | null
+    pro?: string | null
     ppo?: string | null
     stn?: string | null
     pcp?: string | null
@@ -3899,6 +4393,24 @@ export namespace Prisma {
     section?: string | null
     modus?: string | null
     suspectMotive?: string | null
+    suspectSubMotive?: string | null
+    heinous?: boolean
+    sensational?: boolean
+    threatGrp?: boolean
+    grpAffiliation?: string | null
+    incidentTypeThreatGrp?: string | null
+    mrs?: string | null
+    suspectIsEGO?: boolean
+    suspectEGOPosition?: string | null
+    suspectEGOClass?: string | null
+    suspectCount?: number | null
+    victimIsEGO?: boolean
+    victimEGOPosition?: string | null
+    victimEGOClass?: string | null
+    victimCount?: number | null
+    caseStatus?: string | null
+    investigator?: string | null
+    headInves?: string | null
     latitude?: number | null
     longitude?: number | null
     createdAt?: Date | string
@@ -3907,6 +4419,9 @@ export namespace Prisma {
 
   export type CrimeIncidentUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    blotterNo?: NullableStringFieldUpdateOperationsInput | string | null
+    dateEncoded?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pro?: NullableStringFieldUpdateOperationsInput | string | null
     ppo?: NullableStringFieldUpdateOperationsInput | string | null
     stn?: NullableStringFieldUpdateOperationsInput | string | null
     pcp?: NullableStringFieldUpdateOperationsInput | string | null
@@ -3929,6 +4444,24 @@ export namespace Prisma {
     section?: NullableStringFieldUpdateOperationsInput | string | null
     modus?: NullableStringFieldUpdateOperationsInput | string | null
     suspectMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectSubMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    heinous?: BoolFieldUpdateOperationsInput | boolean
+    sensational?: BoolFieldUpdateOperationsInput | boolean
+    threatGrp?: BoolFieldUpdateOperationsInput | boolean
+    grpAffiliation?: NullableStringFieldUpdateOperationsInput | string | null
+    incidentTypeThreatGrp?: NullableStringFieldUpdateOperationsInput | string | null
+    mrs?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    victimCount?: NullableIntFieldUpdateOperationsInput | number | null
+    caseStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    investigator?: NullableStringFieldUpdateOperationsInput | string | null
+    headInves?: NullableStringFieldUpdateOperationsInput | string | null
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -3937,6 +4470,9 @@ export namespace Prisma {
 
   export type CrimeIncidentUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
+    blotterNo?: NullableStringFieldUpdateOperationsInput | string | null
+    dateEncoded?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    pro?: NullableStringFieldUpdateOperationsInput | string | null
     ppo?: NullableStringFieldUpdateOperationsInput | string | null
     stn?: NullableStringFieldUpdateOperationsInput | string | null
     pcp?: NullableStringFieldUpdateOperationsInput | string | null
@@ -3959,6 +4495,24 @@ export namespace Prisma {
     section?: NullableStringFieldUpdateOperationsInput | string | null
     modus?: NullableStringFieldUpdateOperationsInput | string | null
     suspectMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectSubMotive?: NullableStringFieldUpdateOperationsInput | string | null
+    heinous?: BoolFieldUpdateOperationsInput | boolean
+    sensational?: BoolFieldUpdateOperationsInput | boolean
+    threatGrp?: BoolFieldUpdateOperationsInput | boolean
+    grpAffiliation?: NullableStringFieldUpdateOperationsInput | string | null
+    incidentTypeThreatGrp?: NullableStringFieldUpdateOperationsInput | string | null
+    mrs?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
+    victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
+    victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
+    victimCount?: NullableIntFieldUpdateOperationsInput | number | null
+    caseStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    investigator?: NullableStringFieldUpdateOperationsInput | string | null
+    headInves?: NullableStringFieldUpdateOperationsInput | string | null
     latitude?: NullableFloatFieldUpdateOperationsInput | number | null
     longitude?: NullableFloatFieldUpdateOperationsInput | number | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -4065,6 +4619,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -4079,6 +4644,17 @@ export namespace Prisma {
   export type BoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type IntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type FloatNullableFilter<$PrismaModel = never> = {
@@ -4099,6 +4675,9 @@ export namespace Prisma {
 
   export type CrimeIncidentCountOrderByAggregateInput = {
     id?: SortOrder
+    blotterNo?: SortOrder
+    dateEncoded?: SortOrder
+    pro?: SortOrder
     ppo?: SortOrder
     stn?: SortOrder
     pcp?: SortOrder
@@ -4121,6 +4700,24 @@ export namespace Prisma {
     section?: SortOrder
     modus?: SortOrder
     suspectMotive?: SortOrder
+    suspectSubMotive?: SortOrder
+    heinous?: SortOrder
+    sensational?: SortOrder
+    threatGrp?: SortOrder
+    grpAffiliation?: SortOrder
+    incidentTypeThreatGrp?: SortOrder
+    mrs?: SortOrder
+    suspectIsEGO?: SortOrder
+    suspectEGOPosition?: SortOrder
+    suspectEGOClass?: SortOrder
+    suspectCount?: SortOrder
+    victimIsEGO?: SortOrder
+    victimEGOPosition?: SortOrder
+    victimEGOClass?: SortOrder
+    victimCount?: SortOrder
+    caseStatus?: SortOrder
+    investigator?: SortOrder
+    headInves?: SortOrder
     latitude?: SortOrder
     longitude?: SortOrder
     createdAt?: SortOrder
@@ -4128,12 +4725,17 @@ export namespace Prisma {
   }
 
   export type CrimeIncidentAvgOrderByAggregateInput = {
+    suspectCount?: SortOrder
+    victimCount?: SortOrder
     latitude?: SortOrder
     longitude?: SortOrder
   }
 
   export type CrimeIncidentMaxOrderByAggregateInput = {
     id?: SortOrder
+    blotterNo?: SortOrder
+    dateEncoded?: SortOrder
+    pro?: SortOrder
     ppo?: SortOrder
     stn?: SortOrder
     pcp?: SortOrder
@@ -4156,6 +4758,24 @@ export namespace Prisma {
     section?: SortOrder
     modus?: SortOrder
     suspectMotive?: SortOrder
+    suspectSubMotive?: SortOrder
+    heinous?: SortOrder
+    sensational?: SortOrder
+    threatGrp?: SortOrder
+    grpAffiliation?: SortOrder
+    incidentTypeThreatGrp?: SortOrder
+    mrs?: SortOrder
+    suspectIsEGO?: SortOrder
+    suspectEGOPosition?: SortOrder
+    suspectEGOClass?: SortOrder
+    suspectCount?: SortOrder
+    victimIsEGO?: SortOrder
+    victimEGOPosition?: SortOrder
+    victimEGOClass?: SortOrder
+    victimCount?: SortOrder
+    caseStatus?: SortOrder
+    investigator?: SortOrder
+    headInves?: SortOrder
     latitude?: SortOrder
     longitude?: SortOrder
     createdAt?: SortOrder
@@ -4164,6 +4784,9 @@ export namespace Prisma {
 
   export type CrimeIncidentMinOrderByAggregateInput = {
     id?: SortOrder
+    blotterNo?: SortOrder
+    dateEncoded?: SortOrder
+    pro?: SortOrder
     ppo?: SortOrder
     stn?: SortOrder
     pcp?: SortOrder
@@ -4186,6 +4809,24 @@ export namespace Prisma {
     section?: SortOrder
     modus?: SortOrder
     suspectMotive?: SortOrder
+    suspectSubMotive?: SortOrder
+    heinous?: SortOrder
+    sensational?: SortOrder
+    threatGrp?: SortOrder
+    grpAffiliation?: SortOrder
+    incidentTypeThreatGrp?: SortOrder
+    mrs?: SortOrder
+    suspectIsEGO?: SortOrder
+    suspectEGOPosition?: SortOrder
+    suspectEGOClass?: SortOrder
+    suspectCount?: SortOrder
+    victimIsEGO?: SortOrder
+    victimEGOPosition?: SortOrder
+    victimEGOClass?: SortOrder
+    victimCount?: SortOrder
+    caseStatus?: SortOrder
+    investigator?: SortOrder
+    headInves?: SortOrder
     latitude?: SortOrder
     longitude?: SortOrder
     createdAt?: SortOrder
@@ -4193,6 +4834,8 @@ export namespace Prisma {
   }
 
   export type CrimeIncidentSumOrderByAggregateInput = {
+    suspectCount?: SortOrder
+    victimCount?: SortOrder
     latitude?: SortOrder
     longitude?: SortOrder
   }
@@ -4233,6 +4876,20 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -4253,6 +4910,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -4292,17 +4965,6 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
-
-  export type IntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type BarangayCountOrderByAggregateInput = {
@@ -4369,28 +5031,16 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
-  export type IntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
-  }
-
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
 
   export type NullableStringFieldUpdateOperationsInput = {
     set?: string | null
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
   }
 
   export type DateTimeFieldUpdateOperationsInput = {
@@ -4401,7 +5051,7 @@ export namespace Prisma {
     set?: boolean
   }
 
-  export type NullableFloatFieldUpdateOperationsInput = {
+  export type NullableIntFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
     decrement?: number
@@ -4409,7 +5059,7 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type NullableIntFieldUpdateOperationsInput = {
+  export type NullableFloatFieldUpdateOperationsInput = {
     set?: number | null
     increment?: number
     decrement?: number
@@ -4445,6 +5095,17 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type NestedDateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -4459,6 +5120,17 @@ export namespace Prisma {
   export type NestedBoolFilter<$PrismaModel = never> = {
     equals?: boolean | BooleanFieldRefInput<$PrismaModel>
     not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
@@ -4517,15 +5189,18 @@ export namespace Prisma {
     _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
-  export type NestedIntNullableFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {
@@ -4548,6 +5223,22 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedBoolFilter<$PrismaModel>
     _max?: NestedBoolFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _avg?: NestedFloatNullableFilter<$PrismaModel>
+    _sum?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedIntNullableFilter<$PrismaModel>
+    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -4587,22 +5278,6 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
-  }
-
-  export type NestedIntNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: number | IntFieldRefInput<$PrismaModel> | null
-    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
-    lt?: number | IntFieldRefInput<$PrismaModel>
-    lte?: number | IntFieldRefInput<$PrismaModel>
-    gt?: number | IntFieldRefInput<$PrismaModel>
-    gte?: number | IntFieldRefInput<$PrismaModel>
-    not?: NestedIntNullableWithAggregatesFilter<$PrismaModel> | number | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _avg?: NestedFloatNullableFilter<$PrismaModel>
-    _sum?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedIntNullableFilter<$PrismaModel>
-    _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useMapContext } from '@/context/MapContext'
 
 export interface ThreatLevelStats {
   secure: number
@@ -32,14 +33,18 @@ export function useThreatLevels() {
     critical: 0
   })
   const [barangayCrimeCounts, setBarangayCrimeCounts] = useState<Record<string, number>>({})
+  const [filteredBarangayCrimeCounts, setFilteredBarangayCrimeCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
+  
+  const { timeFilterDate, timeFilterHour, isTimeFilterActive } = useMapContext()
 
+  // Fetch base crime data (all crimes)
   useEffect(() => {
-    async function loadThreatData() {
+    async function loadBaseThreatData() {
       try {
         setLoading(true)
         
-        // Fetch barangay crime counts from the optimized endpoint
+        // Fetch all barangay crime counts (no filter)
         const response = await fetch('/api/crimes/barangay-counts')
         const result = await response.json()
         
@@ -60,7 +65,7 @@ export function useThreatLevels() {
         }
         
         Object.values(barangayCounts).forEach(count => {
-          const level = getThreatLevelFromCount(count, FIXED_THRESHOLDS)
+          const level = getThreatLevelFromCount(count as number, FIXED_THRESHOLDS)
           threatStats[level]++
         })
         
@@ -77,13 +82,70 @@ export function useThreatLevels() {
       }
     }
 
-    loadThreatData()
+    loadBaseThreatData()
   }, [])
+
+  // Fetch filtered crime data when time filter is active
+  useEffect(() => {
+    async function loadFilteredThreatData() {
+      if (!isTimeFilterActive || !timeFilterDate) {
+        console.log('Time filter not active or no date, clearing filtered counts')
+        setFilteredBarangayCrimeCounts({})
+        return
+      }
+
+      try {
+        const params = new URLSearchParams()
+        
+        // Use the selected date for filtering
+        const startDate = new Date(timeFilterDate)
+        const endDate = new Date(timeFilterDate)
+        
+        if (timeFilterHour !== null) {
+          // Filter by specific hour - set date range to that day
+          startDate.setHours(0, 0, 0, 0)
+          endDate.setHours(23, 59, 59, 999)
+          
+          // Pass hour as a parameter to the API
+          params.set('hour', timeFilterHour.toString())
+        } else {
+          // Filter by entire day
+          startDate.setHours(0, 0, 0, 0)
+          endDate.setHours(23, 59, 59, 999)
+        }
+        
+        // Convert to ISO string for API
+        params.set('startDateCommitted', startDate.toISOString())
+        params.set('endDateCommitted', endDate.toISOString())
+        
+        console.log('🔍 Fetching filtered crimes:', {
+          date: timeFilterDate.toLocaleDateString(),
+          hour: timeFilterHour,
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        })
+        
+        const response = await fetch(`/api/crimes/barangay-counts?${params}`)
+        const result = await response.json()
+        
+        console.log('📊 Filtered crime counts result:', result.data)
+        
+        if (result.success) {
+          setFilteredBarangayCrimeCounts(result.data.barangayCounts)
+        }
+      } catch (error) {
+        console.error('Error loading filtered threat data:', error)
+      }
+    }
+
+    loadFilteredThreatData()
+  }, [timeFilterDate, timeFilterHour, isTimeFilterActive])
 
   return { 
     stats, 
     thresholds: FIXED_THRESHOLDS, 
     barangayCrimeCounts, 
+    filteredBarangayCrimeCounts,
     loading 
   }
 }

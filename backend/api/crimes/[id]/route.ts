@@ -12,11 +12,12 @@ const updateCrimeSchema = z.object({
 // GET /api/crimes/[id] - Get a specific crime incident
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const crime = await prisma.crimeIncident.findUnique({
-      where: { id: params.id }
+      where: { id }
     })
 
     if (!crime) {
@@ -42,9 +43,10 @@ export async function GET(
 // PUT /api/crimes/[id] - Update a crime incident
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
     const validatedData = updateCrimeSchema.parse(body)
 
@@ -55,7 +57,7 @@ export async function PUT(
     if (validatedData.crimeType) updateData.crimeType = validatedData.crimeType
 
     const crime = await prisma.crimeIncident.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData
     })
 
@@ -70,7 +72,7 @@ export async function PUT(
         { 
           success: false, 
           error: 'Validation failed',
-          details: error.errors
+          details: error.issues
         },
         { status: 400 }
       )
@@ -87,11 +89,12 @@ export async function PUT(
 // DELETE /api/crimes/[id] - Delete a crime incident
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await prisma.crimeIncident.delete({
-      where: { id: params.id }
+      where: { id }
     })
 
     return NextResponse.json({

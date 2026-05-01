@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/backend/lib/prisma'
+import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper'
 
 // GET /api/crimes/stats - Get crime statistics
 export async function GET(request: NextRequest) {
@@ -12,8 +13,10 @@ export async function GET(request: NextRequest) {
     const where: any = {}
 
     if (barangay) {
+      // Map GeoJSON barangay name to database name (e.g., "Amaya I" -> "Daang Amaya I")
+      const dbBarangayName = mapGeoJsonToDb(barangay)
       where.barangay = {
-        contains: barangay,
+        equals: dbBarangayName,
         mode: 'insensitive'
       }
     }
@@ -25,7 +28,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total count
+    // Get total count (all time)
     const totalCrimes = await prisma.crimeIncident.count({ where })
 
     // Get crimes by type
@@ -69,34 +72,79 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Get crimes resolved today
+    // Get crimes resolved today (based on updatedAt and caseStatus)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
-    const resolvedToday = await prisma.crimeIncident.count({
-      where: {
-        ...where,
-        stageOfFelony: {
-          in: ['Consummated', 'Solved', 'Closed']
-        },
-        updatedAt: {
-          gte: today,
-          lt: tomorrow
+    const resolvedTodayWhere: any = Object.keys(where).length > 0
+      ? {
+          AND: [
+            where,
+            {
+              OR: [
+                { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
+                { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
+                { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
+                { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
+              ]
+            },
+            {
+              updatedAt: {
+                gte: today,
+                lt: tomorrow
+              }
+            }
+          ]
         }
-      }
+      : {
+          OR: [
+            { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
+            { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
+            { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
+            { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
+          ],
+          updatedAt: {
+            gte: today,
+            lt: tomorrow
+          }
+        }
+
+    const resolvedToday = await prisma.crimeIncident.count({
+      where: resolvedTodayWhere
     })
 
-    // Get active cases (not resolved)
-    const activeCases = await prisma.crimeIncident.count({
-      where: {
-        ...where,
-        stageOfFelony: {
-          notIn: ['Consummated', 'Solved', 'Closed']
+    // Get cleared/solved cases for safety index calculation
+    const clearedCasesWhere: any = Object.keys(where).length > 0 
+      ? {
+          AND: [
+            where,
+            {
+              OR: [
+                { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
+                { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
+                { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
+                { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
+              ]
+            }
+          ]
         }
-      }
+      : {
+          OR: [
+            { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
+            { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
+            { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
+            { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
+          ]
+        }
+    
+    const clearedCases = await prisma.crimeIncident.count({
+      where: clearedCasesWhere
     })
+
+    // Get active cases (total - cleared)
+    const activeCases = totalCrimes - clearedCases
 
     // Get crimes by month for the current year
     const currentYear = new Date().getFullYear()
@@ -126,9 +174,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Calculate safety index (percentage of resolved cases)
+    // Calculate safety index (percentage of cleared/solved cases)
     const safetyIndex = totalCrimes > 0 
-      ? Math.round(((totalCrimes - activeCases) / totalCrimes) * 100)
+      ? Math.round((clearedCases / totalCrimes) * 100)
       : 100
 
     return NextResponse.json({
@@ -148,13 +196,22 @@ export async function GET(request: NextRequest) {
           count: item._count.barangay
         })),
         monthlyStats,
-        activity: monthlyStats.map(stat => Math.min(100, (stat.count * 10))) // Convert to percentage for chart
+        activity: monthlyStats.map(stat => stat.count) // Return actual raw counts instead of scaled percentages
       }
     })
   } catch (error) {
     console.error('Error fetching crime statistics:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      error
+    })
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch crime statistics' },
+      { 
+        success: false, 
+        error: 'Failed to fetch crime statistics',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      },
       { status: 500 }
     )
   }

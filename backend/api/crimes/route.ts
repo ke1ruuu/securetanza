@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/backend/lib/prisma'
 import { z } from 'zod'
+import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper'
 
 // Validation schema for crime incident
 const crimeIncidentSchema = z.object({
@@ -48,16 +49,20 @@ export async function GET(request: NextRequest) {
     const endDateCommitted = searchParams.get('endDateCommitted')
     const modeReporting = searchParams.get('modeReporting')
     const stageOfFelony = searchParams.get('stageOfFelony')
+    const caseStatus = searchParams.get('caseStatus')
     const offenseType = searchParams.get('offenseType')
     const modus = searchParams.get('modus')
     const typeOfPlace = searchParams.get('typeOfPlace')
     const limit = searchParams.get('limit')
+    const hour = searchParams.get('hour') // Optional hour filter (0-23)
 
     const where: any = {}
 
     if (barangay) {
+      // Map GeoJSON barangay name to database name (e.g., "Amaya I" -> "Daang Amaya I")
+      const dbBarangayName = mapGeoJsonToDb(barangay)
       where.barangay = {
-        contains: barangay,
+        equals: dbBarangayName,
         mode: 'insensitive'
       }
     }
@@ -118,6 +123,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    if (caseStatus) {
+      where.caseStatus = {
+        contains: caseStatus,
+        mode: 'insensitive'
+      }
+    }
+
     if (offenseType) {
       where.offenseType = {
         contains: offenseType,
@@ -147,10 +159,21 @@ export async function GET(request: NextRequest) {
       take: limit ? parseInt(limit) : undefined
     })
 
+    // Filter by hour if specified
+    let filteredCrimes = crimes
+    if (hour !== null && hour !== undefined) {
+      const targetHour = parseInt(hour)
+      filteredCrimes = crimes.filter(crime => {
+        const timeParts = crime.timeCommitted.split(':')
+        const crimeHour = parseInt(timeParts[0])
+        return crimeHour === targetHour
+      })
+    }
+
     return NextResponse.json({
       success: true,
-      data: crimes,
-      count: crimes.length
+      data: filteredCrimes,
+      count: filteredCrimes.length
     })
   } catch (error) {
     console.error('Error fetching crimes:', error)
@@ -209,7 +232,7 @@ export async function POST(request: NextRequest) {
         { 
           success: false, 
           error: 'Validation failed',
-          details: error.errors
+          details: error.issues
         },
         { status: 400 }
       )

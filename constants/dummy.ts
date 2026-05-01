@@ -5,6 +5,9 @@ export interface Incident {
   status: "Active" | "Solved" | "Investigating" | "Pending";
   severity: "High" | "Medium" | "Low";
   location: string;
+  timeReported?: string;
+  dateCommitted?: string;
+  timeCommitted?: string;
 }
 
 export interface HistoricalIncident extends Incident {

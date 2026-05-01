@@ -1,13 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 
 import MapHeader from "@/components/layout/map-header";
 import BarangayFilter from "@/components/layout/barangay-filter";
-import MapDock from "@/components/layout/map-dock";
+import CrimeTypeFilter from "@/components/layout/crime-type-filter";
 
 import RealTimeClock from "@/components/layout/real-time-clock";
+import TimeFilter, { TimeFilterState } from "@/components/layout/time-filter";
 
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
@@ -18,7 +19,7 @@ const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-[#0f172a] flex items-center justify-center">
-      <span className="text-[#818cf8] text-sm font-semibold tracking-widest animate-pulse">
+      <span className="text-[#0EA5E9] text-sm font-semibold tracking-widest animate-pulse">
         Initializing SECURE OS…
       </span>
     </div>
@@ -26,53 +27,88 @@ const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
 });
 
 function HomeContent() {
-  const router = useRouter();
-  const {
-    geoJsonData,
-    selectedBarangay,
-    setSelectedBarangay,
-    flyToStation,
-    setFlyToStation,
-    filterOpen,
-    setFilterOpen,
-    searchQuery,
-    setSearchQuery,
-    filteredBarangays,
-    onFlyToStationComplete,
-  } = useMapContext();
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [timeFilters, setTimeFilters] = useState<TimeFilterState>({
+    selectedDate: new Date(),
+    timeRange: "24h",
+    selectedHour: null,
+  });
+  
+  const { setIsTimeFilterActive, setTimeFilter } = useMapContext();
+
+  const handleFilterToggle = useCallback((isActive: boolean) => {
+    console.log('Filter toggle:', isActive);
+    setIsFilterActive(isActive);
+    setIsTimeFilterActive(isActive);
+    
+    // Clear time filter when closing
+    if (!isActive) {
+      console.log('Clearing time filter');
+      setTimeFilter(null, null);
+    }
+  }, [setIsTimeFilterActive, setTimeFilter]);
+
+  const handleFilterChange = useCallback((filters: TimeFilterState) => {
+    setTimeFilters(filters);
+    // You can use these filters to update the map data
+    console.log("Filter changed:", filters);
+  }, []);
+
+  const handlePlayPauseToggle = useCallback(() => {
+    setIsPlaying((prev) => !prev);
+  }, []);
 
   return (
     <main className="relative h-screen w-screen bg-[#020617] overflow-hidden text-slate-100 font-sans">
-      <div className="absolute top-[-250px] right-[-250px] w-[500px] h-[500px] bg-indigo-500/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-250px] left-[-250px] w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="fixed top-0 left-0 right-0 z-50 transition-transform duration-500 ease-in-out">
+        <MapHeader isVisible={!isFilterActive} />
+      </div>
 
-      <div className="absolute inset-0 z-0">
+      <div className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${
+        isFilterActive ? 'pt-0' : 'pt-16'
+      }`}>
         <TanzaMap />
       </div>
 
-      <div className="relative z-10 p-10 h-full flex flex-col pointer-events-none">
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 z-20">
-          <RealTimeClock />
+      <div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${
+        isFilterActive ? 'pt-0' : 'pt-16'
+      }`}>
+        <div className={`absolute left-6 transition-all duration-500 ease-in-out flex gap-3 ${
+          isFilterActive ? 'top-6' : 'top-20'
+        }`}>
+          <BarangayFilter />
+          <CrimeTypeFilter />
         </div>
 
-        <MapHeader />
+        <div className={`absolute right-6 transition-all duration-500 ease-in-out ${
+          isFilterActive ? 'top-6' : 'top-20'
+        }`}>
+          <MapLegend />
+        </div>
 
-        <RightSidebarControls />
+        <div className="absolute bottom-6 right-6">
+          <RightSidebarControls />
+        </div>
 
-        <div className="mt-auto flex justify-between items-end gap-6 mb-4">
-          <BarangayFilter />
-
-          <MapDock
-            onDashboard={() =>
-              router.push(
-                `/dashboard${selectedBarangay ? `?name=${selectedBarangay}` : ""}`,
-              )
-            }
+        {/* Time Filter - appears at bottom when filter is active with slide up animation */}
+        <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-in-out ${
+          isFilterActive ? 'bottom-6 opacity-100' : '-bottom-32 opacity-0'
+        }`}>
+          <TimeFilter
+            onFilterChange={handleFilterChange}
+            isPlaying={isPlaying}
+            onPlayPauseToggle={handlePlayPauseToggle}
           />
+        </div>
 
-          <div className="flex items-center gap-3">
-            <MapLegend />
-          </div>
+        <div className={`absolute left-6 transition-all duration-500 ease-in-out ${
+          isFilterActive ? 'bottom-[120px]' : 'bottom-6'
+        }`}>
+          <RealTimeClock
+            onFilterToggle={handleFilterToggle}
+            isFilterActive={isFilterActive}
+          />
         </div>
       </div>
     </main>

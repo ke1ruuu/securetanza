@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +20,17 @@ import BarangayDrawer from "./barangay-drawer";
 import HoverStatsPanel from "./hover-stats-panel";
 
 import { useMapContext } from "@/context/MapContext";
+
+/** Captures the Leaflet map instance into context for external controls */
+function MapInstanceCapture() {
+  const map = useMap();
+  const { mapRef } = useMapContext();
+  useEffect(() => {
+    mapRef.current = map;
+    return () => { mapRef.current = null; };
+  }, [map, mapRef]);
+  return null;
+}
 
 export default function TanzaMapRoot() {
   const router = useRouter();
@@ -56,9 +67,7 @@ export default function TanzaMapRoot() {
   };
 
   const handleMoreInfo = (name: string) => {
-    router.push(
-      `/dashboard?name=${name}&month=${hotspotMonth}&year=${hotspotYear}`,
-    );
+    router.push(`/dashboard/overview?name=${name}`);
   };
 
   if (!geoJsonData) return null;
@@ -74,6 +83,7 @@ export default function TanzaMapRoot() {
         zoomControl={false}
         attributionControl={false}
       >
+        <MapInstanceCapture />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution={MAP_ATTR}

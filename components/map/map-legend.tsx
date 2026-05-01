@@ -9,11 +9,11 @@ export default function MapLegend() {
   const { stats, loading } = useThreatLevels();
 
   const LEGEND_ITEMS = [
-    { label: "SEC", full: "Secure", color: THREAT_COLORS.secure, count: stats.secure },
-    { label: "LOW", full: "Low", color: THREAT_COLORS.low, count: stats.low },
-    { label: "MOD", full: "Moderate", color: THREAT_COLORS.moderate, count: stats.moderate },
-    { label: "HIGH", full: "High", color: THREAT_COLORS.high, count: stats.high },
-    { label: "CRT", full: "Critical", color: THREAT_COLORS.critical, count: stats.critical },
+    { label: "CRITICAL", key: "critical", color: THREAT_COLORS.critical, count: stats.critical },
+    { label: "HIGH", key: "high", color: THREAT_COLORS.high, count: stats.high },
+    { label: "MODERATE", key: "moderate", color: THREAT_COLORS.moderate, count: stats.moderate },
+    { label: "LOW", key: "low", color: THREAT_COLORS.low, count: stats.low },
+    { label: "SECURE", key: "secure", color: THREAT_COLORS.secure, count: stats.secure },
   ];
 
   const handleToggle = (level: string) => {
@@ -26,54 +26,57 @@ export default function MapLegend() {
 
   if (loading) {
     return (
-      <div className="glass p-1.5 px-3 rounded-xl border border-white/5 pointer-events-auto flex items-center gap-6">
-        <div className="animate-pulse flex items-center gap-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex flex-col items-center gap-0.5">
-              <div className="w-4 h-3 bg-white/20 rounded"></div>
-              <div className="w-8 h-1 bg-white/20 rounded-full"></div>
-              <div className="w-6 h-2 bg-white/20 rounded"></div>
-            </div>
-          ))}
-        </div>
+      <div className="flex flex-col gap-1.5 pointer-events-auto">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div
+            key={i}
+            className="h-9 w-[100px] rounded-lg bg-white/[0.04] animate-pulse"
+          />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="glass p-1.5 px-3 rounded-xl border border-white/5 pointer-events-auto flex items-center gap-6">
+    <div className="flex flex-col gap-1.5 pointer-events-auto">
       {LEGEND_ITEMS.map((item) => {
-        const isActive = hoveredThreatLevel === item.full;
+        const isActive = hoveredThreatLevel === item.key;
         const isDimmed = hoveredThreatLevel && !isActive;
 
         return (
-          <div 
-            key={item.label} 
-            className={`flex flex-col items-center gap-0.5 group cursor-pointer transition-all duration-300 ${
-              isDimmed ? "opacity-30 scale-90" : "opacity-100 scale-100"
+          <button
+            key={item.label}
+            onClick={() => handleToggle(item.key)}
+            className={`flex items-center gap-2.5 h-9 pl-2 pr-3 rounded-lg border transition-all duration-300 cursor-pointer group ${
+              isActive
+                ? "bg-white/[0.08] border-white/[0.1] scale-105"
+                : isDimmed
+                ? "bg-[#0F172A]/60 border-white/[0.03] opacity-40 scale-95"
+                : "bg-[#0F172A]/60 border-white/[0.05] hover:bg-white/[0.06] hover:border-white/[0.08]"
             }`}
-            onClick={() => handleToggle(item.full)}
           >
-            <span className={`text-[10px] font-black leading-none mb-1 tabular-nums transition-colors ${
-              isActive ? "text-white" : "text-white/60"
-            }`}>
-              {item.count}
-            </span>
-            <div 
-              className={`w-8 rounded-full transition-all ${
-                isActive ? "h-2 w-10" : "h-1 group-hover:h-1.5 group-hover:scale-x-110"
-              }`} 
-              style={{ 
+            {/* Count Badge */}
+            <div
+              className={`min-w-[26px] h-[22px] rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-all ${
+                isActive ? "text-white shadow-lg" : "text-white/90"
+              }`}
+              style={{
                 backgroundColor: item.color,
-                boxShadow: isActive ? `0 0 15px ${item.color}` : `0 0 10px ${item.color}40`,
-              }} 
-            />
-            <span className={`text-[6px] font-black uppercase tracking-widest mt-1 transition-colors ${
-              isActive ? "text-white" : "text-slate-500"
-            }`}>
+                boxShadow: isActive ? `0 0 12px ${item.color}80` : "none",
+              }}
+            >
+              {item.count}
+            </div>
+            {/* Label */}
+            <span
+              className={`text-[8px] font-bold uppercase tracking-[0.12em] whitespace-nowrap transition-colors ${
+                isActive ? "text-white" : "text-slate-500 group-hover:text-slate-300"
+              }`}
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
               {item.label}
             </span>
-          </div>
+          </button>
         );
       })}
     </div>

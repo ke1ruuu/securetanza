@@ -4,12 +4,14 @@ import { Incident } from '@/constants/dummy'
 
 interface DashboardData {
   stats: {
+    totalCrimes: number
     activeCases: number
     resolvedToday: number
     safetyIndex: string
     activePatrols: number
   }
   activity: number[]
+  crimesByType: Array<{ type: string; count: number }>
   incidents: Incident[]
   loading: boolean
   error: string | null
@@ -18,12 +20,14 @@ interface DashboardData {
 export function useDashboardData(barangayName?: string) {
   const [data, setData] = useState<DashboardData>({
     stats: {
+      totalCrimes: 0,
       activeCases: 0,
       resolvedToday: 0,
       safetyIndex: "0%",
       activePatrols: 0
     },
     activity: Array(12).fill(0),
+    crimesByType: [],
     incidents: [],
     loading: true,
     error: null
@@ -43,7 +47,7 @@ export function useDashboardData(barangayName?: string) {
           fetchCrimeStats(statsParams),
           fetchCrimes({ 
             barangay: statsParams?.barangay, 
-            limit: 10 
+            limit: 50 
           })
         ])
 
@@ -59,12 +63,14 @@ export function useDashboardData(barangayName?: string) {
 
         setData({
           stats: {
+            totalCrimes: stats.totalCrimes,
             activeCases: stats.activeCases,
             resolvedToday: stats.resolvedToday,
             safetyIndex: stats.safetyIndex,
             activePatrols
           },
           activity: stats.activity,
+          crimesByType: stats.crimesByType,
           incidents,
           loading: false,
           error: null

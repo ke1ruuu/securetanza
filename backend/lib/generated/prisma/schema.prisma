@@ -13,7 +13,12 @@ datasource db {
 model CrimeIncident {
   id String @id @default(cuid())
 
+  // Blotter Information
+  blotterNo   String?   @map("blotter_no") // Blotter number
+  dateEncoded DateTime? @map("date_encoded") // When record was encoded
+
   // Police Organization Structure
+  pro String? @map("police_regional_office") // Police Regional Office
   ppo String? @map("police_provincial_office") // Police Provincial Office
   stn String? @map("station") // Police Station
   pcp String? @map("police_community_precinct") // Police Community Precinct
@@ -48,8 +53,36 @@ model CrimeIncident {
   section     String? // Legal section reference
 
   // Crime Details
-  modus         String? // Method of operation
-  suspectMotive String? @map("suspect_motive") // Motive of the suspect
+  modus            String? // Method of operation
+  suspectMotive    String? @map("suspect_motive") // Motive of the suspect
+  suspectSubMotive String? @map("suspect_sub_motive") // Sub-motive of the suspect
+
+  // Crime Classification
+  heinous     Boolean @default(false) // Is crime heinous
+  sensational Boolean @default(false) // Is crime sensational
+
+  // Threat Group Information
+  threatGrp             Boolean @default(false) @map("threat_grp") // Threat group involvement
+  grpAffiliation        String? @map("grp_affiliation") // Group affiliation details
+  incidentTypeThreatGrp String? @map("incident_type_threat_grp") // Incident type threat group
+  mrs                   String? // MRS field
+
+  // Suspect Information
+  suspectIsEGO       Boolean @default(false) @map("suspect_is_ego") // Is suspect elected/government official
+  suspectEGOPosition String? @map("suspect_ego_position") // Suspect's government position
+  suspectEGOClass    String? @map("suspect_ego_class") // Suspect's government class
+  suspectCount       Int?    @map("suspect_count") // Number of suspects
+
+  // Victim Information
+  victimIsEGO       Boolean @default(false) @map("victim_is_ego") // Is victim elected/government official
+  victimEGOPosition String? @map("victim_ego_position") // Victim's government position
+  victimEGOClass    String? @map("victim_ego_class") // Victim's government class
+  victimCount       Int?    @map("victim_count") // Number of victims
+
+  // Case Management
+  caseStatus   String? @map("case_status") // Case status (Cleared, etc.)
+  investigator String? // Assigned investigator
+  headInves    String? @map("head_investigator") // Head investigator
 
   // Geographic Coordinates
   latitude  Float? @map("lat")
@@ -64,6 +97,10 @@ model CrimeIncident {
   @@index([incidentType])
   @@index([region, province, municipal])
   @@index([latitude, longitude])
+  @@index([blotterNo])
+  @@index([caseStatus])
+  @@index([heinous])
+  @@index([sensational])
   @@map("crime_incidents")
 }
 
