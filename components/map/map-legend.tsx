@@ -4,16 +4,53 @@ import React from "react";
 import { useMapContext } from "@/context/MapContext";
 import { useThreatLevels, THREAT_COLORS } from "@/hooks/useThreatLevels";
 
+// Helper function to format numbers in standard notation
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toString();
+}
+
 export default function MapLegend() {
   const { hoveredThreatLevel, setHoveredThreatLevel } = useMapContext();
-  const { stats, loading } = useThreatLevels();
+  const { stats, thresholds, loading } = useThreatLevels();
 
+  // Generate dynamic range labels based on thresholds
   const LEGEND_ITEMS = [
-    { label: "CRITICAL", key: "critical", color: THREAT_COLORS.critical, count: stats.critical },
-    { label: "HIGH", key: "high", color: THREAT_COLORS.high, count: stats.high },
-    { label: "MODERATE", key: "moderate", color: THREAT_COLORS.moderate, count: stats.moderate },
-    { label: "LOW", key: "low", color: THREAT_COLORS.low, count: stats.low },
-    { label: "SECURE", key: "secure", color: THREAT_COLORS.secure, count: stats.secure },
+    { 
+      label: "CRITICAL", 
+      key: "critical", 
+      color: THREAT_COLORS.critical, 
+      range: `${thresholds.high + 1}+` 
+    },
+    { 
+      label: "HIGH", 
+      key: "high", 
+      color: THREAT_COLORS.high, 
+      range: `${thresholds.moderate + 1}-${thresholds.high}` 
+    },
+    { 
+      label: "MODERATE", 
+      key: "moderate", 
+      color: THREAT_COLORS.moderate, 
+      range: `${thresholds.low + 1}-${thresholds.moderate}` 
+    },
+    { 
+      label: "LOW", 
+      key: "low", 
+      color: THREAT_COLORS.low, 
+      range: `1-${thresholds.low}` 
+    },
+    { 
+      label: "SECURE", 
+      key: "secure", 
+      color: THREAT_COLORS.secure, 
+      range: "0" 
+    },
   ];
 
   const handleToggle = (level: string) => {
@@ -55,9 +92,9 @@ export default function MapLegend() {
                 : "bg-[#0F172A]/60 border-white/[0.05] hover:bg-white/[0.06] hover:border-white/[0.08]"
             }`}
           >
-            {/* Count Badge */}
+            {/* Range Badge */}
             <div
-              className={`min-w-[26px] h-[22px] rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-all ${
+              className={`min-w-[32px] h-[22px] px-1.5 rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-all ${
                 isActive ? "text-white shadow-lg" : "text-white/90"
               }`}
               style={{
@@ -65,7 +102,7 @@ export default function MapLegend() {
                 boxShadow: isActive ? `0 0 12px ${item.color}80` : "none",
               }}
             >
-              {item.count}
+              {item.range}
             </div>
             {/* Label */}
             <span

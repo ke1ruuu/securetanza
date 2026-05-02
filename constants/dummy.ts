@@ -2,7 +2,7 @@ export interface Incident {
   id: string;
   type: string;
   date: string;
-  status: "Active" | "Solved" | "Investigating" | "Pending";
+  status: "Active" | "Solved" | "Investigating" | "Pending" | "Cleared" | "Under Investigation" | "Filed in Court" | "Archived";
   severity: "High" | "Medium" | "Low";
   location: string;
   timeReported?: string;

@@ -10,14 +10,12 @@ import {
   DEFAULT_ZOOM,
   MAP_ATTR,
 } from "../../constants/map-constants";
-import { useBarangayData } from "../../hooks/useBarangayData";
 import TanzaBarangayLayer from "./tanza-geojson-layer";
 import MapMaskLayer from "./tanza-mask-layer";
 import TanzaPoliceStation from "./tanza-poi-layer";
 import MapBoundsController from "./map-bounds-controller";
 import MapFlyController from "./map-fly-controller";
 import BarangayDrawer from "./barangay-drawer";
-import HoverStatsPanel from "./hover-stats-panel";
 
 import { useMapContext } from "@/context/MapContext";
 
@@ -40,15 +38,10 @@ export default function TanzaMapRoot() {
     setSelectedBarangay: onSelectBarangay,
     flyToStation,
     onFlyToStationComplete,
-    hotspotMonth,
-    hotspotYear,
   } = useMapContext();
   const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [clickedBarangay, setClickedBarangay] = useState<string | null>(null);
-
-  // Use real barangay data
-  const { data: barangayData, loading: barangayLoading } = useBarangayData(clickedBarangay);
 
   useEffect(() => {
     if (geoJsonData) {
@@ -113,12 +106,9 @@ export default function TanzaMapRoot() {
       <BarangayDrawer
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
-        data={barangayData}
-        loading={barangayLoading}
+        barangayName={clickedBarangay}
         onMoreInfo={handleMoreInfo}
       />
-
-      <HoverStatsPanel />
     </div>
   );
 }

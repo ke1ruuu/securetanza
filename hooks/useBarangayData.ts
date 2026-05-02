@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes, fetchCrimeStats, transformCrimeToIncident } from '@/lib/api'
 import { BarangayData } from '@/constants/dummy'
+import { useMapContext } from '@/context/MapContext'
 
 export function useBarangayData(barangayName: string | null) {
+  const { selectedYear } = useMapContext()
   const [data, setData] = useState<BarangayData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -13,6 +15,12 @@ export function useBarangayData(barangayName: string | null) {
       return
     }
 
+    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
+    if (selectedYear === null) {
+      console.log('⏳ BarangayData: Waiting for selectedYear to be set...')
+      return
+    }
+
     async function loadBarangayData() {
       try {
         setLoading(true)
@@ -20,8 +28,15 @@ export function useBarangayData(barangayName: string | null) {
 
         // Fetch barangay-specific data
         const [stats, crimes] = await Promise.all([
-          fetchCrimeStats({ barangay: barangayName! }),
-          fetchCrimes({ barangay: barangayName!, limit: 5 })
+          fetchCrimeStats({ 
+            barangay: barangayName!,
+            year: selectedYear || undefined
+          }),
+          fetchCrimes({ 
+            barangay: barangayName!, 
+            year: selectedYear || undefined,
+            limit: 5 
+          })
         ])
 
         if (!stats) {
@@ -75,7 +90,7 @@ export function useBarangayData(barangayName: string | null) {
     }
 
     loadBarangayData()
-  }, [barangayName])
+  }, [barangayName, selectedYear])
 
   return { data, loading, error }
 }

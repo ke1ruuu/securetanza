@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes, fetchCrimeStats } from '@/lib/api'
+import { useMapContext } from '@/context/MapContext'
 
 interface CrimeByType {
   type: string
@@ -24,6 +25,7 @@ interface TimePatterns {
 interface Trends {
   monthlyChange: number
   resolutionRate: number
+  safetyIndex: number
   trendLevel: 'secure' | 'low' | 'moderate' | 'high' | 'critical'
   trendDirection: 'improved' | 'worsened' | 'stable'
   currentThreatLevel: 'secure' | 'low' | 'moderate' | 'high' | 'critical'
@@ -45,6 +47,7 @@ interface AnalyticsData {
 }
 
 export function useAnalyticsData(barangayName?: string): AnalyticsData {
+  const { selectedYear } = useMapContext()
   const [data, setData] = useState<AnalyticsData>({
     crimesByType: [],
     crimesByMonth: [],
@@ -56,6 +59,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
     trends: {
       monthlyChange: 0,
       resolutionRate: 0,
+      safetyIndex: 0,
       trendLevel: 'secure',
       trendDirection: 'stable',
       currentThreatLevel: 'secure',
@@ -70,32 +74,69 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
   })
 
   useEffect(() => {
+    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
+    if (selectedYear === null) {
+      console.log('⏳ Analytics: Waiting for selectedYear to be set...')
+      return
+    }
+    
     async function loadAnalyticsData() {
       try {
         setData(prev => ({ ...prev, loading: true, error: null }))
 
+        console.log('📊 Loading Analytics Data:', {
+          barangayName,
+          selectedYear,
+          timestamp: new Date().toISOString()
+        })
+
         // Fetch crime statistics and raw crime data
         const statsParams = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName } 
-          : undefined
+          ? { barangay: barangayName, year: selectedYear || undefined } 
+          : { year: selectedYear || undefined }
 
         const [stats, crimes] = await Promise.all([
           fetchCrimeStats(statsParams),
-          fetchCrimes(statsParams)
+          fetchCrimes({ 
+            barangay: statsParams?.barangay,
+            year: selectedYear || undefined
+          })
         ])
 
         if (!stats) {
           throw new Error('Failed to fetch statistics')
         }
 
-        // Process hourly distribution
+        // Process hourly distribution from timeCommitted field (not dateCommitted)
         const hourlyDistribution = Array(24).fill(0)
         crimes.forEach(crime => {
-          const hour = new Date(crime.dateCommitted).getHours()
-          hourlyDistribution[hour]++
+          // Extract hour from timeCommitted string (format: "HH:MM:SS" or "HH:MM")
+          if (crime.timeCommitted) {
+            const timeParts = crime.timeCommitted.split(':')
+            const hour = parseInt(timeParts[0], 10)
+            if (!isNaN(hour) && hour >= 0 && hour < 24) {
+              hourlyDistribution[hour]++
+            }
+          }
         })
 
         const peakHour = hourlyDistribution.indexOf(Math.max(...hourlyDistribution))
+
+        console.log('📊 Analytics Data Loaded:', {
+          barangayName,
+          selectedYear,
+          totalCrimes: crimes.length,
+          statsActivity: stats?.activity,
+          statsActivitySum: stats?.activity.reduce((a, b) => a + b, 0),
+          crimeYears: [...new Set(crimes.map(c => new Date(c.dateCommitted).getFullYear()))],
+          hourlyDistribution,
+          peakHour,
+          sampleCrimes: crimes.slice(0, 3).map(c => ({
+            date: c.dateCommitted,
+            timeCommitted: c.timeCommitted,
+            hour: c.timeCommitted ? parseInt(c.timeCommitted.split(':')[0], 10) : null
+          }))
+        })
 
         // Threat level thresholds (matching map legend)
         const THREAT_THRESHOLDS = {
@@ -184,25 +225,50 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
           trendDirection = 'worsened' // Crime increased
         }
 
-        // Calculate resolution rate based on caseStatus
-        const resolvedCrimes = crimes.filter(crime => {
+        // Calculate resolution rate based on caseStatus (Cleared only)
+        const clearedCrimes = crimes.filter(crime => {
           if (!crime.caseStatus) return false
           const statusLower = crime.caseStatus.toLowerCase()
-          return statusLower.includes('cleared') || 
-                 statusLower.includes('solved') || 
-                 statusLower.includes('archived') || 
-                 statusLower.includes('closed')
+          return statusLower.includes('cleared')
         }).length
         
         const resolutionRate = crimes.length > 0 
-          ? Math.round((resolvedCrimes / crimes.length) * 100)
+          ? Math.round((clearedCrimes / crimes.length) * 100)
           : 0
+
+        // Calculate safety index (Cleared + Solved)
+        const clearedAndSolvedCrimes = crimes.filter(crime => {
+          if (!crime.caseStatus) return false
+          const statusLower = crime.caseStatus.toLowerCase()
+          return statusLower.includes('cleared') || statusLower.includes('solved')
+        }).length
+        
+        const safetyIndex = crimes.length > 0 
+          ? Math.round((clearedAndSolvedCrimes / crimes.length) * 100)
+          : 0
+
+        console.log('📊 Resolution & Safety Calculation:', {
+          totalCrimes: crimes.length,
+          clearedOnly: clearedCrimes,
+          clearedAndSolved: clearedAndSolvedCrimes,
+          resolutionRate: `${resolutionRate}%`,
+          safetyIndex: `${safetyIndex}%`
+        })
 
         // Process monthly data using stats.activity to match the Overview tab
         const monthlyData = stats.activity.map((count, i) => ({
           month: i + 1,
           count
         }))
+
+        console.log('📊 Setting Analytics State:', {
+          timePatterns: {
+            hourlyDistribution,
+            peakHour
+          },
+          monthlyData,
+          totalCrimesFromArray: crimes.length
+        })
 
         setData({
           crimesByType: stats.crimesByType,
@@ -215,6 +281,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
           trends: {
             monthlyChange: quarterlyTrend,
             resolutionRate,
+            safetyIndex,
             trendLevel: currentThreatLevel,
             trendDirection,
             currentThreatLevel,
@@ -239,7 +306,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
     }
 
     loadAnalyticsData()
-  }, [barangayName])
+  }, [barangayName, selectedYear])
 
   return data
 }

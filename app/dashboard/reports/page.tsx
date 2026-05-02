@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import ReportsTab from "@/components/dashboard/reports-tab";
@@ -50,7 +50,9 @@ export default function ReportsPage() {
   return (
     <ThemeProvider>
       <MapProvider>
-        <ReportsContent />
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <ReportsContent />
+        </Suspense>
       </MapProvider>
     </ThemeProvider>
   );

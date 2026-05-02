@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimeStats } from '@/lib/api'
+import { useMapContext } from '@/context/MapContext'
 
 interface CrimeHoverStats {
   totalCrimes: number
@@ -10,6 +11,7 @@ interface CrimeHoverStats {
 export function useCrimeHoverStats(barangayName: string | null) {
   const [stats, setStats] = useState<CrimeHoverStats | null>(null)
   const [loading, setLoading] = useState(false)
+  const { selectedYear } = useMapContext()
 
   useEffect(() => {
     if (!barangayName) {
@@ -21,7 +23,10 @@ export function useCrimeHoverStats(barangayName: string | null) {
       try {
         setLoading(true)
         
-        const crimeStats = await fetchCrimeStats({ barangay: barangayName })
+        const crimeStats = await fetchCrimeStats({ 
+          barangay: barangayName || undefined,
+          year: selectedYear || undefined
+        })
         
         if (crimeStats) {
           setStats({
@@ -44,7 +49,7 @@ export function useCrimeHoverStats(barangayName: string | null) {
     const timeoutId = setTimeout(loadStats, 150)
     
     return () => clearTimeout(timeoutId)
-  }, [barangayName])
+  }, [barangayName, selectedYear])
 
   return { stats, loading }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes } from '@/lib/api'
+import { useMapContext } from '@/context/MapContext'
 
 interface CrimeMatrixData {
   crimeType: string
@@ -9,30 +10,30 @@ interface CrimeMatrixData {
 export function useCrimeMatrix(barangayName?: string) {
   const [matrixData, setMatrixData] = useState<CrimeMatrixData[]>([])
   const [loading, setLoading] = useState(true)
+  const { selectedYear } = useMapContext()
 
   useEffect(() => {
+    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
+    if (selectedYear === null) {
+      console.log('⏳ CrimeMatrix: Waiting for selectedYear to be set...')
+      return
+    }
+    
     async function loadMatrixData() {
       try {
         setLoading(true)
 
         const params = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName } 
-          : undefined
+          ? { barangay: barangayName, year: selectedYear } 
+          : { year: selectedYear }
 
         const crimes = await fetchCrimes(params)
 
-        // Get current year
-        const currentYear = new Date().getFullYear()
-
-        // Group crimes by type and month
+        // Group crimes by type and month (already filtered by year from API)
         const crimeTypeMap = new Map<string, number[]>()
 
         crimes.forEach(crime => {
           const crimeDate = new Date(crime.dateCommitted)
-          
-          // Only include crimes from current year
-          if (crimeDate.getFullYear() !== currentYear) return
-
           const month = crimeDate.getMonth() // 0-11
           const type = crime.incidentType
 
@@ -67,7 +68,7 @@ export function useCrimeMatrix(barangayName?: string) {
     }
 
     loadMatrixData()
-  }, [barangayName])
+  }, [barangayName, selectedYear])
 
   return { matrixData, loading }
 }

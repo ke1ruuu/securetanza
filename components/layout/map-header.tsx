@@ -7,6 +7,7 @@ import { Settings, User, Upload } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import UploadModal from "./upload-modal";
+import YearSelector from "./year-selector";
 
 interface MapHeaderProps {
   isVisible: boolean;
@@ -18,6 +19,7 @@ const navItems = [
   { id: "incidents", label: "Cases", path: "/dashboard/cases" },
   { id: "analytics", label: "Analytics", path: "/dashboard/analytics" },
   { id: "reports", label: "Reports", path: "/dashboard/reports" },
+  { id: "upload-logs", label: "Upload Logs", path: "/dashboard/upload-logs" },
 ];
 
 export default function MapHeader({ isVisible }: MapHeaderProps) {
@@ -116,7 +118,8 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
         </nav>
 
         {/* ── Right Actions ── */}
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
+          <YearSelector />
           <button
             onClick={() => setShowUploadModal(true)}
             className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 hover:border-[#0EA5E9]/30 transition-all duration-200 cursor-pointer"

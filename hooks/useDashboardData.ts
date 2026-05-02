@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes, fetchCrimeStats, transformCrimeToIncident, CrimeStats } from '@/lib/api'
 import { Incident } from '@/constants/dummy'
+import { useMapContext } from '@/context/MapContext'
 
 interface DashboardData {
   stats: {
@@ -18,6 +19,7 @@ interface DashboardData {
 }
 
 export function useDashboardData(barangayName?: string) {
+  const { selectedYear } = useMapContext()
   const [data, setData] = useState<DashboardData>({
     stats: {
       totalCrimes: 0,
@@ -34,19 +36,26 @@ export function useDashboardData(barangayName?: string) {
   })
 
   useEffect(() => {
+    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
+    if (selectedYear === null) {
+      console.log('⏳ Dashboard: Waiting for selectedYear to be set...')
+      return
+    }
+    
     async function loadData() {
       try {
         setData(prev => ({ ...prev, loading: true, error: null }))
 
         // Fetch statistics
         const statsParams = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName } 
-          : undefined
+          ? { barangay: barangayName, year: selectedYear || undefined } 
+          : { year: selectedYear || undefined }
 
         const [stats, crimes] = await Promise.all([
           fetchCrimeStats(statsParams),
           fetchCrimes({ 
             barangay: statsParams?.barangay, 
+            year: selectedYear || undefined,
             limit: 50 
           })
         ])
@@ -87,7 +96,7 @@ export function useDashboardData(barangayName?: string) {
     }
 
     loadData()
-  }, [barangayName])
+  }, [barangayName, selectedYear])
 
   return data
 }

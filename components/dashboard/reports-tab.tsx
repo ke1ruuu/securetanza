@@ -26,6 +26,7 @@ interface Report {
 
 export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const { theme } = useTheme();
+  const { selectedYear } = useMapContext();
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,8 +38,11 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
       try {
         setLoading(true);
 
-        // Fetch crimes for the barangay
-        const params = isGeneralDashboard ? {} : { barangay: barangayName };
+        // Fetch crimes for the barangay with year filter
+        const params: any = isGeneralDashboard ? {} : { barangay: barangayName };
+        if (selectedYear) {
+          params.year = selectedYear;
+        }
         const crimes = await fetchCrimes(params);
 
         // Generate monthly reports
@@ -107,7 +111,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
     }
 
     generateReports();
-  }, [barangayName, isGeneralDashboard]);
+  }, [barangayName, isGeneralDashboard, selectedYear]);
 
   if (loading) {
     return (

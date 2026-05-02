@@ -411,16 +411,16 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                           Resolution Rate Calculation
                         </h4>
                         <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
-                          Percentage of cases that have been resolved:
+                          Percentage of cases that have been cleared:
                         </p>
                         <div className={`text-xs font-mono p-2 rounded ${theme === "dark" ? "bg-slate-900 text-emerald-400" : "bg-slate-100 text-emerald-600"}`}>
                           (Cleared Cases / Total Cases) × 100
                         </div>
                         <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                          <strong>Cleared statuses:</strong> Cleared, Solved, Archived, Closed
+                          <strong>Cleared status:</strong> Cases marked as "Cleared" only
                         </p>
                         <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                          <strong>Example:</strong> 36 cleared out of 38 total = 95%
+                          <strong>Example:</strong> 20 cleared out of 38 total = 53%
                         </p>
                       </div>
                     </HoverCardContent>
@@ -469,10 +469,10 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                           Safety Index Calculation
                         </h4>
                         <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
-                          Overall safety score based on case resolution:
+                          Overall safety score based on cleared and solved cases:
                         </p>
                         <div className={`text-xs font-mono p-2 rounded ${theme === "dark" ? "bg-slate-900 text-amber-400" : "bg-slate-100 text-amber-600"}`}>
-                          (Cleared Cases / Total Cases) × 100
+                          (Cleared + Solved Cases / Total Cases) × 100
                         </div>
                         <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
                           <strong>Interpretation:</strong>
@@ -490,7 +490,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                 <p
                   className={`text-2xl font-black ${theme === "dark" ? "text-white" : "text-slate-900"}`}
                 >
-                  {trends.resolutionRate}%
+                  {trends.safetyIndex}%
                 </p>
                 <p className="text-xs text-slate-500 mt-1">Overall safety</p>
               </div>

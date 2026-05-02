@@ -8,8 +8,15 @@ export async function GET(request: NextRequest) {
     const startDateCommitted = searchParams.get('startDateCommitted')
     const endDateCommitted = searchParams.get('endDateCommitted')
     const hour = searchParams.get('hour') // Optional hour filter (0-23)
+    const year = searchParams.get('year') // Optional year filter
 
-    console.log('🔍 API Request:', { startDateCommitted, endDateCommitted, hour })
+    console.log('🔍 Barangay Counts API Request:', { 
+      startDateCommitted, 
+      endDateCommitted, 
+      hour, 
+      year,
+      url: request.url 
+    })
 
     // Build where clause for date filtering
     const where: any = {}
@@ -19,6 +26,24 @@ export async function GET(request: NextRequest) {
         gte: new Date(startDateCommitted),
         lte: new Date(endDateCommitted)
       }
+      console.log('📅 Using date range filter:', where.dateCommitted)
+    } else if (year) {
+      // Filter by year if specified and no date range provided
+      const yearNum = parseInt(year)
+      const startOfYear = new Date(yearNum, 0, 1)
+      const endOfYear = new Date(yearNum, 11, 31, 23, 59, 59, 999)
+      
+      where.dateCommitted = {
+        gte: startOfYear,
+        lte: endOfYear
+      }
+      console.log('📅 Using year filter:', { 
+        year: yearNum, 
+        startOfYear: startOfYear.toISOString(), 
+        endOfYear: endOfYear.toISOString() 
+      })
+    } else {
+      console.log('⚠️ No date filter applied - fetching ALL crimes')
     }
 
     // If hour is specified, we need to filter by timeCommitted field
@@ -42,10 +67,23 @@ export async function GET(request: NextRequest) {
       crimes = crimes.filter(crime => {
         const timeParts = crime.timeCommitted.split(':')
         const crimeHour = parseInt(timeParts[0])
-        return crimeHour === targetHour
+        const matches = crimeHour === targetHour
+        if (!matches && crimeHour >= 0 && crimeHour < 24) {
+          console.log(`⏰ Crime at hour ${crimeHour} (${crime.timeCommitted}) doesn't match target hour ${targetHour}`)
+        }
+        return matches
       })
 
       console.log(`⏰ After filtering by hour ${targetHour}: ${crimes.length} crimes`)
+      
+      // Log ALL crimes that matched for verification
+      if (crimes.length > 0) {
+        console.log(`✅ ALL ${crimes.length} crimes at hour ${targetHour}:`, crimes.map(c => ({
+          barangay: c.barangay,
+          time: c.timeCommitted,
+          date: new Date(c.dateCommitted).toLocaleDateString()
+        })))
+      }
 
       // Count by barangay manually
       const counts: Record<string, number> = {}
@@ -56,7 +94,8 @@ export async function GET(request: NextRequest) {
       const totalCrimes = crimes.length
       const barangayCount = Object.keys(counts).length
 
-      console.log('✅ Barangay counts:', counts)
+      console.log('✅ Barangay counts by barangay:', counts)
+      console.log('✅ Total crimes:', totalCrimes, 'Barangays affected:', barangayCount)
 
       return NextResponse.json({
         success: true,
@@ -90,6 +129,13 @@ export async function GET(request: NextRequest) {
 
     // Get total crime count for statistics
     const totalCrimes = await prisma.crimeIncident.count({ where })
+
+    console.log('✅ Barangay Counts Result:', {
+      totalCrimes,
+      barangayCount: barangayCounts.length,
+      counts,
+      whereClause: where
+    })
 
     return NextResponse.json({
       success: true,

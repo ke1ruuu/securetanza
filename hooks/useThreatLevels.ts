@@ -16,12 +16,36 @@ export interface ThreatThresholds {
   critical: number
 }
 
-// Fixed thresholds based on crime data analysis to ensure consistent coloring
-const FIXED_THRESHOLDS: ThreatThresholds = {
-  low: 2,      // 1-2 crimes = Low threat
-  moderate: 5,  // 3-5 crimes = Moderate threat  
-  high: 10,     // 6-10 crimes = High threat
-  critical: 15  // 11+ crimes = Critical threat
+// Calculate dynamic thresholds based on quartiles of actual crime data
+function calculateDynamicThresholds(crimeCounts: number[]): ThreatThresholds {
+  // Filter out zeros and sort
+  const nonZeroCounts = crimeCounts.filter(count => count > 0).sort((a, b) => a - b);
+  
+  if (nonZeroCounts.length === 0) {
+    // Fallback to fixed thresholds if no data
+    return {
+      low: 2,
+      moderate: 5,
+      high: 10,
+      critical: 15
+    };
+  }
+  
+  // Calculate quartiles (Q1, Q2/median, Q3)
+  const q1Index = Math.floor(nonZeroCounts.length * 0.25);
+  const q2Index = Math.floor(nonZeroCounts.length * 0.50);
+  const q3Index = Math.floor(nonZeroCounts.length * 0.75);
+  
+  const q1 = nonZeroCounts[q1Index] || 1;
+  const q2 = nonZeroCounts[q2Index] || 2;
+  const q3 = nonZeroCounts[q3Index] || 5;
+  
+  return {
+    low: Math.ceil(q1),           // 0-25th percentile
+    moderate: Math.ceil(q2),      // 25th-50th percentile
+    high: Math.ceil(q3),          // 50th-75th percentile
+    critical: Math.ceil(q3) + 1   // 75th+ percentile
+  };
 }
 
 export function useThreatLevels() {
@@ -32,21 +56,62 @@ export function useThreatLevels() {
     high: 0,
     critical: 0
   })
+  const [thresholds, setThresholds] = useState<ThreatThresholds>({
+    low: 2,
+    moderate: 5,
+    high: 10,
+    critical: 15
+  })
   const [barangayCrimeCounts, setBarangayCrimeCounts] = useState<Record<string, number>>({})
   const [filteredBarangayCrimeCounts, setFilteredBarangayCrimeCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   
-  const { timeFilterDate, timeFilterHour, isTimeFilterActive } = useMapContext()
+  const { timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear } = useMapContext()
 
-  // Fetch base crime data (all crimes)
+  // Fetch base crime data (all crimes or filtered by year)
   useEffect(() => {
+    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
+    if (selectedYear === null) {
+      console.log('⏳ Waiting for selectedYear to be set...')
+      return
+    }
+    
     async function loadBaseThreatData() {
       try {
         setLoading(true)
         
-        // Fetch all barangay crime counts (no filter)
-        const response = await fetch('/api/crimes/barangay-counts')
+        console.log('🎯 useThreatLevels Effect Triggered:', {
+          selectedYear,
+          selectedYearType: typeof selectedYear,
+          timestamp: new Date().toISOString()
+        })
+        
+        // Build query params
+        const params = new URLSearchParams()
+        if (selectedYear) {
+          params.set('year', selectedYear.toString())
+        }
+        
+        console.log('🗺️ Fetching Threat Levels:', {
+          selectedYear,
+          hasYear: !!selectedYear,
+          url: `/api/crimes/barangay-counts?${params}`,
+          paramsString: params.toString(),
+          timestamp: new Date().toISOString()
+        })
+        
+        // Fetch all barangay crime counts (with optional year filter)
+        const response = await fetch(`/api/crimes/barangay-counts?${params}`)
         const result = await response.json()
+        
+        console.log('🗺️ Threat Levels Response:', {
+          selectedYear,
+          success: result.success,
+          totalCrimes: result.data?.totalCrimes,
+          barangayCount: result.data?.barangayCount,
+          barangayCounts: result.data?.barangayCounts,
+          timestamp: new Date().toISOString()
+        })
         
         if (!result.success) {
           throw new Error(result.error || 'Failed to fetch barangay counts')
@@ -55,7 +120,20 @@ export function useThreatLevels() {
         const { barangayCounts } = result.data
         setBarangayCrimeCounts(barangayCounts)
         
-        // Calculate threat level distribution using fixed thresholds
+        // Calculate dynamic thresholds based on actual data distribution
+        const crimeCounts = Object.values(barangayCounts) as number[];
+        const dynamicThresholds = calculateDynamicThresholds(crimeCounts);
+        setThresholds(dynamicThresholds);
+        
+        console.log('📊 Dynamic Thresholds Calculated:', {
+          low: `1-${dynamicThresholds.low}`,
+          moderate: `${dynamicThresholds.low + 1}-${dynamicThresholds.moderate}`,
+          high: `${dynamicThresholds.moderate + 1}-${dynamicThresholds.high}`,
+          critical: `${dynamicThresholds.high + 1}+`,
+          dataPoints: crimeCounts.length
+        });
+        
+        // Calculate threat level distribution using dynamic thresholds
         const threatStats = {
           secure: 0,
           low: 0,
@@ -65,7 +143,7 @@ export function useThreatLevels() {
         }
         
         Object.values(barangayCounts).forEach(count => {
-          const level = getThreatLevelFromCount(count as number, FIXED_THRESHOLDS)
+          const level = getThreatLevelFromCount(count as number, dynamicThresholds)
           threatStats[level]++
         })
         
@@ -83,7 +161,7 @@ export function useThreatLevels() {
     }
 
     loadBaseThreatData()
-  }, [])
+  }, [selectedYear])
 
   // Fetch filtered crime data when time filter is active
   useEffect(() => {
@@ -97,30 +175,32 @@ export function useThreatLevels() {
       try {
         const params = new URLSearchParams()
         
-        // Use the selected date for filtering
+        // Use the EXACT selected date, not a 60-day range
+        // This ensures we only show crimes from the specific date being viewed
         const startDate = new Date(timeFilterDate)
-        const endDate = new Date(timeFilterDate)
+        startDate.setHours(0, 0, 0, 0)
         
-        if (timeFilterHour !== null) {
-          // Filter by specific hour - set date range to that day
-          startDate.setHours(0, 0, 0, 0)
-          endDate.setHours(23, 59, 59, 999)
-          
-          // Pass hour as a parameter to the API
-          params.set('hour', timeFilterHour.toString())
-        } else {
-          // Filter by entire day
-          startDate.setHours(0, 0, 0, 0)
-          endDate.setHours(23, 59, 59, 999)
-        }
+        const endDate = new Date(timeFilterDate)
+        endDate.setHours(23, 59, 59, 999)
         
         // Convert to ISO string for API
         params.set('startDateCommitted', startDate.toISOString())
         params.set('endDateCommitted', endDate.toISOString())
         
-        console.log('🔍 Fetching filtered crimes:', {
+        // Pass hour as a parameter to the API
+        if (timeFilterHour !== null) {
+          params.set('hour', timeFilterHour.toString())
+        }
+        
+        // Add year filter if selected
+        if (selectedYear) {
+          params.set('year', selectedYear.toString())
+        }
+        
+        console.log('🔍 Fetching filtered crimes for SPECIFIC DATE:', {
           date: timeFilterDate.toLocaleDateString(),
           hour: timeFilterHour,
+          year: selectedYear,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString()
         })
@@ -128,7 +208,11 @@ export function useThreatLevels() {
         const response = await fetch(`/api/crimes/barangay-counts?${params}`)
         const result = await response.json()
         
-        console.log('📊 Filtered crime counts result:', result.data)
+        console.log('📊 Filtered crime counts result:', {
+          totalCrimes: result.data?.totalCrimes,
+          barangayCount: result.data?.barangayCount,
+          barangayCounts: result.data?.barangayCounts
+        })
         
         if (result.success) {
           setFilteredBarangayCrimeCounts(result.data.barangayCounts)
@@ -139,11 +223,11 @@ export function useThreatLevels() {
     }
 
     loadFilteredThreatData()
-  }, [timeFilterDate, timeFilterHour, isTimeFilterActive])
+  }, [timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear])
 
   return { 
     stats, 
-    thresholds: FIXED_THRESHOLDS, 
+    thresholds, 
     barangayCrimeCounts, 
     filteredBarangayCrimeCounts,
     loading 

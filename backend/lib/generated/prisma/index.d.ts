@@ -23,6 +23,11 @@ export type CrimeIncident = $Result.DefaultSelection<Prisma.$CrimeIncidentPayloa
  * 
  */
 export type Barangay = $Result.DefaultSelection<Prisma.$BarangayPayload>
+/**
+ * Model UploadLog
+ * 
+ */
+export type UploadLog = $Result.DefaultSelection<Prisma.$UploadLogPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -164,6 +169,16 @@ export class PrismaClient<
     * ```
     */
   get barangay(): Prisma.BarangayDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.uploadLog`: Exposes CRUD operations for the **UploadLog** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UploadLogs
+    * const uploadLogs = await prisma.uploadLog.findMany()
+    * ```
+    */
+  get uploadLog(): Prisma.UploadLogDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -599,7 +614,8 @@ export namespace Prisma {
 
   export const ModelName: {
     CrimeIncident: 'CrimeIncident',
-    Barangay: 'Barangay'
+    Barangay: 'Barangay',
+    UploadLog: 'UploadLog'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -615,7 +631,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "crimeIncident" | "barangay"
+      modelProps: "crimeIncident" | "barangay" | "uploadLog"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -767,6 +783,80 @@ export namespace Prisma {
           }
         }
       }
+      UploadLog: {
+        payload: Prisma.$UploadLogPayload<ExtArgs>
+        fields: Prisma.UploadLogFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UploadLogFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UploadLogFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>
+          }
+          findFirst: {
+            args: Prisma.UploadLogFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UploadLogFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>
+          }
+          findMany: {
+            args: Prisma.UploadLogFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>[]
+          }
+          create: {
+            args: Prisma.UploadLogCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>
+          }
+          createMany: {
+            args: Prisma.UploadLogCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UploadLogCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>[]
+          }
+          delete: {
+            args: Prisma.UploadLogDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>
+          }
+          update: {
+            args: Prisma.UploadLogUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>
+          }
+          deleteMany: {
+            args: Prisma.UploadLogDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UploadLogUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UploadLogUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>[]
+          }
+          upsert: {
+            args: Prisma.UploadLogUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UploadLogPayload>
+          }
+          aggregate: {
+            args: Prisma.UploadLogAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUploadLog>
+          }
+          groupBy: {
+            args: Prisma.UploadLogGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UploadLogGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UploadLogCountArgs<ExtArgs>
+            result: $Utils.Optional<UploadLogCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -877,6 +967,7 @@ export namespace Prisma {
   export type GlobalOmitConfig = {
     crimeIncident?: CrimeIncidentOmit
     barangay?: BarangayOmit
+    uploadLog?: UploadLogOmit
   }
 
   /* Types for Logging */
@@ -1021,6 +1112,7 @@ export namespace Prisma {
     suspectEGOPosition: string | null
     suspectEGOClass: string | null
     suspectCount: number | null
+    suspectArrested: boolean | null
     victimIsEGO: boolean | null
     victimEGOPosition: string | null
     victimEGOClass: string | null
@@ -1072,6 +1164,7 @@ export namespace Prisma {
     suspectEGOPosition: string | null
     suspectEGOClass: string | null
     suspectCount: number | null
+    suspectArrested: boolean | null
     victimIsEGO: boolean | null
     victimEGOPosition: string | null
     victimEGOClass: string | null
@@ -1123,6 +1216,7 @@ export namespace Prisma {
     suspectEGOPosition: number
     suspectEGOClass: number
     suspectCount: number
+    suspectArrested: number
     victimIsEGO: number
     victimEGOPosition: number
     victimEGOClass: number
@@ -1190,6 +1284,7 @@ export namespace Prisma {
     suspectEGOPosition?: true
     suspectEGOClass?: true
     suspectCount?: true
+    suspectArrested?: true
     victimIsEGO?: true
     victimEGOPosition?: true
     victimEGOClass?: true
@@ -1241,6 +1336,7 @@ export namespace Prisma {
     suspectEGOPosition?: true
     suspectEGOClass?: true
     suspectCount?: true
+    suspectArrested?: true
     victimIsEGO?: true
     victimEGOPosition?: true
     victimEGOClass?: true
@@ -1292,6 +1388,7 @@ export namespace Prisma {
     suspectEGOPosition?: true
     suspectEGOClass?: true
     suspectCount?: true
+    suspectArrested?: true
     victimIsEGO?: true
     victimEGOPosition?: true
     victimEGOClass?: true
@@ -1430,6 +1527,7 @@ export namespace Prisma {
     suspectEGOPosition: string | null
     suspectEGOClass: string | null
     suspectCount: number | null
+    suspectArrested: boolean | null
     victimIsEGO: boolean
     victimEGOPosition: string | null
     victimEGOClass: string | null
@@ -1500,6 +1598,7 @@ export namespace Prisma {
     suspectEGOPosition?: boolean
     suspectEGOClass?: boolean
     suspectCount?: boolean
+    suspectArrested?: boolean
     victimIsEGO?: boolean
     victimEGOPosition?: boolean
     victimEGOClass?: boolean
@@ -1551,6 +1650,7 @@ export namespace Prisma {
     suspectEGOPosition?: boolean
     suspectEGOClass?: boolean
     suspectCount?: boolean
+    suspectArrested?: boolean
     victimIsEGO?: boolean
     victimEGOPosition?: boolean
     victimEGOClass?: boolean
@@ -1602,6 +1702,7 @@ export namespace Prisma {
     suspectEGOPosition?: boolean
     suspectEGOClass?: boolean
     suspectCount?: boolean
+    suspectArrested?: boolean
     victimIsEGO?: boolean
     victimEGOPosition?: boolean
     victimEGOClass?: boolean
@@ -1653,6 +1754,7 @@ export namespace Prisma {
     suspectEGOPosition?: boolean
     suspectEGOClass?: boolean
     suspectCount?: boolean
+    suspectArrested?: boolean
     victimIsEGO?: boolean
     victimEGOPosition?: boolean
     victimEGOClass?: boolean
@@ -1666,7 +1768,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type CrimeIncidentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "blotterNo" | "dateEncoded" | "pro" | "ppo" | "stn" | "pcp" | "region" | "province" | "municipal" | "barangay" | "street" | "typeOfPlace" | "dateReported" | "timeReported" | "dateCommitted" | "timeCommitted" | "incidentType" | "isCrime" | "modeReporting" | "stageOfFelony" | "offense" | "offenseType" | "section" | "modus" | "suspectMotive" | "suspectSubMotive" | "heinous" | "sensational" | "threatGrp" | "grpAffiliation" | "incidentTypeThreatGrp" | "mrs" | "suspectIsEGO" | "suspectEGOPosition" | "suspectEGOClass" | "suspectCount" | "victimIsEGO" | "victimEGOPosition" | "victimEGOClass" | "victimCount" | "caseStatus" | "investigator" | "headInves" | "latitude" | "longitude" | "createdAt" | "updatedAt", ExtArgs["result"]["crimeIncident"]>
+  export type CrimeIncidentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "blotterNo" | "dateEncoded" | "pro" | "ppo" | "stn" | "pcp" | "region" | "province" | "municipal" | "barangay" | "street" | "typeOfPlace" | "dateReported" | "timeReported" | "dateCommitted" | "timeCommitted" | "incidentType" | "isCrime" | "modeReporting" | "stageOfFelony" | "offense" | "offenseType" | "section" | "modus" | "suspectMotive" | "suspectSubMotive" | "heinous" | "sensational" | "threatGrp" | "grpAffiliation" | "incidentTypeThreatGrp" | "mrs" | "suspectIsEGO" | "suspectEGOPosition" | "suspectEGOClass" | "suspectCount" | "suspectArrested" | "victimIsEGO" | "victimEGOPosition" | "victimEGOClass" | "victimCount" | "caseStatus" | "investigator" | "headInves" | "latitude" | "longitude" | "createdAt" | "updatedAt", ExtArgs["result"]["crimeIncident"]>
 
   export type $CrimeIncidentPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "CrimeIncident"
@@ -1709,6 +1811,7 @@ export namespace Prisma {
       suspectEGOPosition: string | null
       suspectEGOClass: string | null
       suspectCount: number | null
+      suspectArrested: boolean | null
       victimIsEGO: boolean
       victimEGOPosition: string | null
       victimEGOClass: string | null
@@ -2180,6 +2283,7 @@ export namespace Prisma {
     readonly suspectEGOPosition: FieldRef<"CrimeIncident", 'String'>
     readonly suspectEGOClass: FieldRef<"CrimeIncident", 'String'>
     readonly suspectCount: FieldRef<"CrimeIncident", 'Int'>
+    readonly suspectArrested: FieldRef<"CrimeIncident", 'Boolean'>
     readonly victimIsEGO: FieldRef<"CrimeIncident", 'Boolean'>
     readonly victimEGOPosition: FieldRef<"CrimeIncident", 'String'>
     readonly victimEGOClass: FieldRef<"CrimeIncident", 'String'>
@@ -3623,6 +3727,1083 @@ export namespace Prisma {
 
 
   /**
+   * Model UploadLog
+   */
+
+  export type AggregateUploadLog = {
+    _count: UploadLogCountAggregateOutputType | null
+    _avg: UploadLogAvgAggregateOutputType | null
+    _sum: UploadLogSumAggregateOutputType | null
+    _min: UploadLogMinAggregateOutputType | null
+    _max: UploadLogMaxAggregateOutputType | null
+  }
+
+  export type UploadLogAvgAggregateOutputType = {
+    fileSize: number | null
+    recordsImported: number | null
+  }
+
+  export type UploadLogSumAggregateOutputType = {
+    fileSize: number | null
+    recordsImported: number | null
+  }
+
+  export type UploadLogMinAggregateOutputType = {
+    id: string | null
+    fileName: string | null
+    fileSize: number | null
+    recordsImported: number | null
+    status: string | null
+    errorMessage: string | null
+    uploadedBy: string | null
+    uploadedAt: Date | null
+  }
+
+  export type UploadLogMaxAggregateOutputType = {
+    id: string | null
+    fileName: string | null
+    fileSize: number | null
+    recordsImported: number | null
+    status: string | null
+    errorMessage: string | null
+    uploadedBy: string | null
+    uploadedAt: Date | null
+  }
+
+  export type UploadLogCountAggregateOutputType = {
+    id: number
+    fileName: number
+    fileSize: number
+    recordsImported: number
+    status: number
+    errorMessage: number
+    uploadedBy: number
+    uploadedAt: number
+    _all: number
+  }
+
+
+  export type UploadLogAvgAggregateInputType = {
+    fileSize?: true
+    recordsImported?: true
+  }
+
+  export type UploadLogSumAggregateInputType = {
+    fileSize?: true
+    recordsImported?: true
+  }
+
+  export type UploadLogMinAggregateInputType = {
+    id?: true
+    fileName?: true
+    fileSize?: true
+    recordsImported?: true
+    status?: true
+    errorMessage?: true
+    uploadedBy?: true
+    uploadedAt?: true
+  }
+
+  export type UploadLogMaxAggregateInputType = {
+    id?: true
+    fileName?: true
+    fileSize?: true
+    recordsImported?: true
+    status?: true
+    errorMessage?: true
+    uploadedBy?: true
+    uploadedAt?: true
+  }
+
+  export type UploadLogCountAggregateInputType = {
+    id?: true
+    fileName?: true
+    fileSize?: true
+    recordsImported?: true
+    status?: true
+    errorMessage?: true
+    uploadedBy?: true
+    uploadedAt?: true
+    _all?: true
+  }
+
+  export type UploadLogAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UploadLog to aggregate.
+     */
+    where?: UploadLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UploadLogs to fetch.
+     */
+    orderBy?: UploadLogOrderByWithRelationInput | UploadLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UploadLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UploadLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UploadLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UploadLogs
+    **/
+    _count?: true | UploadLogCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UploadLogAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UploadLogSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UploadLogMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UploadLogMaxAggregateInputType
+  }
+
+  export type GetUploadLogAggregateType<T extends UploadLogAggregateArgs> = {
+        [P in keyof T & keyof AggregateUploadLog]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUploadLog[P]>
+      : GetScalarType<T[P], AggregateUploadLog[P]>
+  }
+
+
+
+
+  export type UploadLogGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UploadLogWhereInput
+    orderBy?: UploadLogOrderByWithAggregationInput | UploadLogOrderByWithAggregationInput[]
+    by: UploadLogScalarFieldEnum[] | UploadLogScalarFieldEnum
+    having?: UploadLogScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UploadLogCountAggregateInputType | true
+    _avg?: UploadLogAvgAggregateInputType
+    _sum?: UploadLogSumAggregateInputType
+    _min?: UploadLogMinAggregateInputType
+    _max?: UploadLogMaxAggregateInputType
+  }
+
+  export type UploadLogGroupByOutputType = {
+    id: string
+    fileName: string
+    fileSize: number
+    recordsImported: number
+    status: string
+    errorMessage: string | null
+    uploadedBy: string | null
+    uploadedAt: Date
+    _count: UploadLogCountAggregateOutputType | null
+    _avg: UploadLogAvgAggregateOutputType | null
+    _sum: UploadLogSumAggregateOutputType | null
+    _min: UploadLogMinAggregateOutputType | null
+    _max: UploadLogMaxAggregateOutputType | null
+  }
+
+  type GetUploadLogGroupByPayload<T extends UploadLogGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UploadLogGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UploadLogGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UploadLogGroupByOutputType[P]>
+            : GetScalarType<T[P], UploadLogGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UploadLogSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    fileSize?: boolean
+    recordsImported?: boolean
+    status?: boolean
+    errorMessage?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+  }, ExtArgs["result"]["uploadLog"]>
+
+  export type UploadLogSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    fileSize?: boolean
+    recordsImported?: boolean
+    status?: boolean
+    errorMessage?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+  }, ExtArgs["result"]["uploadLog"]>
+
+  export type UploadLogSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    fileName?: boolean
+    fileSize?: boolean
+    recordsImported?: boolean
+    status?: boolean
+    errorMessage?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+  }, ExtArgs["result"]["uploadLog"]>
+
+  export type UploadLogSelectScalar = {
+    id?: boolean
+    fileName?: boolean
+    fileSize?: boolean
+    recordsImported?: boolean
+    status?: boolean
+    errorMessage?: boolean
+    uploadedBy?: boolean
+    uploadedAt?: boolean
+  }
+
+  export type UploadLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "fileName" | "fileSize" | "recordsImported" | "status" | "errorMessage" | "uploadedBy" | "uploadedAt", ExtArgs["result"]["uploadLog"]>
+
+  export type $UploadLogPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UploadLog"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      fileName: string
+      fileSize: number
+      recordsImported: number
+      status: string
+      errorMessage: string | null
+      uploadedBy: string | null
+      uploadedAt: Date
+    }, ExtArgs["result"]["uploadLog"]>
+    composites: {}
+  }
+
+  type UploadLogGetPayload<S extends boolean | null | undefined | UploadLogDefaultArgs> = $Result.GetResult<Prisma.$UploadLogPayload, S>
+
+  type UploadLogCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UploadLogFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UploadLogCountAggregateInputType | true
+    }
+
+  export interface UploadLogDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UploadLog'], meta: { name: 'UploadLog' } }
+    /**
+     * Find zero or one UploadLog that matches the filter.
+     * @param {UploadLogFindUniqueArgs} args - Arguments to find a UploadLog
+     * @example
+     * // Get one UploadLog
+     * const uploadLog = await prisma.uploadLog.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UploadLogFindUniqueArgs>(args: SelectSubset<T, UploadLogFindUniqueArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UploadLog that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UploadLogFindUniqueOrThrowArgs} args - Arguments to find a UploadLog
+     * @example
+     * // Get one UploadLog
+     * const uploadLog = await prisma.uploadLog.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UploadLogFindUniqueOrThrowArgs>(args: SelectSubset<T, UploadLogFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UploadLog that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogFindFirstArgs} args - Arguments to find a UploadLog
+     * @example
+     * // Get one UploadLog
+     * const uploadLog = await prisma.uploadLog.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UploadLogFindFirstArgs>(args?: SelectSubset<T, UploadLogFindFirstArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UploadLog that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogFindFirstOrThrowArgs} args - Arguments to find a UploadLog
+     * @example
+     * // Get one UploadLog
+     * const uploadLog = await prisma.uploadLog.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UploadLogFindFirstOrThrowArgs>(args?: SelectSubset<T, UploadLogFindFirstOrThrowArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UploadLogs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UploadLogs
+     * const uploadLogs = await prisma.uploadLog.findMany()
+     * 
+     * // Get first 10 UploadLogs
+     * const uploadLogs = await prisma.uploadLog.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const uploadLogWithIdOnly = await prisma.uploadLog.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UploadLogFindManyArgs>(args?: SelectSubset<T, UploadLogFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UploadLog.
+     * @param {UploadLogCreateArgs} args - Arguments to create a UploadLog.
+     * @example
+     * // Create one UploadLog
+     * const UploadLog = await prisma.uploadLog.create({
+     *   data: {
+     *     // ... data to create a UploadLog
+     *   }
+     * })
+     * 
+     */
+    create<T extends UploadLogCreateArgs>(args: SelectSubset<T, UploadLogCreateArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UploadLogs.
+     * @param {UploadLogCreateManyArgs} args - Arguments to create many UploadLogs.
+     * @example
+     * // Create many UploadLogs
+     * const uploadLog = await prisma.uploadLog.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UploadLogCreateManyArgs>(args?: SelectSubset<T, UploadLogCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UploadLogs and returns the data saved in the database.
+     * @param {UploadLogCreateManyAndReturnArgs} args - Arguments to create many UploadLogs.
+     * @example
+     * // Create many UploadLogs
+     * const uploadLog = await prisma.uploadLog.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UploadLogs and only return the `id`
+     * const uploadLogWithIdOnly = await prisma.uploadLog.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UploadLogCreateManyAndReturnArgs>(args?: SelectSubset<T, UploadLogCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UploadLog.
+     * @param {UploadLogDeleteArgs} args - Arguments to delete one UploadLog.
+     * @example
+     * // Delete one UploadLog
+     * const UploadLog = await prisma.uploadLog.delete({
+     *   where: {
+     *     // ... filter to delete one UploadLog
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UploadLogDeleteArgs>(args: SelectSubset<T, UploadLogDeleteArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UploadLog.
+     * @param {UploadLogUpdateArgs} args - Arguments to update one UploadLog.
+     * @example
+     * // Update one UploadLog
+     * const uploadLog = await prisma.uploadLog.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UploadLogUpdateArgs>(args: SelectSubset<T, UploadLogUpdateArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UploadLogs.
+     * @param {UploadLogDeleteManyArgs} args - Arguments to filter UploadLogs to delete.
+     * @example
+     * // Delete a few UploadLogs
+     * const { count } = await prisma.uploadLog.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UploadLogDeleteManyArgs>(args?: SelectSubset<T, UploadLogDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UploadLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UploadLogs
+     * const uploadLog = await prisma.uploadLog.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UploadLogUpdateManyArgs>(args: SelectSubset<T, UploadLogUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UploadLogs and returns the data updated in the database.
+     * @param {UploadLogUpdateManyAndReturnArgs} args - Arguments to update many UploadLogs.
+     * @example
+     * // Update many UploadLogs
+     * const uploadLog = await prisma.uploadLog.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UploadLogs and only return the `id`
+     * const uploadLogWithIdOnly = await prisma.uploadLog.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UploadLogUpdateManyAndReturnArgs>(args: SelectSubset<T, UploadLogUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UploadLog.
+     * @param {UploadLogUpsertArgs} args - Arguments to update or create a UploadLog.
+     * @example
+     * // Update or create a UploadLog
+     * const uploadLog = await prisma.uploadLog.upsert({
+     *   create: {
+     *     // ... data to create a UploadLog
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UploadLog we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UploadLogUpsertArgs>(args: SelectSubset<T, UploadLogUpsertArgs<ExtArgs>>): Prisma__UploadLogClient<$Result.GetResult<Prisma.$UploadLogPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UploadLogs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogCountArgs} args - Arguments to filter UploadLogs to count.
+     * @example
+     * // Count the number of UploadLogs
+     * const count = await prisma.uploadLog.count({
+     *   where: {
+     *     // ... the filter for the UploadLogs we want to count
+     *   }
+     * })
+    **/
+    count<T extends UploadLogCountArgs>(
+      args?: Subset<T, UploadLogCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UploadLogCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UploadLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UploadLogAggregateArgs>(args: Subset<T, UploadLogAggregateArgs>): Prisma.PrismaPromise<GetUploadLogAggregateType<T>>
+
+    /**
+     * Group by UploadLog.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UploadLogGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UploadLogGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UploadLogGroupByArgs['orderBy'] }
+        : { orderBy?: UploadLogGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UploadLogGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUploadLogGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UploadLog model
+   */
+  readonly fields: UploadLogFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UploadLog.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UploadLogClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UploadLog model
+   */
+  interface UploadLogFieldRefs {
+    readonly id: FieldRef<"UploadLog", 'String'>
+    readonly fileName: FieldRef<"UploadLog", 'String'>
+    readonly fileSize: FieldRef<"UploadLog", 'Int'>
+    readonly recordsImported: FieldRef<"UploadLog", 'Int'>
+    readonly status: FieldRef<"UploadLog", 'String'>
+    readonly errorMessage: FieldRef<"UploadLog", 'String'>
+    readonly uploadedBy: FieldRef<"UploadLog", 'String'>
+    readonly uploadedAt: FieldRef<"UploadLog", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UploadLog findUnique
+   */
+  export type UploadLogFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * Filter, which UploadLog to fetch.
+     */
+    where: UploadLogWhereUniqueInput
+  }
+
+  /**
+   * UploadLog findUniqueOrThrow
+   */
+  export type UploadLogFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * Filter, which UploadLog to fetch.
+     */
+    where: UploadLogWhereUniqueInput
+  }
+
+  /**
+   * UploadLog findFirst
+   */
+  export type UploadLogFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * Filter, which UploadLog to fetch.
+     */
+    where?: UploadLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UploadLogs to fetch.
+     */
+    orderBy?: UploadLogOrderByWithRelationInput | UploadLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UploadLogs.
+     */
+    cursor?: UploadLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UploadLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UploadLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UploadLogs.
+     */
+    distinct?: UploadLogScalarFieldEnum | UploadLogScalarFieldEnum[]
+  }
+
+  /**
+   * UploadLog findFirstOrThrow
+   */
+  export type UploadLogFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * Filter, which UploadLog to fetch.
+     */
+    where?: UploadLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UploadLogs to fetch.
+     */
+    orderBy?: UploadLogOrderByWithRelationInput | UploadLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UploadLogs.
+     */
+    cursor?: UploadLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UploadLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UploadLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UploadLogs.
+     */
+    distinct?: UploadLogScalarFieldEnum | UploadLogScalarFieldEnum[]
+  }
+
+  /**
+   * UploadLog findMany
+   */
+  export type UploadLogFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * Filter, which UploadLogs to fetch.
+     */
+    where?: UploadLogWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UploadLogs to fetch.
+     */
+    orderBy?: UploadLogOrderByWithRelationInput | UploadLogOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UploadLogs.
+     */
+    cursor?: UploadLogWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UploadLogs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UploadLogs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UploadLogs.
+     */
+    distinct?: UploadLogScalarFieldEnum | UploadLogScalarFieldEnum[]
+  }
+
+  /**
+   * UploadLog create
+   */
+  export type UploadLogCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * The data needed to create a UploadLog.
+     */
+    data: XOR<UploadLogCreateInput, UploadLogUncheckedCreateInput>
+  }
+
+  /**
+   * UploadLog createMany
+   */
+  export type UploadLogCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UploadLogs.
+     */
+    data: UploadLogCreateManyInput | UploadLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UploadLog createManyAndReturn
+   */
+  export type UploadLogCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * The data used to create many UploadLogs.
+     */
+    data: UploadLogCreateManyInput | UploadLogCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UploadLog update
+   */
+  export type UploadLogUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * The data needed to update a UploadLog.
+     */
+    data: XOR<UploadLogUpdateInput, UploadLogUncheckedUpdateInput>
+    /**
+     * Choose, which UploadLog to update.
+     */
+    where: UploadLogWhereUniqueInput
+  }
+
+  /**
+   * UploadLog updateMany
+   */
+  export type UploadLogUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UploadLogs.
+     */
+    data: XOR<UploadLogUpdateManyMutationInput, UploadLogUncheckedUpdateManyInput>
+    /**
+     * Filter which UploadLogs to update
+     */
+    where?: UploadLogWhereInput
+    /**
+     * Limit how many UploadLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UploadLog updateManyAndReturn
+   */
+  export type UploadLogUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * The data used to update UploadLogs.
+     */
+    data: XOR<UploadLogUpdateManyMutationInput, UploadLogUncheckedUpdateManyInput>
+    /**
+     * Filter which UploadLogs to update
+     */
+    where?: UploadLogWhereInput
+    /**
+     * Limit how many UploadLogs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UploadLog upsert
+   */
+  export type UploadLogUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * The filter to search for the UploadLog to update in case it exists.
+     */
+    where: UploadLogWhereUniqueInput
+    /**
+     * In case the UploadLog found by the `where` argument doesn't exist, create a new UploadLog with this data.
+     */
+    create: XOR<UploadLogCreateInput, UploadLogUncheckedCreateInput>
+    /**
+     * In case the UploadLog was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UploadLogUpdateInput, UploadLogUncheckedUpdateInput>
+  }
+
+  /**
+   * UploadLog delete
+   */
+  export type UploadLogDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+    /**
+     * Filter which UploadLog to delete.
+     */
+    where: UploadLogWhereUniqueInput
+  }
+
+  /**
+   * UploadLog deleteMany
+   */
+  export type UploadLogDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UploadLogs to delete
+     */
+    where?: UploadLogWhereInput
+    /**
+     * Limit how many UploadLogs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UploadLog without action
+   */
+  export type UploadLogDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UploadLog
+     */
+    select?: UploadLogSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UploadLog
+     */
+    omit?: UploadLogOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -3674,6 +4855,7 @@ export namespace Prisma {
     suspectEGOPosition: 'suspectEGOPosition',
     suspectEGOClass: 'suspectEGOClass',
     suspectCount: 'suspectCount',
+    suspectArrested: 'suspectArrested',
     victimIsEGO: 'victimIsEGO',
     victimEGOPosition: 'victimEGOPosition',
     victimEGOClass: 'victimEGOClass',
@@ -3701,6 +4883,20 @@ export namespace Prisma {
   };
 
   export type BarangayScalarFieldEnum = (typeof BarangayScalarFieldEnum)[keyof typeof BarangayScalarFieldEnum]
+
+
+  export const UploadLogScalarFieldEnum: {
+    id: 'id',
+    fileName: 'fileName',
+    fileSize: 'fileSize',
+    recordsImported: 'recordsImported',
+    status: 'status',
+    errorMessage: 'errorMessage',
+    uploadedBy: 'uploadedBy',
+    uploadedAt: 'uploadedAt'
+  };
+
+  export type UploadLogScalarFieldEnum = (typeof UploadLogScalarFieldEnum)[keyof typeof UploadLogScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -3870,6 +5066,7 @@ export namespace Prisma {
     suspectEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
     suspectEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
     suspectCount?: IntNullableFilter<"CrimeIncident"> | number | null
+    suspectArrested?: BoolNullableFilter<"CrimeIncident"> | boolean | null
     victimIsEGO?: BoolFilter<"CrimeIncident"> | boolean
     victimEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
     victimEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
@@ -3921,6 +5118,7 @@ export namespace Prisma {
     suspectEGOPosition?: SortOrderInput | SortOrder
     suspectEGOClass?: SortOrderInput | SortOrder
     suspectCount?: SortOrderInput | SortOrder
+    suspectArrested?: SortOrderInput | SortOrder
     victimIsEGO?: SortOrder
     victimEGOPosition?: SortOrderInput | SortOrder
     victimEGOClass?: SortOrderInput | SortOrder
@@ -3975,6 +5173,7 @@ export namespace Prisma {
     suspectEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
     suspectEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
     suspectCount?: IntNullableFilter<"CrimeIncident"> | number | null
+    suspectArrested?: BoolNullableFilter<"CrimeIncident"> | boolean | null
     victimIsEGO?: BoolFilter<"CrimeIncident"> | boolean
     victimEGOPosition?: StringNullableFilter<"CrimeIncident"> | string | null
     victimEGOClass?: StringNullableFilter<"CrimeIncident"> | string | null
@@ -4026,6 +5225,7 @@ export namespace Prisma {
     suspectEGOPosition?: SortOrderInput | SortOrder
     suspectEGOClass?: SortOrderInput | SortOrder
     suspectCount?: SortOrderInput | SortOrder
+    suspectArrested?: SortOrderInput | SortOrder
     victimIsEGO?: SortOrder
     victimEGOPosition?: SortOrderInput | SortOrder
     victimEGOClass?: SortOrderInput | SortOrder
@@ -4085,6 +5285,7 @@ export namespace Prisma {
     suspectEGOPosition?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     suspectEGOClass?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     suspectCount?: IntNullableWithAggregatesFilter<"CrimeIncident"> | number | null
+    suspectArrested?: BoolNullableWithAggregatesFilter<"CrimeIncident"> | boolean | null
     victimIsEGO?: BoolWithAggregatesFilter<"CrimeIncident"> | boolean
     victimEGOPosition?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
     victimEGOClass?: StringNullableWithAggregatesFilter<"CrimeIncident"> | string | null
@@ -4162,6 +5363,75 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"Barangay"> | Date | string
   }
 
+  export type UploadLogWhereInput = {
+    AND?: UploadLogWhereInput | UploadLogWhereInput[]
+    OR?: UploadLogWhereInput[]
+    NOT?: UploadLogWhereInput | UploadLogWhereInput[]
+    id?: StringFilter<"UploadLog"> | string
+    fileName?: StringFilter<"UploadLog"> | string
+    fileSize?: IntFilter<"UploadLog"> | number
+    recordsImported?: IntFilter<"UploadLog"> | number
+    status?: StringFilter<"UploadLog"> | string
+    errorMessage?: StringNullableFilter<"UploadLog"> | string | null
+    uploadedBy?: StringNullableFilter<"UploadLog"> | string | null
+    uploadedAt?: DateTimeFilter<"UploadLog"> | Date | string
+  }
+
+  export type UploadLogOrderByWithRelationInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+    status?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    uploadedBy?: SortOrderInput | SortOrder
+    uploadedAt?: SortOrder
+  }
+
+  export type UploadLogWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: UploadLogWhereInput | UploadLogWhereInput[]
+    OR?: UploadLogWhereInput[]
+    NOT?: UploadLogWhereInput | UploadLogWhereInput[]
+    fileName?: StringFilter<"UploadLog"> | string
+    fileSize?: IntFilter<"UploadLog"> | number
+    recordsImported?: IntFilter<"UploadLog"> | number
+    status?: StringFilter<"UploadLog"> | string
+    errorMessage?: StringNullableFilter<"UploadLog"> | string | null
+    uploadedBy?: StringNullableFilter<"UploadLog"> | string | null
+    uploadedAt?: DateTimeFilter<"UploadLog"> | Date | string
+  }, "id">
+
+  export type UploadLogOrderByWithAggregationInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+    status?: SortOrder
+    errorMessage?: SortOrderInput | SortOrder
+    uploadedBy?: SortOrderInput | SortOrder
+    uploadedAt?: SortOrder
+    _count?: UploadLogCountOrderByAggregateInput
+    _avg?: UploadLogAvgOrderByAggregateInput
+    _max?: UploadLogMaxOrderByAggregateInput
+    _min?: UploadLogMinOrderByAggregateInput
+    _sum?: UploadLogSumOrderByAggregateInput
+  }
+
+  export type UploadLogScalarWhereWithAggregatesInput = {
+    AND?: UploadLogScalarWhereWithAggregatesInput | UploadLogScalarWhereWithAggregatesInput[]
+    OR?: UploadLogScalarWhereWithAggregatesInput[]
+    NOT?: UploadLogScalarWhereWithAggregatesInput | UploadLogScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UploadLog"> | string
+    fileName?: StringWithAggregatesFilter<"UploadLog"> | string
+    fileSize?: IntWithAggregatesFilter<"UploadLog"> | number
+    recordsImported?: IntWithAggregatesFilter<"UploadLog"> | number
+    status?: StringWithAggregatesFilter<"UploadLog"> | string
+    errorMessage?: StringNullableWithAggregatesFilter<"UploadLog"> | string | null
+    uploadedBy?: StringNullableWithAggregatesFilter<"UploadLog"> | string | null
+    uploadedAt?: DateTimeWithAggregatesFilter<"UploadLog"> | Date | string
+  }
+
   export type CrimeIncidentCreateInput = {
     id?: string
     blotterNo?: string | null
@@ -4200,6 +5470,7 @@ export namespace Prisma {
     suspectEGOPosition?: string | null
     suspectEGOClass?: string | null
     suspectCount?: number | null
+    suspectArrested?: boolean | null
     victimIsEGO?: boolean
     victimEGOPosition?: string | null
     victimEGOClass?: string | null
@@ -4251,6 +5522,7 @@ export namespace Prisma {
     suspectEGOPosition?: string | null
     suspectEGOClass?: string | null
     suspectCount?: number | null
+    suspectArrested?: boolean | null
     victimIsEGO?: boolean
     victimEGOPosition?: string | null
     victimEGOClass?: string | null
@@ -4302,6 +5574,7 @@ export namespace Prisma {
     suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
     suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    suspectArrested?: NullableBoolFieldUpdateOperationsInput | boolean | null
     victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
     victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4353,6 +5626,7 @@ export namespace Prisma {
     suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
     suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    suspectArrested?: NullableBoolFieldUpdateOperationsInput | boolean | null
     victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
     victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4404,6 +5678,7 @@ export namespace Prisma {
     suspectEGOPosition?: string | null
     suspectEGOClass?: string | null
     suspectCount?: number | null
+    suspectArrested?: boolean | null
     victimIsEGO?: boolean
     victimEGOPosition?: string | null
     victimEGOClass?: string | null
@@ -4455,6 +5730,7 @@ export namespace Prisma {
     suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
     suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    suspectArrested?: NullableBoolFieldUpdateOperationsInput | boolean | null
     victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
     victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4506,6 +5782,7 @@ export namespace Prisma {
     suspectEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     suspectEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
     suspectCount?: NullableIntFieldUpdateOperationsInput | number | null
+    suspectArrested?: NullableBoolFieldUpdateOperationsInput | boolean | null
     victimIsEGO?: BoolFieldUpdateOperationsInput | boolean
     victimEGOPosition?: NullableStringFieldUpdateOperationsInput | string | null
     victimEGOClass?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4589,6 +5866,83 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type UploadLogCreateInput = {
+    id?: string
+    fileName: string
+    fileSize: number
+    recordsImported: number
+    status?: string
+    errorMessage?: string | null
+    uploadedBy?: string | null
+    uploadedAt?: Date | string
+  }
+
+  export type UploadLogUncheckedCreateInput = {
+    id?: string
+    fileName: string
+    fileSize: number
+    recordsImported: number
+    status?: string
+    errorMessage?: string | null
+    uploadedBy?: string | null
+    uploadedAt?: Date | string
+  }
+
+  export type UploadLogUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
+    recordsImported?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UploadLogUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
+    recordsImported?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UploadLogCreateManyInput = {
+    id?: string
+    fileName: string
+    fileSize: number
+    recordsImported: number
+    status?: string
+    errorMessage?: string | null
+    uploadedBy?: string | null
+    uploadedAt?: Date | string
+  }
+
+  export type UploadLogUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
+    recordsImported?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UploadLogUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    fileName?: StringFieldUpdateOperationsInput | string
+    fileSize?: IntFieldUpdateOperationsInput | number
+    recordsImported?: IntFieldUpdateOperationsInput | number
+    status?: StringFieldUpdateOperationsInput | string
+    errorMessage?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedBy?: NullableStringFieldUpdateOperationsInput | string | null
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -4657,6 +6011,11 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type BoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
+  }
+
   export type FloatNullableFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -4711,6 +6070,7 @@ export namespace Prisma {
     suspectEGOPosition?: SortOrder
     suspectEGOClass?: SortOrder
     suspectCount?: SortOrder
+    suspectArrested?: SortOrder
     victimIsEGO?: SortOrder
     victimEGOPosition?: SortOrder
     victimEGOClass?: SortOrder
@@ -4769,6 +6129,7 @@ export namespace Prisma {
     suspectEGOPosition?: SortOrder
     suspectEGOClass?: SortOrder
     suspectCount?: SortOrder
+    suspectArrested?: SortOrder
     victimIsEGO?: SortOrder
     victimEGOPosition?: SortOrder
     victimEGOClass?: SortOrder
@@ -4820,6 +6181,7 @@ export namespace Prisma {
     suspectEGOPosition?: SortOrder
     suspectEGOClass?: SortOrder
     suspectCount?: SortOrder
+    suspectArrested?: SortOrder
     victimIsEGO?: SortOrder
     victimEGOPosition?: SortOrder
     victimEGOClass?: SortOrder
@@ -4928,6 +6290,14 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
+  export type BoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type FloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -5031,6 +6401,76 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
+  export type IntFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type UploadLogCountOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+    status?: SortOrder
+    errorMessage?: SortOrder
+    uploadedBy?: SortOrder
+    uploadedAt?: SortOrder
+  }
+
+  export type UploadLogAvgOrderByAggregateInput = {
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+  }
+
+  export type UploadLogMaxOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+    status?: SortOrder
+    errorMessage?: SortOrder
+    uploadedBy?: SortOrder
+    uploadedAt?: SortOrder
+  }
+
+  export type UploadLogMinOrderByAggregateInput = {
+    id?: SortOrder
+    fileName?: SortOrder
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+    status?: SortOrder
+    errorMessage?: SortOrder
+    uploadedBy?: SortOrder
+    uploadedAt?: SortOrder
+  }
+
+  export type UploadLogSumOrderByAggregateInput = {
+    fileSize?: SortOrder
+    recordsImported?: SortOrder
+  }
+
+  export type IntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -5059,8 +6499,20 @@ export namespace Prisma {
     divide?: number
   }
 
+  export type NullableBoolFieldUpdateOperationsInput = {
+    set?: boolean | null
+  }
+
   export type NullableFloatFieldUpdateOperationsInput = {
     set?: number | null
+    increment?: number
+    decrement?: number
+    multiply?: number
+    divide?: number
+  }
+
+  export type IntFieldUpdateOperationsInput = {
+    set?: number
     increment?: number
     decrement?: number
     multiply?: number
@@ -5131,6 +6583,11 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedBoolNullableFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
   export type NestedFloatNullableFilter<$PrismaModel = never> = {
@@ -5241,6 +6698,14 @@ export namespace Prisma {
     _max?: NestedIntNullableFilter<$PrismaModel>
   }
 
+  export type NestedBoolNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel> | null
+    not?: NestedBoolNullableWithAggregatesFilter<$PrismaModel> | boolean | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedBoolNullableFilter<$PrismaModel>
+    _max?: NestedBoolNullableFilter<$PrismaModel>
+  }
+
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -5278,6 +6743,33 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel>
+    in?: number[] | ListIntFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel>
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntWithAggregatesFilter<$PrismaModel> | number
+    _count?: NestedIntFilter<$PrismaModel>
+    _avg?: NestedFloatFilter<$PrismaModel>
+    _sum?: NestedIntFilter<$PrismaModel>
+    _min?: NestedIntFilter<$PrismaModel>
+    _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type NestedFloatFilter<$PrismaModel = never> = {
+    equals?: number | FloatFieldRefInput<$PrismaModel>
+    in?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    notIn?: number[] | ListFloatFieldRefInput<$PrismaModel>
+    lt?: number | FloatFieldRefInput<$PrismaModel>
+    lte?: number | FloatFieldRefInput<$PrismaModel>
+    gt?: number | FloatFieldRefInput<$PrismaModel>
+    gte?: number | FloatFieldRefInput<$PrismaModel>
+    not?: NestedFloatFilter<$PrismaModel> | number
   }
 
 

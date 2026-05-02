@@ -23,6 +23,8 @@ interface MapContextType {
   timeFilterHourCrimeCount: number;
   isTimeFilterActive: boolean;
   selectedCrimeType: string | null;
+  selectedYear: number | null;
+  availableYears: number[];
   
   // Actions
   setSelectedBarangay: (name: string | null) => void;
@@ -36,6 +38,7 @@ interface MapContextType {
   setTimeFilter: (date: Date | null, hour: number | null, hourCrimeCount?: number) => void;
   setIsTimeFilterActive: (isActive: boolean) => void;
   setSelectedCrimeType: (crimeType: string | null) => void;
+  setSelectedYear: (year: number | null) => void;
   onFlyToStationComplete: () => void;
 }
 
@@ -59,7 +62,19 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const [timeFilterHourCrimeCount, setTimeFilterHourCrimeCount] = useState<number>(0);
   const [isTimeFilterActive, setIsTimeFilterActive] = useState(false);
   const [selectedCrimeType, setSelectedCrimeType] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const mapRef = useRef<L.Map | null>(null);
+
+  // Wrapper for setSelectedYear that also saves to localStorage
+  const setSelectedYearWithPersistence = useCallback((year: number | null) => {
+    setSelectedYear(year);
+    if (year !== null) {
+      localStorage.setItem('selectedYear', year.toString());
+    } else {
+      localStorage.removeItem('selectedYear');
+    }
+  }, []);
 
   const setHotspotDate = useCallback((month: string, year: string) => {
     setHotspotMonth(month);
@@ -73,6 +88,37 @@ export function MapProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const hotspotBarangay = hotspotMode ? getHotspotSectorForDate(hotspotMonth, hotspotYear) : null;
+
+  // Fetch available years from database
+  useEffect(() => {
+    fetch("/api/crimes/years")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.years && data.years.length > 0) {
+          setAvailableYears(data.years);
+          
+          // Try to restore from localStorage first
+          const savedYear = localStorage.getItem('selectedYear');
+          if (savedYear) {
+            const yearNum = parseInt(savedYear);
+            if (data.years.includes(yearNum)) {
+              console.log('📅 Restored year from localStorage:', yearNum);
+              setSelectedYear(yearNum);
+              return;
+            }
+          }
+          
+          // Otherwise, set current year as default if available, or use the most recent year
+          const currentYear = new Date().getFullYear();
+          if (data.years.includes(currentYear)) {
+            setSelectedYear(currentYear);
+          } else {
+            setSelectedYear(data.years[0]); // Most recent year
+          }
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     fetch("/tanza_cavite.geojson")
@@ -111,6 +157,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
     timeFilterHourCrimeCount,
     isTimeFilterActive,
     selectedCrimeType,
+    selectedYear,
+    availableYears,
     mapRef,
     setSelectedBarangay,
     setHoveredBarangay,
@@ -123,6 +171,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setTimeFilter,
     setIsTimeFilterActive,
     setSelectedCrimeType,
+    setSelectedYear: setSelectedYearWithPersistence,
     onFlyToStationComplete,
   };
 

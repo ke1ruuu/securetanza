@@ -1,4 +1,5 @@
 import { prisma } from './prisma'
+import type { CrimeIncident as PrismaCrimeIncident } from './generated/prisma'
 
 export interface CrimeIncident {
   id: string
@@ -33,18 +34,29 @@ export async function getCrimesForBarangay(
     }
 
     if (startDate && endDate) {
-      where.date = {
+      where.dateCommitted = {
         gte: startDate,
         lte: endDate
       }
     }
 
-    return await prisma.crimeIncident.findMany({
+    const crimes = await prisma.crimeIncident.findMany({
       where,
       orderBy: {
-        date: 'desc'
+        dateCommitted: 'desc'
       }
     })
+
+    // Map Prisma model to CrimeIncident interface
+    return crimes.map(crime => ({
+      id: crime.id,
+      barangay: crime.barangay,
+      date: crime.dateCommitted,
+      time: crime.timeCommitted,
+      crimeType: crime.incidentType,
+      createdAt: crime.createdAt,
+      updatedAt: crime.updatedAt
+    }))
   } catch (error) {
     console.error('Error fetching crimes for barangay:', error)
     return []
@@ -68,7 +80,7 @@ export async function getCrimeStats(
     }
 
     if (startDate && endDate) {
-      where.date = {
+      where.dateCommitted = {
         gte: startDate,
         lte: endDate
       }
@@ -84,7 +96,7 @@ export async function getCrimeStats(
     const recentCrimes = await prisma.crimeIncident.count({
       where: {
         ...where,
-        date: {
+        dateCommitted: {
           gte: sevenDaysAgo
         }
       }
@@ -92,14 +104,14 @@ export async function getCrimeStats(
 
     // Get crimes by type
     const crimesByType = await prisma.crimeIncident.groupBy({
-      by: ['crimeType'],
+      by: ['incidentType'],
       where,
       _count: {
-        crimeType: true
+        incidentType: true
       },
       orderBy: {
         _count: {
-          crimeType: 'desc'
+          incidentType: 'desc'
         }
       }
     })
@@ -126,13 +138,13 @@ export async function getCrimeStats(
     const monthlyData = await prisma.crimeIncident.findMany({
       where: {
         ...where,
-        date: {
+        dateCommitted: {
           gte: yearStart,
           lt: yearEnd
         }
       },
       select: {
-        date: true
+        dateCommitted: true
       }
     })
 
@@ -140,7 +152,7 @@ export async function getCrimeStats(
     const monthlyStats = Array.from({ length: 12 }, (_, i) => {
       const month = i + 1
       const count = monthlyData.filter(crime => 
-        crime.date.getMonth() + 1 === month
+        crime.dateCommitted.getMonth() + 1 === month
       ).length
       return { month, count }
     })
@@ -149,8 +161,8 @@ export async function getCrimeStats(
       totalCrimes,
       recentCrimes,
       crimesByType: crimesByType.map(item => ({
-        type: item.crimeType,
-        count: item._count.crimeType
+        type: item.incidentType,
+        count: item._count.incidentType
       })),
       crimesByBarangay: crimesByBarangay.map(item => ({
         barangay: item.barangay,

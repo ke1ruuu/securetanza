@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import IncidentsTab from "@/components/dashboard/incidents-tab";
@@ -50,7 +50,9 @@ export default function CasesPage() {
   return (
     <ThemeProvider>
       <MapProvider>
-        <CasesContent />
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <CasesContent />
+        </Suspense>
       </MapProvider>
     </ThemeProvider>
   );

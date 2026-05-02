@@ -22,6 +22,12 @@ export default function DashboardBarangaySelector({ currentBarangay }: Dashboard
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isGeneralDashboard = !currentBarangay || currentBarangay === "General Dashboard";
+  const [isClient, setIsClient] = useState(false);
+
+  // Mark when component has mounted on client
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -170,8 +176,14 @@ export default function DashboardBarangaySelector({ currentBarangay }: Dashboard
         </div>
 
         {/* Barangay List */}
-        <div className="overflow-y-auto max-h-[260px] py-1 custom-scrollbar">
-          {filteredBarangays.length === 0 ? (
+        <div className="overflow-y-auto max-h-[260px] py-1 custom-scrollbar" suppressHydrationWarning>
+          {!isClient || barangayNames.length === 0 ? (
+            <div className={`p-4 text-[13px] text-center ${
+              theme === "dark" ? "text-slate-600" : "text-slate-400"
+            }`}>
+              Loading...
+            </div>
+          ) : filteredBarangays.length === 0 ? (
             <div className={`p-4 text-[13px] text-center ${
               theme === "dark" ? "text-slate-600" : "text-slate-400"
             }`}>

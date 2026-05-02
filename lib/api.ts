@@ -89,6 +89,7 @@ export async function fetchCrimes(params?: {
   endDateCommitted?: string
   startHour?: number
   endHour?: number
+  year?: number
 }): Promise<CrimeIncident[]> {
   try {
     const searchParams = new URLSearchParams()
@@ -97,6 +98,7 @@ export async function fetchCrimes(params?: {
     if (params?.incidentType) searchParams.set('incidentType', params.incidentType)
     if (params?.startDateCommitted) searchParams.set('startDateCommitted', params.startDateCommitted)
     if (params?.endDateCommitted) searchParams.set('endDateCommitted', params.endDateCommitted)
+    if (params?.year) searchParams.set('year', params.year.toString())
 
     const response = await fetch(`/api/crimes?${searchParams}`)
     const result: ApiResponse<CrimeIncident[]> = await response.json()
@@ -128,12 +130,14 @@ export async function fetchCrimeStats(params?: {
   barangay?: string
   startDate?: string
   endDate?: string
+  year?: number
 }): Promise<CrimeStats | null> {
   try {
     const searchParams = new URLSearchParams()
     if (params?.barangay) searchParams.set('barangay', params.barangay)
     if (params?.startDate) searchParams.set('startDate', params.startDate)
     if (params?.endDate) searchParams.set('endDate', params.endDate)
+    if (params?.year) searchParams.set('year', params.year.toString())
 
     const response = await fetch(`/api/crimes/stats?${searchParams}`)
     const result: ApiResponse<CrimeStats> = await response.json()

@@ -22,17 +22,49 @@ export const CRIME_TYPE_COLORS: Record<string, string> = {
   "Alarm and Scandal": "#F59E0B", // amber-500
   "Carnapping": "#EAB308", // yellow-500
   "Drugs": "#8B5CF6", // violet-500
+  "Buy Bust": "#8B5CF6", // violet-500 (drug operation)
   "Homicide": "#EC4899", // pink-500
   "Rape": "#BE185D", // pink-700
   "Murder": "#991B1B", // red-900
+  "Shooting": "#991B1B", // red-900
+  "Illegal Gambling": "#F59E0B", // amber-500
   "Other": "#6B7280", // gray-500
 };
+
+// Helper function to extract crime type from incident type
+// Handles formats like "(Incident) Theft" or "(Operation) Buy Bust"
+export function extractCrimeType(incidentType: string): string {
+  // Remove "(Incident)" or "(Operation)" prefix
+  const cleaned = incidentType.replace(/^\((?:Incident|Operation)\)\s*/i, '').trim();
+  return cleaned;
+}
+
+// Helper function to get color for a crime type
+export function getCrimeTypeColor(type: string): string {
+  // Extract the actual crime type (remove prefix)
+  const crimeType = extractCrimeType(type);
+  
+  // Try exact match first
+  if (CRIME_TYPE_COLORS[crimeType]) {
+    return CRIME_TYPE_COLORS[crimeType];
+  }
+  
+  // Try partial match (for cases like "Physical Injury" matching "Injury")
+  for (const [key, color] of Object.entries(CRIME_TYPE_COLORS)) {
+    if (crimeType.toLowerCase().includes(key.toLowerCase()) || 
+        key.toLowerCase().includes(crimeType.toLowerCase())) {
+      return color;
+    }
+  }
+  
+  return CRIME_TYPE_COLORS["Other"];
+}
 
 export function useCrimeTypes(): CrimeTypesData {
   const [stats, setStats] = useState<CrimeTypeStats[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { selectedBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive } = useMapContext();
+  const { selectedBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear } = useMapContext();
 
   useEffect(() => {
     async function fetchCrimeTypes() {
@@ -61,6 +93,9 @@ export function useCrimeTypes(): CrimeTypesData {
           
           params.append("startDate", startDate.toISOString());
           params.append("endDate", endDate.toISOString());
+        } else if (selectedYear) {
+          // Add year filter if no time filter is active
+          params.append("year", selectedYear.toString());
         }
 
         const response = await fetch(`/api/crimes/stats?${params.toString()}`);
@@ -90,12 +125,7 @@ export function useCrimeTypes(): CrimeTypesData {
     }
 
     fetchCrimeTypes();
-  }, [selectedBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive]);
+  }, [selectedBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear]);
 
   return { stats, total, loading };
-}
-
-// Helper function to get color for a crime type
-export function getCrimeTypeColor(type: string): string {
-  return CRIME_TYPE_COLORS[type] || CRIME_TYPE_COLORS["Other"];
 }

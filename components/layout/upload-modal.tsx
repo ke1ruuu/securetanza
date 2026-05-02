@@ -1,17 +1,23 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, X, ChevronDown } from "lucide-react";
 import * as XLSX from "xlsx";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 
 interface UploadModalProps {
   open: boolean;
@@ -37,7 +43,7 @@ const EXPECTED_COLUMNS = [
   "date_committed",
   "time_committed",
   "incident_type",
-  "iscime", // Note: This maps to isCrime boolean
+  "is_crime",
   "mode_reporting",
   "stage_of_felony",
   "offense",
@@ -56,6 +62,7 @@ const EXPECTED_COLUMNS = [
   "suspect_ego_position",
   "suspect_ego_class",
   "suspect_count",
+  "suspect_arrested",
   "victim_is_ego",
   "victim_ego_position",
   "victim_ego_class",
@@ -87,7 +94,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
   // Reset state when dialog closes
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !uploading) {
-      // Reset all state when closing
       setFile(null);
       setValidation(null);
       setError(null);
@@ -103,7 +109,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
     setError(null);
     setValidation(null);
 
-    // Check file type
     const validTypes = [
       "application/vnd.ms-excel",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -115,7 +120,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
       return;
     }
 
-    // Check file size (max 10MB)
     if (selectedFile.size > 10 * 1024 * 1024) {
       setError("File size must be less than 10MB");
       setFile(null);
@@ -123,7 +127,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
     }
 
     try {
-      // Read Excel file
       const data = await selectedFile.arrayBuffer();
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -135,12 +138,10 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
         return;
       }
 
-      // Get column headers (first row)
       const headers = jsonData[0].map((h: any) => 
         String(h).toLowerCase().trim().replace(/\s+/g, "_")
       );
 
-      // Validate columns
       const found: string[] = [];
       const missing: string[] = [];
       const extra: string[] = [];
@@ -154,7 +155,7 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
         }
       });
 
-      // Check for extra columns
+      // Check for extra columns that don't exist in database
       headers.forEach((header: string) => {
         if (!EXPECTED_COLUMNS.includes(header) && header !== "") {
           extra.push(header);
@@ -165,10 +166,15 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
       const requiredColumns = ["barangay", "date_reported", "time_reported", "date_committed", "time_committed", "incident_type"];
       const missingRequired = requiredColumns.filter(col => !headers.includes(col));
 
-      const isValid = missingRequired.length === 0;
+      // File is only valid if:
+      // 1. All required columns are present
+      // 2. No extra columns that don't exist in database
+      const isValid = missingRequired.length === 0 && extra.length === 0;
 
-      if (!isValid) {
+      if (missingRequired.length > 0) {
         setError(`Missing required columns: ${missingRequired.join(", ")}`);
+      } else if (extra.length > 0) {
+        setError(`File contains invalid columns that don't exist in the database. Please remove: ${extra.slice(0, 5).join(", ")}${extra.length > 5 ? ` and ${extra.length - 5} more` : ""}`);
       }
 
       setValidation({
@@ -186,7 +192,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
     }
   }, []);
 
-  // Handle file drop
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
@@ -200,7 +205,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
     [validateFile]
   );
 
-  // Handle file selection
   const handleFileSelect = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const selectedFile = e.target.files?.[0];
@@ -211,7 +215,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
     [validateFile]
   );
 
-  // Handle upload
   const handleUpload = async () => {
     if (!file || !validation?.isValid) return;
 
@@ -223,7 +226,6 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Simulate progress (since we can't track actual upload progress easily)
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -248,10 +250,23 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
         throw new Error(result.error || "Upload failed");
       }
 
+      // Save upload log to database
+      await fetch('/api/upload-logs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          recordsImported: result.recordsImported || 0,
+          status: 'success',
+        }),
+      });
+
       setUploadSuccess(true);
       setTimeout(() => {
         handleOpenChange(false);
-        // Optionally reload the page to show new data
         window.location.reload();
       }, 2000);
     } catch (err) {
@@ -265,249 +280,340 @@ export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl bg-[#0F172A] border-white/[0.08] text-white max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Upload Crime Data</DialogTitle>
-          <DialogDescription className="text-slate-400">
-            Upload an Excel file with crime incident data
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="!w-[1000px] !h-[800px] !max-w-[1000px] !max-h-[800px] bg-white dark:bg-[#0F172A] border-0 p-0 gap-0 overflow-hidden shadow-2xl flex flex-col">
+        <VisuallyHidden>
+          <DialogTitle>{file ? "Review Upload" : "Upload Crime Data"}</DialogTitle>
+        </VisuallyHidden>
+        
+        {!file ? (
+          // UPLOAD STATE - Centered, Simple
+          <div className="flex flex-col items-center justify-center w-full h-full p-16 overflow-y-auto">
+            <div
+              onDrop={handleDrop}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onClick={() => fileInputRef.current?.click()}
+              className={`w-full max-w-xl border-2 border-dashed rounded-3xl p-20 transition-all duration-300 cursor-pointer ${
+                isDragging
+                  ? "border-blue-500 bg-blue-50/50 dark:bg-blue-500/5 scale-[1.02]"
+                  : "border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
+              }`}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
 
-        <div className="space-y-6 py-4">
-          {/* Upload Zone */}
-          <div
-            onDrop={handleDrop}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 ${
-              isDragging
-                ? "border-[#0EA5E9] bg-[#0EA5E9]/5"
-                : file
-                ? "border-emerald-500/30 bg-emerald-500/5"
-                : "border-white/[0.1] hover:border-white/[0.2] bg-white/[0.02]"
-            }`}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-
-            <div className="flex flex-col items-center text-center">
-              {file ? (
-                <>
-                  <FileSpreadsheet className="h-12 w-12 text-emerald-500 mb-3" />
-                  <p className="text-white font-semibold">{file.name}</p>
-                  <p className="text-sm text-slate-400 mt-1">
-                    {(file.size / 1024).toFixed(2)} KB
+              <div className="flex flex-col items-center text-center space-y-6">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
+                  <Upload className="h-10 w-10 text-white" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    Upload Crime Data
+                  </h3>
+                  <p className="text-slate-500 dark:text-slate-400">
+                    Drop your Excel file here or click to browse
                   </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setFile(null);
-                      setValidation(null);
-                      setError(null);
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                    className="mt-3 text-slate-400 hover:text-white"
-                  >
-                    Remove file
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Upload className="h-12 w-12 text-slate-400 mb-3" />
-                  <p className="text-white font-semibold mb-1">
-                    Drop your Excel file here
+                  <p className="text-sm text-slate-400 dark:text-slate-500">
+                    Supports .xlsx and .xls • Maximum 10MB
                   </p>
-                  <p className="text-sm text-slate-400 mb-4">
-                    or click to browse
-                  </p>
-                  <Button
-                    variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="bg-[#0EA5E9]/10 border-[#0EA5E9]/20 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 hover:text-[#0EA5E9]"
-                  >
-                    Select File
-                  </Button>
-                  <p className="text-xs text-slate-500 mt-3">
-                    Supports .xlsx and .xls files (max 10MB)
-                  </p>
-                </>
-              )}
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-red-400">Error</p>
-                <p className="text-sm text-red-300 mt-1">{error}</p>
+        ) : (
+          // VALIDATION STATE - Full Layout
+          <>
+            {/* Header - Fixed */}
+            <div className="flex-shrink-0 px-12 py-8 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+                    Review Upload
+                  </h2>
+                  <p className="text-slate-500 dark:text-slate-400">
+                    Verify your data before importing
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setFile(null);
+                    setValidation(null);
+                    setError(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
+                  }}
+                  className="h-10 w-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
             </div>
-          )}
 
-          {/* Column Validation */}
-          {validation && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                {validation.isValid ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                ) : (
-                  <AlertCircle className="h-5 w-5 text-amber-500" />
-                )}
-                <h3 className="text-sm font-bold text-white">
-                  Column Validation
-                </h3>
+            {/* Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-12 py-8 space-y-8 min-h-0">
+              {/* File Info */}
+              <div className="flex items-center gap-4 p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+                <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center">
+                  <FileSpreadsheet className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900 dark:text-white truncate">
+                    {file.name}
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {(file.size / 1024).toFixed(2)} KB
+                  </p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                {/* Found Columns */}
-                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                  <p className="text-xs font-bold text-emerald-400 mb-2">
-                    ✓ Found Columns ({validation.found.length})
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {validation.found.slice(0, 10).map((col) => (
-                      <span
-                        key={col}
-                        className="text-xs px-2 py-1 rounded bg-emerald-500/20 text-emerald-300"
-                      >
-                        {col}
-                      </span>
-                    ))}
-                    {validation.found.length > 10 && (
-                      <span className="text-xs px-2 py-1 text-emerald-400">
-                        +{validation.found.length - 10} more
-                      </span>
+              {/* Validation Status */}
+              {validation && (
+                <>
+                  {/* Status Card */}
+                  <div className={`p-6 rounded-2xl border-2 ${
+                    validation.isValid
+                      ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20"
+                      : "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20"
+                  }`}>
+                    <div className="flex items-start gap-4">
+                      {validation.isValid ? (
+                        <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      )}
+                      <div>
+                        <h3 className={`font-bold text-lg mb-1 ${
+                          validation.isValid
+                            ? "text-emerald-900 dark:text-emerald-400"
+                            : "text-red-900 dark:text-red-400"
+                        }`}>
+                          {validation.isValid ? "Ready to Upload" : "Validation Failed"}
+                        </h3>
+                        <p className={`text-sm ${
+                          validation.isValid
+                            ? "text-emerald-700 dark:text-emerald-300"
+                            : "text-red-700 dark:text-red-300"
+                        }`}>
+                          {validation.isValid
+                            ? "All columns match the database schema"
+                            : validation.extra.length > 0
+                              ? "Remove invalid columns before uploading"
+                              : "Add missing required columns"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="p-6 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                      <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                        {validation.found.length}
+                      </div>
+                      <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                        Valid Columns
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                      <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+                        {validation.missing.length}
+                      </div>
+                      <div className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                        Optional
+                      </div>
+                    </div>
+
+                    <div className="p-6 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+                      <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
+                        {validation.extra.length}
+                      </div>
+                      <div className="text-sm font-medium text-red-700 dark:text-red-300">
+                        Invalid
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column Details */}
+                  <Accordion type="multiple" className="space-y-3">
+                    {/* Valid Columns */}
+                    <AccordionItem value="found" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <div className="flex items-center gap-3 w-full">
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                          <span className="font-semibold text-slate-900 dark:text-white">Valid Columns</span>
+                          <span className="ml-auto text-sm text-slate-500 dark:text-slate-400 mr-2">
+                            {validation.found.length}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 pb-4">
+                        <div className="flex flex-wrap gap-2 pt-2">
+                          {validation.found.map((col) => (
+                            <span
+                              key={col}
+                              className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20 font-medium"
+                            >
+                              {col}
+                            </span>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* Optional Columns */}
+                    {validation.missing.length > 0 && (
+                      <AccordionItem value="missing" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50">
+                        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <div className="flex items-center gap-3 w-full">
+                            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                            <span className="font-semibold text-slate-900 dark:text-white">Optional Columns</span>
+                            <span className="ml-auto text-sm text-slate-500 dark:text-slate-400 mr-2">
+                              {validation.missing.length}
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-4 space-y-3">
+                          <p className="text-sm text-amber-700 dark:text-amber-300">
+                            These columns are not required. Data will be imported without them.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {validation.missing.map((col) => (
+                              <span
+                                key={col}
+                                className="text-xs px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 font-medium"
+                              >
+                                {col}
+                              </span>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                     )}
+
+                    {/* Invalid Columns */}
+                    {validation.extra.length > 0 && (
+                      <AccordionItem value="extra" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50">
+                        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <div className="flex items-center gap-3 w-full">
+                            <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                            <span className="font-semibold text-slate-900 dark:text-white">Invalid Columns</span>
+                            <span className="ml-auto text-sm text-slate-500 dark:text-slate-400 mr-2">
+                              {validation.extra.length}
+                            </span>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-6 pb-4 space-y-3">
+                          <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                            ⚠️ These columns don't exist in the database. Remove them from your file.
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {validation.extra.map((col) => (
+                              <span
+                                key={col}
+                                className="text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20 font-medium"
+                              >
+                                {col}
+                              </span>
+                            ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    )}
+                  </Accordion>
+                </>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                    {error}
+                  </p>
+                </div>
+              )}
+
+              {/* Upload Progress */}
+              {uploading && (
+                <div className="space-y-3 p-6 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                      <span className="font-semibold text-blue-900 dark:text-blue-400">
+                        Uploading...
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-blue-100 dark:bg-blue-900/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
                   </div>
                 </div>
+              )}
 
-                {/* Missing Columns */}
-                {validation.missing.length > 0 && (
-                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                    <p className="text-xs font-bold text-amber-400 mb-2">
-                      ⚠ Missing Columns ({validation.missing.length})
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {validation.missing.slice(0, 10).map((col) => (
-                        <span
-                          key={col}
-                          className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-300"
-                        >
-                          {col}
-                        </span>
-                      ))}
-                      {validation.missing.length > 10 && (
-                        <span className="text-xs px-2 py-1 text-amber-400">
-                          +{validation.missing.length - 10} more
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-amber-300 mt-2">
-                      Optional columns - data will be imported without these fields
-                    </p>
-                  </div>
-                )}
+              {/* Success Message */}
+              {uploadSuccess && (
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-400">
+                    Upload successful! Refreshing data...
+                  </p>
+                </div>
+              )}
+            </div>
 
-                {/* Extra Columns */}
-                {validation.extra.length > 0 && (
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <p className="text-xs font-bold text-blue-400 mb-2">
-                      ℹ Extra Columns ({validation.extra.length})
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {validation.extra.slice(0, 10).map((col) => (
-                        <span
-                          key={col}
-                          className="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-300"
-                        >
-                          {col}
-                        </span>
-                      ))}
-                      {validation.extra.length > 10 && (
-                        <span className="text-xs px-2 py-1 text-blue-400">
-                          +{validation.extra.length - 10} more
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-blue-300 mt-2">
-                      These columns will be ignored during import
-                    </p>
-                  </div>
-                )}
+            {/* Footer - Fixed */}
+            <div className="flex-shrink-0 px-12 py-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+              <div className="flex items-center justify-end gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleOpenChange(false)}
+                  disabled={uploading}
+                  className="px-6"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpload}
+                  disabled={!file || !validation?.isValid || uploading || uploadSuccess}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 disabled:opacity-50"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      Uploading
+                    </>
+                  ) : uploadSuccess ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Uploaded
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Data
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
-          )}
-
-          {/* Upload Progress */}
-          {uploading && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-400">Uploading...</span>
-                <span className="text-white font-semibold">{uploadProgress}%</span>
-              </div>
-              <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[#0EA5E9] transition-all duration-300"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {uploadSuccess && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-              <p className="text-sm font-semibold text-emerald-400">
-                Upload successful! Refreshing data...
-              </p>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => handleOpenChange(false)}
-            disabled={uploading}
-            className="text-slate-400 hover:text-white"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleUpload}
-            disabled={!file || !validation?.isValid || uploading || uploadSuccess}
-            className="bg-[#0EA5E9] text-white hover:bg-[#0EA5E9]/90"
-          >
-            {uploading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Uploading...
-              </>
-            ) : uploadSuccess ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Uploaded
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Data
-              </>
-            )}
-          </Button>
-        </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

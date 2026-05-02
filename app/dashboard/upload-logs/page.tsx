@@ -1,0 +1,315 @@
+"use client";
+
+import React, { Suspense, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import MapHeader from "@/components/layout/map-header";
+import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
+import { MapProvider } from "@/context/MapContext";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Clock, Download, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface UploadLog {
+  id: string;
+  fileName: string;
+  fileSize: number;
+  recordsImported: number;
+  status: string;
+  errorMessage?: string;
+  uploadedBy?: string;
+  uploadedAt: string;
+}
+
+function UploadLogsContent() {
+  const searchParams = useSearchParams();
+  const rawParamName = searchParams.get("name");
+  const barangayName = rawParamName || "General Dashboard";
+  const { theme } = useTheme();
+  
+  const [logs, setLogs] = useState<UploadLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
+
+  const loadLogs = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/upload-logs?limit=100');
+      const data = await response.json();
+      
+      if (data.success) {
+        setLogs(data.logs);
+        setTotal(data.total);
+      }
+    } catch (error) {
+      console.error('Error loading upload logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLogs();
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
+      case 'failed':
+        return <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />;
+      case 'partial':
+        return <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />;
+      default:
+        return <FileSpreadsheet className="h-5 w-5 text-slate-600 dark:text-slate-400" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300';
+      case 'failed':
+        return 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-300';
+      case 'partial':
+        return 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-300';
+      default:
+        return 'bg-slate-50 dark:bg-slate-500/10 border-slate-200 dark:border-slate-500/20 text-slate-700 dark:text-slate-300';
+    }
+  };
+
+  return (
+    <div className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${
+      theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
+    }`}>
+      <MapHeader isVisible={true} />
+
+      {/* Dashboard Sub-header */}
+      <div className={`flex items-center justify-between gap-4 px-6 py-3 border-b shrink-0 ${
+        theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
+      }`}>
+        <div className="flex items-center gap-4">
+          <DashboardBarangaySelector currentBarangay={barangayName} />
+          <div className={`h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
+          <span className={`text-sm font-medium ${
+            theme === "dark" ? "text-slate-500" : "text-slate-400"
+          }`}>
+            Upload history and logs
+          </span>
+        </div>
+        <Button
+          onClick={loadLogs}
+          variant="ghost"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
+      </div>
+
+      <main className={`flex-1 flex flex-col min-w-0 overflow-hidden ${
+        theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"
+      }`}>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className={`p-6 rounded-xl border ${
+              theme === "dark" 
+                ? "bg-slate-900/50 border-slate-800" 
+                : "bg-white border-slate-200"
+            }`}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
+                  <FileSpreadsheet className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {total}
+                  </div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    Total Uploads
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={`p-6 rounded-xl border ${
+              theme === "dark" 
+                ? "bg-slate-900/50 border-slate-800" 
+                : "bg-white border-slate-200"
+            }`}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                  <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {logs.filter(l => l.status === 'success').length}
+                  </div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    Successful
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={`p-6 rounded-xl border ${
+              theme === "dark" 
+                ? "bg-slate-900/50 border-slate-800" 
+                : "bg-white border-slate-200"
+            }`}>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
+                  <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {logs.reduce((sum, log) => sum + log.recordsImported, 0).toLocaleString()}
+                  </div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    Total Records
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Upload Logs Table */}
+          <div className={`rounded-xl border overflow-hidden ${
+            theme === "dark" 
+              ? "bg-slate-900/50 border-slate-800" 
+              : "bg-white border-slate-200"
+          }`}>
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Upload History
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-slate-500 dark:text-slate-400">Loading logs...</p>
+                </div>
+              </div>
+            ) : logs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
+                  <FileSpreadsheet className="h-10 w-10 text-slate-400 dark:text-slate-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
+                  No Upload Logs
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm">
+                  Upload history will appear here once you successfully import data files
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className={`${
+                    theme === "dark" ? "bg-slate-800/50" : "bg-slate-50"
+                  }`}>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        File Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Size
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Records
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Uploaded At
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    {logs.map((log) => (
+                      <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            {getStatusIcon(log.status)}
+                            <div>
+                              <div className="font-medium text-slate-900 dark:text-white">
+                                {log.fileName}
+                              </div>
+                              {log.errorMessage && (
+                                <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                  {log.errorMessage}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                          {formatFileSize(log.fileSize)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-lg font-semibold text-slate-900 dark:text-white">
+                            {log.recordsImported.toLocaleString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusColor(log.status)}`}>
+                            <div className={`w-1.5 h-1.5 rounded-full ${
+                              log.status === 'success' ? 'bg-emerald-500' :
+                              log.status === 'failed' ? 'bg-red-500' :
+                              log.status === 'partial' ? 'bg-amber-500' :
+                              'bg-slate-500'
+                            }`}></div>
+                            {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                            <Clock className="h-4 w-4" />
+                            {formatDate(log.uploadedAt)}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default function UploadLogsPage() {
+  return (
+    <ThemeProvider>
+      <MapProvider>
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <UploadLogsContent />
+        </Suspense>
+      </MapProvider>
+    </ThemeProvider>
+  );
+}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes } from '@/lib/api'
+import { useMapContext } from '@/context/MapContext'
 
 interface ModusData {
   modus: string
@@ -18,6 +19,7 @@ interface ModusAndPlaceData {
 }
 
 export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
+  const { selectedYear } = useMapContext()
   const [data, setData] = useState<ModusAndPlaceData>({
     modusList: [],
     placesList: [],
@@ -25,13 +27,19 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
   })
 
   useEffect(() => {
+    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
+    if (selectedYear === null) {
+      console.log('⏳ ModusAndPlace: Waiting for selectedYear to be set...')
+      return
+    }
+    
     async function loadData() {
       try {
         setData(prev => ({ ...prev, loading: true }))
 
         const params = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName } 
-          : undefined
+          ? { barangay: barangayName, year: selectedYear } 
+          : { year: selectedYear }
 
         const crimes = await fetchCrimes(params)
 
@@ -80,7 +88,7 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
     }
 
     loadData()
-  }, [barangayName])
+  }, [barangayName, selectedYear])
 
   return data
 }

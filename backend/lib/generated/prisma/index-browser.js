@@ -158,6 +158,7 @@ exports.Prisma.CrimeIncidentScalarFieldEnum = {
   suspectEGOPosition: 'suspectEGOPosition',
   suspectEGOClass: 'suspectEGOClass',
   suspectCount: 'suspectCount',
+  suspectArrested: 'suspectArrested',
   victimIsEGO: 'victimIsEGO',
   victimEGOPosition: 'victimEGOPosition',
   victimEGOClass: 'victimEGOClass',
@@ -179,6 +180,17 @@ exports.Prisma.BarangayScalarFieldEnum = {
   area: 'area',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UploadLogScalarFieldEnum = {
+  id: 'id',
+  fileName: 'fileName',
+  fileSize: 'fileSize',
+  recordsImported: 'recordsImported',
+  status: 'status',
+  errorMessage: 'errorMessage',
+  uploadedBy: 'uploadedBy',
+  uploadedAt: 'uploadedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -210,7 +222,8 @@ exports.Prisma.JsonNullValueFilter = {
 
 exports.Prisma.ModelName = {
   CrimeIncident: 'CrimeIncident',
-  Barangay: 'Barangay'
+  Barangay: 'Barangay',
+  UploadLog: 'UploadLog'
 };
 
 /**

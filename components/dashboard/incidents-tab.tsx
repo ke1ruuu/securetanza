@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/context/ThemeContext";
+import { useMapContext } from "@/context/MapContext";
 import { fetchCrimes, CrimeIncident } from "@/lib/api";
 import { Select } from "@/components/ui/select";
 
@@ -18,13 +19,14 @@ interface IncidentsTabProps {
 
 export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   const { theme } = useTheme();
+  const { selectedYear } = useMapContext();
   const [cases, setCases] = useState<CrimeIncident[]>([]);
   const [filteredCases, setFilteredCases] = useState<CrimeIncident[]>([]);
   const [selectedCase, setSelectedCase] = useState<CrimeIncident | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [crimeTypeFilter, setCrimeTypeFilter] = useState("(All)");
-  const [dateRangeFilter, setDateRangeFilter] = useState("(Last 30 Days)");
+  const [dateRangeFilter, setDateRangeFilter] = useState("(All)");
   const [barangayFilter, setBarangayFilter] = useState("(All)");
   const [statusFilter, setStatusFilter] = useState("(All)");
   
@@ -36,10 +38,18 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
   // Fetch cases from backend
   useEffect(() => {
+    // Don't fetch until selectedYear is set
+    if (selectedYear === null) {
+      console.log('⏳ Cases: Waiting for selectedYear to be set...')
+      return
+    }
+    
     async function loadCases() {
       setLoading(true);
       try {
-        const params: any = {};
+        const params: any = {
+          year: selectedYear // Always filter by selected year
+        };
 
         // Only add date range if not "All"
         if (dateRangeFilter !== "(All)") {
@@ -92,7 +102,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     }
 
     loadCases();
-  }, [barangayName, isGeneralDashboard, crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter]);
+  }, [barangayName, isGeneralDashboard, crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter, selectedYear]);
 
   // Filter cases based on search query
   useEffect(() => {

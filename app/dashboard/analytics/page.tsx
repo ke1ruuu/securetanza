@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import AnalyticsTab from "@/components/dashboard/analytics-tab";
@@ -50,7 +50,9 @@ export default function AnalyticsPage() {
   return (
     <ThemeProvider>
       <MapProvider>
-        <AnalyticsContent />
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <AnalyticsContent />
+        </Suspense>
       </MapProvider>
     </ThemeProvider>
   );

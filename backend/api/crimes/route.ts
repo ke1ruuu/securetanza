@@ -55,6 +55,7 @@ export async function GET(request: NextRequest) {
     const typeOfPlace = searchParams.get('typeOfPlace')
     const limit = searchParams.get('limit')
     const hour = searchParams.get('hour') // Optional hour filter (0-23)
+    const year = searchParams.get('year') // Optional year filter
 
     const where: any = {}
 
@@ -148,6 +149,19 @@ export async function GET(request: NextRequest) {
       where.typeOfPlace = {
         contains: typeOfPlace,
         mode: 'insensitive'
+      }
+    }
+
+    // Filter by year if specified
+    if (year) {
+      const yearNum = parseInt(year)
+      const startOfYear = new Date(yearNum, 0, 1) // January 1st
+      const endOfYear = new Date(yearNum, 11, 31, 23, 59, 59, 999) // December 31st
+      
+      where.dateCommitted = {
+        ...where.dateCommitted,
+        gte: startOfYear,
+        lte: endOfYear
       }
     }
 

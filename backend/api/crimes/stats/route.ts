@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
     const barangay = searchParams.get('barangay')
     const startDate = searchParams.get('startDate')
     const endDate = searchParams.get('endDate')
+    const year = searchParams.get('year')
 
     const where: any = {}
 
@@ -25,6 +26,16 @@ export async function GET(request: NextRequest) {
       where.dateCommitted = {
         gte: new Date(startDate),
         lte: new Date(endDate)
+      }
+    } else if (year) {
+      // Filter by year if specified and no date range provided
+      const yearNum = parseInt(year)
+      const startOfYear = new Date(yearNum, 0, 1)
+      const endOfYear = new Date(yearNum, 11, 31, 23, 59, 59, 999)
+      
+      where.dateCommitted = {
+        gte: startOfYear,
+        lte: endOfYear
       }
     }
 
@@ -146,17 +157,23 @@ export async function GET(request: NextRequest) {
     // Get active cases (total - cleared)
     const activeCases = totalCrimes - clearedCases
 
-    // Get crimes by month for the current year
-    const currentYear = new Date().getFullYear()
+    // Get crimes by month for the selected year or current year
+    const targetYear = year ? parseInt(year) : new Date().getFullYear()
+    
+    // Build the where clause for monthly stats
+    // If where already has dateCommitted (from year filter), use it
+    // Otherwise, set it to the target year
+    const monthlyWhere: any = { ...where }
+    if (!monthlyWhere.dateCommitted) {
+      monthlyWhere.dateCommitted = {
+        gte: new Date(`${targetYear}-01-01`),
+        lt: new Date(`${targetYear + 1}-01-01`)
+      }
+    }
+    
     const crimesByMonth = await prisma.crimeIncident.groupBy({
       by: ['dateCommitted'],
-      where: {
-        ...where,
-        dateCommitted: {
-          gte: new Date(`${currentYear}-01-01`),
-          lt: new Date(`${currentYear + 1}-01-01`)
-        }
-      },
+      where: monthlyWhere,
       _count: {
         dateCommitted: true
       }
@@ -178,6 +195,16 @@ export async function GET(request: NextRequest) {
     const safetyIndex = totalCrimes > 0 
       ? Math.round((clearedCases / totalCrimes) * 100)
       : 100
+
+    console.log('📊 Stats API Response:', {
+      year,
+      targetYear,
+      totalCrimes,
+      monthlyStatsSum: monthlyStats.reduce((sum, m) => sum + m.count, 0),
+      activitySum: monthlyStats.map(s => s.count).reduce((a, b) => a + b, 0),
+      activity: monthlyStats.map(s => s.count),
+      crimesByMonthLength: crimesByMonth.length
+    })
 
     return NextResponse.json({
       success: true,

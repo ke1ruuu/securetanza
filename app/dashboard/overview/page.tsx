@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import OverviewTab from "@/components/dashboard/overview-tab";
@@ -86,7 +86,9 @@ export default function OverviewPage() {
   return (
     <ThemeProvider>
       <MapProvider>
-        <OverviewContent />
+        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+          <OverviewContent />
+        </Suspense>
       </MapProvider>
     </ThemeProvider>
   );

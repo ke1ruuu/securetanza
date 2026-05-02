@@ -1,8 +1,19 @@
 "use client";
 
 import React from "react";
-import { useCrimeTypes, getCrimeTypeColor } from "@/hooks/useCrimeTypes";
+import { useCrimeTypes, getCrimeTypeColor, extractCrimeType } from "@/hooks/useCrimeTypes";
 import { useMapContext } from "@/context/MapContext";
+
+// Helper function to format numbers in standard notation
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toString();
+}
 
 export default function CrimeLegend() {
   const { stats, total, loading } = useCrimeTypes();
@@ -58,7 +69,7 @@ export default function CrimeLegend() {
             Crime Types
           </span>
           <span className="text-[10px] font-bold text-slate-400 tabular-nums">
-            {total} total
+            {formatNumber(total)} total
           </span>
         </div>
       </div>
@@ -69,6 +80,8 @@ export default function CrimeLegend() {
         const isDimmed = selectedCrimeType && !isActive;
         const color = getCrimeTypeColor(item.type);
         const percentage = total > 0 ? Math.round((item.count / total) * 100) : 0;
+        const displayName = extractCrimeType(item.type); // Remove prefix for display
+        const formattedCount = formatNumber(item.count); // Format count
 
         return (
           <button
@@ -84,7 +97,7 @@ export default function CrimeLegend() {
           >
             {/* Count Badge */}
             <div
-              className={`min-w-[26px] h-[22px] rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-all ${
+              className={`min-w-[26px] h-[22px] px-1.5 rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-all ${
                 isActive ? "text-white shadow-lg" : "text-white/90"
               }`}
               style={{
@@ -92,7 +105,7 @@ export default function CrimeLegend() {
                 boxShadow: isActive ? `0 0 12px ${color}80` : "none",
               }}
             >
-              {item.count}
+              {formattedCount}
             </div>
 
             {/* Label and Percentage */}
@@ -103,7 +116,7 @@ export default function CrimeLegend() {
                 }`}
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                {item.type}
+                {displayName}
               </span>
               <span
                 className={`text-[8px] font-medium tabular-nums transition-colors ${

@@ -5,15 +5,18 @@ import { useMapContext } from "@/context/MapContext";
 export function useFilteredCrimes() {
   const [crimes, setCrimes] = useState<CrimeIncident[]>([]);
   const [loading, setLoading] = useState(false);
-  const { timeFilterDate, timeFilterHour } = useMapContext();
+  const { timeFilterDate, timeFilterHour, selectedYear } = useMapContext();
 
   useEffect(() => {
     const fetchFilteredCrimes = async () => {
       setLoading(true);
       try {
         if (!timeFilterDate) {
-          // No filter active, fetch all recent crimes
-          const allCrimes = await fetchCrimes({ limit: 1000 });
+          // No time filter active, fetch all recent crimes (with optional year filter)
+          const allCrimes = await fetchCrimes({ 
+            limit: 1000,
+            year: selectedYear || undefined
+          });
           setCrimes(allCrimes);
         } else {
           // Filter by date and hour
@@ -33,6 +36,7 @@ export function useFilteredCrimes() {
           const filteredCrimes = await fetchCrimes({
             startDateCommitted: startDate.toISOString(),
             endDateCommitted: endDate.toISOString(),
+            year: selectedYear || undefined
           });
           
           setCrimes(filteredCrimes);
@@ -46,7 +50,7 @@ export function useFilteredCrimes() {
     };
 
     fetchFilteredCrimes();
-  }, [timeFilterDate, timeFilterHour]);
+  }, [timeFilterDate, timeFilterHour, selectedYear]);
 
   return { crimes, loading };
 }

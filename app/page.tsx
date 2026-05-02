@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback } from "react";
+import { useState, useCallback, Suspense } from "react";
 
 import MapHeader from "@/components/layout/map-header";
 import BarangayFilter from "@/components/layout/barangay-filter";
@@ -56,13 +56,25 @@ function HomeContent() {
   }, []);
 
   const handlePlayPauseToggle = useCallback(() => {
-    setIsPlaying((prev) => !prev);
-  }, []);
+    setIsPlaying((prev) => {
+      const newIsPlaying = !prev;
+      // Activate time filter when starting playback
+      if (newIsPlaying) {
+        console.log('▶️ Starting playback - activating time filter');
+        setIsTimeFilterActive(true);
+      }
+      return newIsPlaying;
+    });
+  }, [setIsTimeFilterActive]);
 
   return (
     <main className="relative h-screen w-screen bg-[#020617] overflow-hidden text-slate-100 font-sans">
       <div className="fixed top-0 left-0 right-0 z-50 transition-transform duration-500 ease-in-out">
-        <MapHeader isVisible={!isFilterActive} />
+        <Suspense fallback={
+          <div className="w-full h-16 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06]" />
+        }>
+          <MapHeader isVisible={!isFilterActive} />
+        </Suspense>
       </div>
 
       <div className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${
