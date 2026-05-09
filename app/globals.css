@@ -90,6 +90,12 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes loading {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
 @keyframes pulse {
   0% { opacity: 1; }
   50% { opacity: 0.4; }
@@ -99,6 +105,11 @@ body {
 /* Map controls — hide default zoom (custom controls in right sidebar) */
 .leaflet-control-zoom {
   display: none !important;
+}
+
+/* Force dark background on leaflet container */
+.leaflet-container {
+  background: #0f172a !important;
 }
 
 .leaflet-tooltip {
@@ -260,5 +271,196 @@ body {
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* ============================================
+   RESPONSIVE IMPROVEMENTS
+   ============================================ */
+
+/* Minimum touch target size for mobile (44x44px recommended by Apple/Google) */
+@media (max-width: 768px) {
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Larger tap targets for interactive elements */
+  .pointer-events-auto button,
+  .pointer-events-auto a {
+    padding: 0.75rem;
+  }
+}
+
+/* Smooth scrolling for all devices */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Better text rendering on mobile */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  h4 { font-size: 1.125rem; }
+}
+
+/* Improve table responsiveness */
+@media (max-width: 768px) {
+  table {
+    font-size: 0.875rem;
+  }
+  
+  th, td {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Better card spacing on mobile */
+@media (max-width: 640px) {
+  .space-y-8 > * + * {
+    margin-top: 1.5rem;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* Optimize chart containers for mobile */
+@media (max-width: 768px) {
+  [class*="ChartContainer"] {
+    max-height: 300px !important;
+  }
+}
+
+/* Better modal/drawer sizing on mobile */
+@media (max-width: 640px) {
+  [role="dialog"] {
+    max-width: 95vw !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* Improve focus visibility for accessibility */
+*:focus-visible {
+  outline: 2px solid #0EA5E9;
+  outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Better loading states */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Improve select/dropdown on mobile */
+@media (max-width: 768px) {
+  select {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.75rem;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Better grid responsiveness */
+@media (max-width: 640px) {
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}
+
+/* Optimize spacing for small screens */
+@media (max-width: 640px) {
+  .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Better button states on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  button:active,
+  a:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+}
+
+/* Improve map controls on mobile */
+@media (max-width: 768px) {
+  .leaflet-control-zoom {
+    margin-right: 0.5rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 20px !important;
+  }
+}
+
+/* Better sidebar/drawer on mobile */
+@media (max-width: 768px) {
+  [data-vaul-drawer] {
+    max-height: 85vh !important;
+  }
+}
+
+/* Optimize performance with GPU acceleration */
+.transform,
+.transition-transform,
+.animate-in,
+.animate-out {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Better contrast for dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
   }
 }

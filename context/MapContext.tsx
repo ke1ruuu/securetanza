@@ -4,6 +4,22 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import L from "leaflet";
 import { BARANGAY_NAMES, generateBarangayData, getHotspotSectorForDate } from "../constants/dummy";
 
+// Time range selection types
+export type FilterMode = 'day' | 'month' | 'quarter' | 'half-year' | 'year';
+
+export interface TimeSelection {
+  year: number;
+  quarter?: number;
+  halfYear?: number;
+  month?: number;
+  day?: Date;
+}
+
+export interface TimeRange {
+  mode: FilterMode;
+  selections: TimeSelection[];
+}
+
 interface MapContextType {
   geoJsonData: any;
   barangayNames: string[];
@@ -18,6 +34,7 @@ interface MapContextType {
   hotspotYear: string;
   hoveredThreatLevel: string | null;
   mapRef: React.MutableRefObject<L.Map | null>;
+  initialBounds: L.LatLngBounds | null;
   timeFilterDate: Date | null;
   timeFilterHour: number | null;
   timeFilterHourCrimeCount: number;
@@ -25,6 +42,7 @@ interface MapContextType {
   selectedCrimeType: string | null;
   selectedYear: number | null;
   availableYears: number[];
+  timeRange: TimeRange;
   
   // Actions
   setSelectedBarangay: (name: string | null) => void;
@@ -35,10 +53,12 @@ interface MapContextType {
   setHotspotMode: (value: boolean) => void;
   setHotspotDate: (month: string, year: string) => void;
   setHoveredThreatLevel: (level: string | null) => void;
+  setInitialBounds: (bounds: L.LatLngBounds | null) => void;
   setTimeFilter: (date: Date | null, hour: number | null, hourCrimeCount?: number) => void;
   setIsTimeFilterActive: (isActive: boolean) => void;
   setSelectedCrimeType: (crimeType: string | null) => void;
   setSelectedYear: (year: number | null) => void;
+  setTimeRange: (timeRange: TimeRange) => void;
   onFlyToStationComplete: () => void;
 }
 
@@ -64,7 +84,29 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const [selectedCrimeType, setSelectedCrimeType] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [timeRange, setTimeRangeState] = useState<TimeRange>({ mode: 'year', selections: [] });
+  const [initialBounds, setInitialBounds] = useState<L.LatLngBounds | null>(null);
   const mapRef = useRef<L.Map | null>(null);
+
+  // Wrapper for setTimeRange that also saves to localStorage
+  const setTimeRange = useCallback((newTimeRange: TimeRange) => {
+    setTimeRangeState(newTimeRange);
+    
+    // Save to localStorage (serialize Date objects)
+    const serialized = {
+      mode: newTimeRange.mode,
+      selections: newTimeRange.selections.map(s => ({
+        year: s.year,
+        quarter: s.quarter,
+        halfYear: s.halfYear,
+        month: s.month,
+        day: s.day ? s.day.toISOString() : undefined
+      }))
+    };
+    localStorage.setItem('timeRange', JSON.stringify(serialized));
+    
+    console.log('💾 Saved timeRange to localStorage:', serialized);
+  }, []);
 
   // Wrapper for setSelectedYear that also saves to localStorage
   const setSelectedYearWithPersistence = useCallback((year: number | null) => {
@@ -97,13 +139,54 @@ export function MapProvider({ children }: { children: ReactNode }) {
         if (data.years && data.years.length > 0) {
           setAvailableYears(data.years);
           
-          // Try to restore from localStorage first
+          // Try to restore timeRange from localStorage first
+          const savedTimeRange = localStorage.getItem('timeRange');
+          if (savedTimeRange) {
+            try {
+              const parsed = JSON.parse(savedTimeRange);
+              // Deserialize Date objects
+              const restored: TimeRange = {
+                mode: parsed.mode,
+                selections: parsed.selections.map((s: any) => ({
+                  year: s.year,
+                  quarter: s.quarter,
+                  halfYear: s.halfYear,
+                  month: s.month,
+                  day: s.day ? new Date(s.day) : undefined
+                }))
+              };
+              
+              // Validate that the restored selections are still valid
+              const validSelections = restored.selections.filter(s => {
+                if (restored.mode === 'year') {
+                  return data.years.includes(s.year);
+                }
+                return data.years.includes(s.year);
+              });
+              
+              if (validSelections.length > 0) {
+                console.log('📅 Restored timeRange from localStorage:', restored);
+                setTimeRangeState({ ...restored, selections: validSelections });
+                
+                // Also restore selectedYear for backward compatibility
+                if (validSelections.length > 0) {
+                  setSelectedYear(validSelections[0].year);
+                }
+                return;
+              }
+            } catch (e) {
+              console.error('Failed to restore timeRange from localStorage:', e);
+            }
+          }
+          
+          // Try to restore selectedYear from localStorage
           const savedYear = localStorage.getItem('selectedYear');
           if (savedYear) {
             const yearNum = parseInt(savedYear);
             if (data.years.includes(yearNum)) {
               console.log('📅 Restored year from localStorage:', yearNum);
               setSelectedYear(yearNum);
+              setTimeRangeState({ mode: 'year', selections: [{ year: yearNum }] });
               return;
             }
           }
@@ -112,8 +195,10 @@ export function MapProvider({ children }: { children: ReactNode }) {
           const currentYear = new Date().getFullYear();
           if (data.years.includes(currentYear)) {
             setSelectedYear(currentYear);
+            setTimeRangeState({ mode: 'year', selections: [{ year: currentYear }] });
           } else {
             setSelectedYear(data.years[0]); // Most recent year
+            setTimeRangeState({ mode: 'year', selections: [{ year: data.years[0] }] });
           }
         }
       })
@@ -159,7 +244,9 @@ export function MapProvider({ children }: { children: ReactNode }) {
     selectedCrimeType,
     selectedYear,
     availableYears,
+    timeRange,
     mapRef,
+    initialBounds,
     setSelectedBarangay,
     setHoveredBarangay,
     setFlyToStation,
@@ -168,10 +255,12 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setHotspotMode,
     setHotspotDate,
     setHoveredThreatLevel,
+    setInitialBounds,
     setTimeFilter,
     setIsTimeFilterActive,
     setSelectedCrimeType,
     setSelectedYear: setSelectedYearWithPersistence,
+    setTimeRange,
     onFlyToStationComplete,
   };
 

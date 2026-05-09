@@ -10,6 +10,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/context/ThemeContext";
 import { useMapContext } from "@/context/MapContext";
+import { useTimeRangeData } from "@/hooks/useTimeRangeData";
 import { fetchCrimes, CrimeIncident } from "@/lib/api";
 import { Select } from "@/components/ui/select";
 
@@ -19,7 +20,8 @@ interface IncidentsTabProps {
 
 export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   const { theme } = useTheme();
-  const { selectedYear } = useMapContext();
+  const { timeRange } = useMapContext();
+  const dateRanges = useTimeRangeData();
   const [cases, setCases] = useState<CrimeIncident[]>([]);
   const [filteredCases, setFilteredCases] = useState<CrimeIncident[]>([]);
   const [selectedCase, setSelectedCase] = useState<CrimeIncident | null>(null);
@@ -38,61 +40,91 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
   // Fetch cases from backend
   useEffect(() => {
-    // Don't fetch until selectedYear is set
-    if (selectedYear === null) {
-      console.log('⏳ Cases: Waiting for selectedYear to be set...')
+    // Don't fetch until time range has selections
+    if (dateRanges.length === 0) {
+      console.log('⏳ Cases: Waiting for time range selections...')
       return
     }
     
     async function loadCases() {
       setLoading(true);
       try {
-        const params: any = {
-          year: selectedYear // Always filter by selected year
-        };
+        console.log('📋 Loading Cases Data:', {
+          barangayName,
+          timeRange,
+          dateRanges: dateRanges.map(r => ({ start: r.start.toISOString(), end: r.end.toISOString() })),
+          timestamp: new Date().toISOString()
+        })
 
-        // Only add date range if not "All"
-        if (dateRangeFilter !== "(All)") {
-          // Calculate date range
-          const endDate = new Date();
-          const startDate = new Date();
-          
-          if (dateRangeFilter === "(Last 7 Days)") {
-            startDate.setDate(startDate.getDate() - 7);
-          } else if (dateRangeFilter === "(Last 30 Days)") {
-            startDate.setDate(startDate.getDate() - 30);
-          } else if (dateRangeFilter === "(Last 90 Days)") {
-            startDate.setDate(startDate.getDate() - 90);
+        // Fetch data for all date ranges in parallel
+        const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const params: any = {
+            startDateCommitted: start.toISOString(),
+            endDateCommitted: end.toISOString()
+          };
+
+          // Only add additional date range filter if not "All"
+          if (dateRangeFilter !== "(All)") {
+            // Calculate additional date range filter
+            const endDate = new Date();
+            const startDate = new Date();
+            
+            if (dateRangeFilter === "(Last 7 Days)") {
+              startDate.setDate(startDate.getDate() - 7);
+            } else if (dateRangeFilter === "(Last 30 Days)") {
+              startDate.setDate(startDate.getDate() - 30);
+            } else if (dateRangeFilter === "(Last 90 Days)") {
+              startDate.setDate(startDate.getDate() - 90);
+            }
+
+            // Use the more restrictive date range
+            if (startDate > start) {
+              params.startDateCommitted = startDate.toISOString();
+            }
+            if (endDate < end) {
+              params.endDateCommitted = endDate.toISOString();
+            }
           }
 
-          params.startDateCommitted = startDate.toISOString();
-          params.endDateCommitted = endDate.toISOString();
-        }
+          // Add barangay filter for specific dashboard
+          if (!isGeneralDashboard) {
+            params.barangay = barangayName;
+          } else if (barangayFilter !== "(All)") {
+            params.barangay = barangayFilter;
+          }
 
-        // Add barangay filter for specific dashboard
-        if (!isGeneralDashboard) {
-          params.barangay = barangayName;
-        } else if (barangayFilter !== "(All)") {
-          params.barangay = barangayFilter;
-        }
+          // Add crime type filter
+          if (crimeTypeFilter !== "(All)") {
+            params.incidentType = crimeTypeFilter;
+          }
 
-        // Add crime type filter
-        if (crimeTypeFilter !== "(All)") {
-          params.incidentType = crimeTypeFilter;
-        }
+          // Add status filter
+          if (statusFilter !== "(All)") {
+            params.caseStatus = statusFilter;
+          }
 
-        // Add status filter
-        if (statusFilter !== "(All)") {
-          params.caseStatus = statusFilter;
-        }
+          return fetchCrimes(params);
+        });
 
-        const data = await fetchCrimes(params);
-        setCases(data);
-        setFilteredCases(data);
+        const results = await Promise.all(fetchPromises);
+        
+        // Combine all results and remove duplicates by id
+        const allCases = results.flat();
+        const uniqueCases = Array.from(
+          new Map(allCases.map(crime => [crime.id, crime])).values()
+        );
+        
+        // Sort by date committed (most recent first)
+        uniqueCases.sort((a, b) => 
+          new Date(b.dateCommitted).getTime() - new Date(a.dateCommitted).getTime()
+        );
+
+        setCases(uniqueCases);
+        setFilteredCases(uniqueCases);
         
         // Auto-select first case
-        if (data.length > 0) {
-          setSelectedCase(data[0]);
+        if (uniqueCases.length > 0) {
+          setSelectedCase(uniqueCases[0]);
         }
       } catch (error) {
         console.error("Error loading cases:", error);
@@ -102,7 +134,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     }
 
     loadCases();
-  }, [barangayName, isGeneralDashboard, crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter, selectedYear]);
+  }, [barangayName, isGeneralDashboard, crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter, timeRange, dateRanges]);
 
   // Filter cases based on search query
   useEffect(() => {
@@ -188,6 +220,25 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     });
   };
 
+  // Format time to 12-hour with AM/PM
+  const formatTime = (timeString: string) => {
+    if (!timeString) return '';
+    
+    // If timeString is in HH:MM or HH:MM:SS format
+    const parts = timeString.split(':');
+    if (parts.length >= 2) {
+      const hour = parseInt(parts[0]);
+      const minute = parts[1];
+      
+      if (hour === 0) return `12:${minute} AM`;
+      if (hour < 12) return `${hour}:${minute} AM`;
+      if (hour === 12) return `12:${minute} PM`;
+      return `${hour - 12}:${minute} PM`;
+    }
+    
+    return timeString;
+  };
+
   // Generate case ID display
   const getCaseId = (crime: CrimeIncident) => {
     const date = new Date(crime.dateCommitted);
@@ -198,10 +249,45 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-          <p className="text-sm font-semibold text-slate-400">Loading cases...</p>
+      <div className="max-w-[1400px] mx-auto space-y-6 animate-pulse">
+        {/* Search Bar Skeleton */}
+        <div className={`h-12 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-slate-200"}`}></div>
+        
+        {/* Filters Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={`h-10 rounded-lg ${theme === "dark" ? "bg-white/5" : "bg-slate-200"}`}></div>
+          ))}
+        </div>
+
+        {/* Cases Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Cases List Skeleton */}
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className={`p-4 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-white"}`}
+              >
+                <div className={`h-4 rounded mb-3 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '60%' }}></div>
+                <div className={`h-3 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '40%' }}></div>
+                <div className={`h-3 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '50%' }}></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Case Details Skeleton */}
+          <div className={`p-6 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-white"}`}>
+            <div className={`h-6 rounded mb-4 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '70%' }}></div>
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i}>
+                  <div className={`h-3 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '30%' }}></div>
+                  <div className={`h-4 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '80%' }}></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -569,7 +655,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                       <p className={`text-sm ${
                         theme === "dark" ? "text-slate-300" : "text-slate-700"
                       }`}>
-                        {formatDate(selectedCase.dateCommitted)} at {selectedCase.timeCommitted}
+                        {formatDate(selectedCase.dateCommitted)} at {formatTime(selectedCase.timeCommitted)}
                       </p>
                     </div>
                   </div>

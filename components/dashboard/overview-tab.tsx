@@ -60,13 +60,73 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
   if (loading) {
     return (
       <div className="max-w-[1400px] mx-auto space-y-6 animate-pulse">
+        {/* Dashboard Title Skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className={`h-8 w-64 rounded mb-2 ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+            <div className={`h-4 w-96 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+          </div>
+        </div>
+
+        {/* Top Stats Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className={`p-6 rounded-2xl h-32 ${theme === 'dark' ? 'bg-white/5' : 'bg-white'}`}>
-              <div className="h-4 bg-gray-300 rounded mb-4"></div>
-              <div className="h-8 bg-gray-300 rounded"></div>
+            <div key={i} className={`p-6 rounded-2xl border-0 shadow-lg ${theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'}`}>
+              <div className="flex items-start gap-4">
+                <div className={`w-12 h-12 rounded-xl ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-200'}`}></div>
+                <div className="flex-1">
+                  <div className={`h-4 w-32 rounded mb-3 ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                  <div className={`h-10 w-24 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                </div>
+              </div>
             </div>
           ))}
+        </div>
+
+        {/* Main Content Grid Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Crime Trend Chart Skeleton */}
+          <div className={`lg:col-span-2 p-6 rounded-2xl border-0 shadow-lg ${theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'}`}>
+            <div className={`h-6 w-32 rounded mb-2 ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+            <div className={`h-4 w-48 rounded mb-4 ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+            <div className={`h-[280px] w-full rounded ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-200'}`}></div>
+          </div>
+
+          {/* Crime Distribution Pie Chart Skeleton */}
+          <div className={`p-6 rounded-2xl border-0 shadow-lg ${theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'}`}>
+            <div className={`h-6 w-40 rounded mb-4 ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+            <div className={`h-[220px] w-full rounded-full mx-auto mb-4 ${theme === 'dark' ? 'bg-white/5' : 'bg-slate-200'}`} style={{ maxWidth: '220px' }}></div>
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                    <div className={`h-3 w-24 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                  </div>
+                  <div className={`h-3 w-12 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Crime Activity Table Skeleton */}
+        <div className={`rounded-2xl border-0 shadow-lg overflow-hidden ${theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'}`}>
+          <div className={`p-6 border-b ${theme === 'dark' ? 'border-white/5' : 'border-slate-100'}`}>
+            <div className={`h-6 w-48 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+          </div>
+          <div className="p-6 space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="grid grid-cols-6 gap-4">
+                <div className={`h-4 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                <div className={`h-4 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                <div className={`h-4 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                <div className={`h-4 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                <div className={`h-4 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+                <div className={`h-4 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-slate-300'}`}></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -75,6 +135,25 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
   // Calculate most frequent crime type
   const totalCrimesCount = crimesByType?.reduce((sum, item) => sum + item.count, 0) || 0;
   const mostFrequentCrime = [...(crimesByType || [])].sort((a, b) => b.count - a.count)[0]?.type || "N/A";
+
+  // Format time to 12-hour with AM/PM
+  const formatTime = (timeString: string | undefined) => {
+    if (!timeString) return 'N/A';
+    
+    // If timeString is in HH:MM or HH:MM:SS format
+    const parts = timeString.split(':');
+    if (parts.length >= 2) {
+      const hour = parseInt(parts[0]);
+      const minute = parts[1];
+      
+      if (hour === 0) return `12:${minute} AM`;
+      if (hour < 12) return `${hour}:${minute} AM`;
+      if (hour === 12) return `12:${minute} PM`;
+      return `${hour - 12}:${minute} PM`;
+    }
+    
+    return timeString;
+  };
 
   // Find critical area
   let criticalArea = "N/A";
@@ -448,7 +527,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
                     }`}>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 opacity-50" />
-                        {incident.timeReported || 'N/A'}
+                        {formatTime(incident.timeReported)}
                       </div>
                     </td>
                     <td className={`px-6 py-4 ${
@@ -461,7 +540,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
                     }`}>
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 opacity-50" />
-                        {incident.timeCommitted || 'N/A'}
+                        {formatTime(incident.timeCommitted)}
                       </div>
                     </td>
                     <td className="px-6 py-4">

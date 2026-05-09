@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Settings, User, Upload } from "lucide-react";
+import { Settings, User, Upload, Clock, Menu, X, BookOpen } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import UploadModal from "./upload-modal";
-import YearSelector from "./year-selector";
+import TimeSelector from "./time-selector";
 
 interface MapHeaderProps {
   isVisible: boolean;
@@ -19,7 +19,6 @@ const navItems = [
   { id: "incidents", label: "Cases", path: "/dashboard/cases" },
   { id: "analytics", label: "Analytics", path: "/dashboard/analytics" },
   { id: "reports", label: "Reports", path: "/dashboard/reports" },
-  { id: "upload-logs", label: "Upload Logs", path: "/dashboard/upload-logs" },
 ];
 
 export default function MapHeader({ isVisible }: MapHeaderProps) {
@@ -27,6 +26,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Sync selectedBarangay from URL ?name= param on dashboard pages
   useEffect(() => {
@@ -40,6 +40,11 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
       }
     }
   }, [pathname, searchParams, selectedBarangay, setSelectedBarangay]);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   const buildDashboardUrl = (path: string) => {
     const params = new URLSearchParams();
@@ -66,13 +71,13 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
-      <div className="flex items-center h-16 px-8">
+      <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
         {/* ── Logo + Brand ── */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 no-underline shrink-0 mr-10 group"
+          className="flex items-center gap-2 sm:gap-2.5 no-underline shrink-0 group"
         >
-          <div className="w-9 h-9 flex items-center justify-center">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
             <Image
               src="/SC LOGO W 1.png"
               alt="SECURE Tanza Logo"
@@ -83,15 +88,15 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
             />
           </div>
           <span
-            className="text-[17px] font-bold text-white/90 tracking-tight leading-none whitespace-nowrap"
+            className="text-[15px] sm:text-[17px] font-bold text-white/90 tracking-tight leading-none whitespace-nowrap"
             style={{ fontFamily: "var(--font-manrope)" }}
           >
             Secure Tanza
           </span>
         </Link>
 
-        {/* ── Navigation Links ── */}
-        <nav className="flex items-center gap-1 h-full">
+        {/* Desktop Navigation - Hidden on mobile */}
+        <nav className="hidden lg:flex items-center gap-1 h-full absolute left-1/2 -translate-x-1/2">
           {navItems.map((item) => {
             const isActive = isNavItemActive(item);
             const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
@@ -100,7 +105,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
               <Link
                 key={item.id}
                 href={href}
-                className={`relative flex items-center h-full px-5 text-[15px] font-medium tracking-wide no-underline transition-colors duration-200 ${
+                className={`relative flex items-center h-full px-4 xl:px-5 text-[14px] xl:text-[15px] font-medium tracking-wide no-underline transition-colors duration-200 ${
                   isActive
                     ? "text-[#0EA5E9]"
                     : "text-slate-400 hover:text-white"
@@ -117,32 +122,114 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           })}
         </nav>
 
-        {/* ── Right Actions ── */}
-        <div className="ml-auto flex items-center gap-2">
-          <YearSelector />
+        {/* Right Side Actions */}
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          {/* Time Selector - Hidden on small mobile */}
+          <div className="hidden sm:block">
+            <TimeSelector />
+          </div>
+          
+          
+          {/* Upload Button */}
           <button
             onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 h-9 px-4 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 hover:border-[#0EA5E9]/30 transition-all duration-200 cursor-pointer"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 hover:border-[#0EA5E9]/30 transition-all duration-200 cursor-pointer"
             title="Upload Data"
           >
-            <Upload className="h-4 w-4" />
-            <span className="text-sm font-semibold">Upload Data</span>
+            <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
+
+          {/* Help/Docs Button */}
+          <Link
+            href="/docs"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
+            title="User Guide"
+          >
+            <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </Link>
+          
+          {/* Settings - Hidden on mobile */}
           <Link
             href={buildDashboardUrl("/dashboard/config")}
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
+            className="hidden sm:flex w-10 h-10 rounded-lg items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
             title="Settings"
           >
             <Settings className="h-5 w-5" />
           </Link>
+          
+          {/* Profile - Hidden on mobile */}
           <button
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
+            className="hidden sm:flex w-10 h-10 rounded-lg items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
             title="Profile"
           >
             <User className="h-5 w-5" />
           </button>
+
+          {/* Mobile Menu Button - Only on mobile */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden border-t border-white/[0.06] bg-[#0F172A]/95 backdrop-blur-xl">
+          <nav className="px-4 py-3 space-y-1">
+            {navItems.map((item) => {
+              const isActive = isNavItemActive(item);
+              const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
+
+              return (
+                <Link
+                  key={item.id}
+                  href={href}
+                  className={`block px-4 py-3 rounded-lg text-[15px] font-medium tracking-wide no-underline transition-colors duration-200 ${
+                    isActive
+                      ? "text-[#0EA5E9] bg-[#0EA5E9]/10"
+                      : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                  }`}
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+            
+            {/* Mobile-only menu items */}
+            <div className="pt-2 mt-2 border-t border-white/[0.06] space-y-1">
+              <Link
+                href="/docs"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-200 no-underline"
+              >
+                <BookOpen className="h-5 w-5" />
+                User Guide
+              </Link>
+              <Link
+                href={buildDashboardUrl("/dashboard/config")}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-200 no-underline"
+              >
+                <Settings className="h-5 w-5" />
+                Settings
+              </Link>
+              <button
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-200 text-left"
+              >
+                <User className="h-5 w-5" />
+                Profile
+              </button>
+            </div>
+          </nav>
+        </div>
+      )}
 
       {/* Upload Modal */}
       <UploadModal open={showUploadModal} onOpenChange={setShowUploadModal} />

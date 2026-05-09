@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { TrendingUp, TrendingDown, BarChart3, Clock, HelpCircle, Shield } from "lucide-react";
+import React, { useState } from "react";
+import { TrendingUp, TrendingDown, BarChart3, Clock, HelpCircle, Shield, Brain, BarChart2, AlertCircle } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -15,6 +15,10 @@ import {
   PolarAngleAxis,
   PolarGrid,
   PolarRadiusAxis,
+  Line,
+  LineChart,
+  Legend,
+  ResponsiveContainer,
 } from "recharts";
 import {
   Card,
@@ -38,6 +42,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useCrimeMatrix } from "@/hooks/useCrimeMatrix";
 import { useModusAndPlace } from "@/hooks/useModusAndPlace";
+import { useForecast } from "@/hooks/useForecast";
 import CrimeMatrixChart from "./crime-matrix-chart";
 
 interface AnalyticsTabProps {
@@ -74,6 +79,8 @@ const BAR_COLORS = [
 
 export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
   const { theme } = useTheme();
+  const [mode, setMode] = useState<"historical" | "predictive">("historical");
+  
   const {
     crimesByType,
     crimesByMonth,
@@ -85,6 +92,13 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
   
   const { matrixData, loading: matrixLoading } = useCrimeMatrix(barangayName);
   const { modusList, placesList, loading: modusPlaceLoading } = useModusAndPlace(barangayName);
+  
+  // Forecast data for predictive mode
+  const { forecast, loading: forecastLoading, error: forecastError } = useForecast({
+    barangay: barangayName,
+    periods: 12,
+    validate: true
+  });
 
   const isGeneralDashboard =
     !barangayName || barangayName === "General Dashboard";
@@ -166,11 +180,25 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
     count: { label: "Incidents", color: "hsl(38, 92%, 50%)" },
   };
 
+  // Format hour to 12-hour with AM/PM
+  const formatHour = (hour: number) => {
+    if (hour === 0) return "12 AM";
+    if (hour < 12) return `${hour} AM`;
+    if (hour === 12) return "12 PM";
+    return `${hour - 12} PM`;
+  };
+
   // ─── Hourly Heatmap Data ───
   const hourlyData = timePatterns.hourlyDistribution.map((count, hour) => ({
-    hour: `${hour.toString().padStart(2, "0")}:00`,
+    hour: formatHour(hour),
     incidents: count,
   }));
+
+  console.log('📊 Hourly Data for Chart:', {
+    hourlyDistribution: timePatterns.hourlyDistribution,
+    hourlyData,
+    totalIncidents: hourlyData.reduce((sum, d) => sum + d.incidents, 0)
+  });
 
   const hourlyChartConfig: ChartConfig = {
     incidents: { label: "Incidents", color: "hsl(262, 83%, 58%)" },
@@ -186,23 +214,66 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
-      {/* Header */}
+      {/* Header with Mode Toggle */}
       <div
         className={`border-b pb-6 ${theme === "dark" ? "border-white/5" : "border-slate-200"}`}
       >
-        <h2
-          className={`text-2xl font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-slate-900"}`}
-        >
-          Crime Analytics
-        </h2>
-        <p className="text-slate-500 text-base mt-2 font-medium">
-          Comprehensive analysis and insights for{" "}
-          {isGeneralDashboard ? "all barangays in Tanza" : barangayName}
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h2
+              className={`text-2xl font-black uppercase tracking-wider ${theme === "dark" ? "text-white" : "text-slate-900"}`}
+            >
+              Crime Analytics
+            </h2>
+            <p className="text-slate-500 text-base mt-2 font-medium">
+              Comprehensive analysis and insights for{" "}
+              {isGeneralDashboard ? "all barangays in Tanza" : barangayName}
+            </p>
+          </div>
+          
+          {/* Mode Toggle */}
+          <div className={`flex items-center gap-2 p-1 rounded-lg ${
+            theme === "dark" ? "bg-slate-800/50 border border-slate-700" : "bg-slate-100 border border-slate-200"
+          }`}>
+            <button
+              onClick={() => setMode("historical")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                mode === "historical"
+                  ? theme === "dark"
+                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                    : "bg-blue-500 text-white"
+                  : theme === "dark"
+                    ? "text-slate-400 hover:text-slate-300"
+                    : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <BarChart2 className="h-4 w-4" />
+              Historical
+            </button>
+            <button
+              onClick={() => setMode("predictive")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-all ${
+                mode === "predictive"
+                  ? theme === "dark"
+                    ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+                    : "bg-purple-500 text-white"
+                  : theme === "dark"
+                    ? "text-slate-400 hover:text-slate-300"
+                    : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Brain className="h-4 w-4" />
+              Predictive
+            </button>
+          </div>
+        </div>
       </div>
 
+      {/* Conditional Content Based on Mode */}
+      {mode === "historical" ? (
+        <>
       {/* Trend Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {/* Overall Trend Card */}
         <Card
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-gradient-to-br from-blue-500/10 to-blue-600/5" : "bg-gradient-to-br from-blue-50 to-blue-100"}`}
@@ -362,7 +433,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                           Hour with MAX(incident count)
                         </div>
                         <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
-                          <strong>Example:</strong> If 15 crimes occurred at 14:00 and that's the highest, peak hour = 14:00
+                          <strong>Example:</strong> If 15 crimes occurred at 2 PM and that's the highest, peak hour = 2 PM
                         </p>
                       </div>
                     </HoverCardContent>
@@ -371,7 +442,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                 <p
                   className={`text-2xl font-black ${theme === "dark" ? "text-white" : "text-slate-900"}`}
                 >
-                  {timePatterns.peakHour}:00
+                  {formatHour(timePatterns.peakHour)}
                 </p>
                 <p className="text-xs text-slate-500 mt-1">Most incidents</p>
               </div>
@@ -507,7 +578,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       </div>
 
       {/* Main Analytics Grid */}
-      <div className={`grid gap-8 ${isGeneralDashboard ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1 lg:grid-cols-[1fr_1fr]'}`}>
+      <div className={`grid gap-6 sm:gap-8 ${isGeneralDashboard ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 xl:grid-cols-[1fr_1fr]'}`}>
         {/* ═══════════════════════════════════════════════════ */}
         {/* LEFT COLUMN: Time Patterns (Full height for specific barangay) */}
         {/* ═══════════════════════════════════════════════════ */}
@@ -525,12 +596,15 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
             </p>
           </CardHeader>
           <CardContent className="flex justify-center flex-1">
-            <ChartContainer
-              config={hourlyChartConfig}
-              className={`mx-auto aspect-square w-full pb-4 ${!isGeneralDashboard ? 'max-h-[680px]' : 'max-h-[320px]'}`}
-            >
+            <div id="chart-hourly-distribution" className="w-full">
+              <ChartContainer
+                config={hourlyChartConfig}
+                className={`mx-auto aspect-square w-full pb-4 ${!isGeneralDashboard ? 'max-h-[680px]' : 'max-h-[320px]'}`}
+              >
               <RadarChart 
                 data={hourlyData}
+                width={500}
+                height={500}
                 margin={{ top: 24, right: 24, bottom: 24, left: 24 }}
               >
                 <PolarGrid
@@ -568,10 +642,11 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                 />
               </RadarChart>
             </ChartContainer>
+            </div>
           </CardContent>
           <CardFooter className="flex-col items-start gap-1 text-sm px-6 pb-6">
             <div className="flex items-center gap-2 font-semibold leading-none">
-              Peak activity at {timePatterns.peakHour}:00
+              Peak activity at {formatHour(timePatterns.peakHour)}
               <Clock className="h-4 w-4 text-purple-500" />
             </div>
             <div className="text-muted-foreground leading-none">
@@ -910,7 +985,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       {/* ═══════════════════════════════════════════════════ */}
       {/* Modus and Type of Place Charts                     */}
       {/* ═══════════════════════════════════════════════════ */}
-      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 sm:gap-8 grid-cols-1 xl:grid-cols-2">
         {/* ═══════════════════════════════════════════════════ */}
         {/* Crime Modus (Method of Operation)                  */}
         {/* ═══════════════════════════════════════════════════ */}
@@ -1213,6 +1288,350 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
           />
         )}
       </div>
+      </>
+      ) : (
+        /* ═══════════════════════════════════════════════════ */
+        /* PREDICTIVE MODE - Forecast Visualization           */
+        /* ═══════════════════════════════════════════════════ */
+        <div className="space-y-8">
+          {forecastLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 animate-pulse ${
+                theme === "dark" ? "bg-purple-500/10" : "bg-purple-100"
+              }`}>
+                <Brain className={`h-10 w-10 ${
+                  theme === "dark" ? "text-purple-400" : "text-purple-600"
+                }`} />
+              </div>
+              <h3 className={`text-xl font-bold mb-2 ${
+                theme === "dark" ? "text-white" : "text-slate-900"
+              }`}>
+                Generating Forecast...
+              </h3>
+              <p className="text-slate-500">Training ARIMA model with multi-year data</p>
+            </div>
+          ) : forecastError ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-6 ${
+                theme === "dark" ? "bg-red-500/10" : "bg-red-100"
+              }`}>
+                <AlertCircle className={`h-10 w-10 ${
+                  theme === "dark" ? "text-red-400" : "text-red-600"
+                }`} />
+              </div>
+              <h3 className={`text-xl font-bold mb-2 ${
+                theme === "dark" ? "text-white" : "text-slate-900"
+              }`}>
+                Forecast Unavailable
+              </h3>
+              <p className="text-slate-500 mb-4">{forecastError}</p>
+              <p className="text-sm text-slate-400">Make sure the forecast API is running on port 8000</p>
+            </div>
+          ) : forecast ? (
+            <>
+              {/* Forecast Summary Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {/* Average Forecast */}
+                <Card className={`border-0 shadow-lg ${
+                  theme === "dark" ? "bg-gradient-to-br from-purple-500/10 to-purple-600/5" : "bg-gradient-to-br from-purple-50 to-purple-100"
+                }`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className={`text-sm font-bold uppercase tracking-wider ${
+                          theme === "dark" ? "text-purple-400" : "text-purple-600"
+                        }`}>
+                          Avg Forecast
+                        </p>
+                        <p className={`text-2xl font-black ${
+                          theme === "dark" ? "text-white" : "text-slate-900"
+                        }`}>
+                          {forecast.summary.avg_forecast.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">crimes/month</p>
+                      </div>
+                      <div className={`p-3 rounded-xl ${
+                        theme === "dark" ? "bg-purple-500/20" : "bg-purple-100"
+                      }`}>
+                        <TrendingUp className={`h-6 w-6 ${
+                          theme === "dark" ? "text-purple-400" : "text-purple-600"
+                        }`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Total Predicted */}
+                <Card className={`border-0 shadow-lg ${
+                  theme === "dark" ? "bg-gradient-to-br from-blue-500/10 to-blue-600/5" : "bg-gradient-to-br from-blue-50 to-blue-100"
+                }`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className={`text-sm font-bold uppercase tracking-wider ${
+                          theme === "dark" ? "text-blue-400" : "text-blue-600"
+                        }`}>
+                          Total Predicted
+                        </p>
+                        <p className={`text-2xl font-black ${
+                          theme === "dark" ? "text-white" : "text-slate-900"
+                        }`}>
+                          {forecast.summary.total_forecast}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">{forecast.forecast_period}</p>
+                      </div>
+                      <div className={`p-3 rounded-xl ${
+                        theme === "dark" ? "bg-blue-500/20" : "bg-blue-100"
+                      }`}>
+                        <BarChart3 className={`h-6 w-6 ${
+                          theme === "dark" ? "text-blue-400" : "text-blue-600"
+                        }`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Model Accuracy */}
+                <Card className={`border-0 shadow-lg ${
+                  theme === "dark" ? "bg-gradient-to-br from-emerald-500/10 to-emerald-600/5" : "bg-gradient-to-br from-emerald-50 to-emerald-100"
+                }`}>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className={`text-sm font-bold uppercase tracking-wider ${
+                          theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                        }`}>
+                          Model MAPE
+                        </p>
+                        <p className={`text-2xl font-black ${
+                          theme === "dark" ? "text-white" : "text-slate-900"
+                        }`}>
+                          {forecast.metrics.mape.toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">Training accuracy</p>
+                      </div>
+                      <div className={`p-3 rounded-xl ${
+                        theme === "dark" ? "bg-emerald-500/20" : "bg-emerald-100"
+                      }`}>
+                        <Shield className={`h-6 w-6 ${
+                          theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                        }`} />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Validation Status */}
+                {forecast.validation && (
+                  <Card className={`border-0 shadow-lg ${
+                    theme === "dark" ? "bg-gradient-to-br from-amber-500/10 to-amber-600/5" : "bg-gradient-to-br from-amber-50 to-amber-100"
+                  }`}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className={`text-sm font-bold uppercase tracking-wider ${
+                            theme === "dark" ? "text-amber-400" : "text-amber-600"
+                          }`}>
+                            Validation
+                          </p>
+                          <p className={`text-lg font-black capitalize ${
+                            theme === "dark" ? "text-white" : "text-slate-900"
+                          }`}>
+                            {forecast.validation.accuracy_assessment}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {forecast.validation.months_validated} months validated
+                          </p>
+                        </div>
+                        <div className={`p-3 rounded-xl ${
+                          theme === "dark" ? "bg-amber-500/20" : "bg-amber-100"
+                        }`}>
+                          <Brain className={`h-6 w-6 ${
+                            theme === "dark" ? "text-amber-400" : "text-amber-600"
+                          }`} />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+
+              {/* Forecast Chart */}
+              <Card className={`border-0 shadow-lg ${
+                theme === "dark" ? "bg-[#1e293b]" : "bg-white"
+              }`}>
+                <CardHeader>
+                  <CardTitle className={`text-lg font-bold ${
+                    theme === "dark" ? "text-white" : "text-slate-900"
+                  }`}>
+                    Crime Forecast - Next 12 Months
+                  </CardTitle>
+                  <p className="text-sm text-slate-500">
+                    Predicted crime trends with 95% confidence intervals
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={{
+                      forecast: { label: "Forecast", color: "hsl(262, 83%, 58%)" },
+                      upper: { label: "Upper Bound", color: "hsl(262, 83%, 58%)" },
+                      lower: { label: "Lower Bound", color: "hsl(262, 83%, 58%)" },
+                    }}
+                    className="h-[400px] w-full"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={forecast.data.map(point => ({
+                          date: new Date(point.date).toLocaleDateString('en-US', { month: 'short' }),
+                          forecast: point.forecast,
+                          upper: point.upper_bound,
+                          lower: point.lower_bound,
+                        }))}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke={theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}
+                        />
+                        <XAxis
+                          dataKey="date"
+                          tick={{
+                            fontSize: 11,
+                            fill: theme === "dark" ? "#94a3b8" : "#64748b",
+                          }}
+                        />
+                        <YAxis
+                          tick={{
+                            fontSize: 11,
+                            fill: theme === "dark" ? "#64748b" : "#94a3b8",
+                          }}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Legend />
+                        <Line
+                          type="monotone"
+                          dataKey="upper"
+                          stroke="hsl(262, 83%, 58%)"
+                          strokeWidth={1}
+                          strokeDasharray="5 5"
+                          dot={false}
+                          name="Upper Bound"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="forecast"
+                          stroke="hsl(262, 83%, 58%)"
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: "hsl(262, 83%, 58%)" }}
+                          name="Forecast"
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="lower"
+                          stroke="hsl(262, 83%, 58%)"
+                          strokeWidth={1}
+                          strokeDasharray="5 5"
+                          dot={false}
+                          name="Lower Bound"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+                <CardFooter className="flex-col items-start gap-1 text-sm px-6 pb-6">
+                  <div className="flex items-center gap-2 font-semibold leading-none">
+                    Training Period: {forecast.training_period}
+                  </div>
+                  <div className="text-muted-foreground leading-none">
+                    Model: ARIMA with {forecast.summary.training_months} months of historical data
+                  </div>
+                </CardFooter>
+              </Card>
+
+              {/* Validation Results */}
+              {forecast.validation && forecast.validation.comparison.length > 0 && (
+                <Card className={`border-0 shadow-lg ${
+                  theme === "dark" ? "bg-[#1e293b]" : "bg-white"
+                }`}>
+                  <CardHeader>
+                    <CardTitle className={`text-lg font-bold ${
+                      theme === "dark" ? "text-white" : "text-slate-900"
+                    }`}>
+                      Validation Results
+                    </CardTitle>
+                    <p className="text-sm text-slate-500">
+                      Comparing predictions with actual 2026 data
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {forecast.validation.comparison.map((point) => (
+                        <div
+                          key={point.month}
+                          className={`p-4 rounded-lg border ${
+                            theme === "dark" ? "border-white/5 bg-white/5" : "border-slate-200 bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`font-semibold ${
+                              theme === "dark" ? "text-white" : "text-slate-900"
+                            }`}>
+                              {point.month}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              point.accuracy === 'good'
+                                ? 'bg-emerald-500/20 text-emerald-400'
+                                : point.accuracy === 'moderate'
+                                ? 'bg-amber-500/20 text-amber-400'
+                                : 'bg-red-500/20 text-red-400'
+                            }`}>
+                              {point.accuracy}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="text-slate-500 text-xs">Actual</p>
+                              <p className={`font-bold ${
+                                theme === "dark" ? "text-white" : "text-slate-900"
+                              }`}>
+                                {point.actual}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Forecast</p>
+                              <p className={`font-bold ${
+                                theme === "dark" ? "text-white" : "text-slate-900"
+                              }`}>
+                                {point.forecast}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-slate-500 text-xs">Error</p>
+                              <p className={`font-bold ${
+                                point.error > 0 ? 'text-red-500' : 'text-emerald-500'
+                              }`}>
+                                {point.error > 0 ? '+' : ''}{point.error.toFixed(0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex-col items-start gap-1 text-sm px-6 pb-6">
+                    <div className="flex items-center gap-2 font-semibold leading-none">
+                      Validation MAE: {forecast.validation.mae.toFixed(2)} crimes/month
+                    </div>
+                    <div className="text-muted-foreground leading-none">
+                      Mean Absolute Percentage Error: {forecast.validation.mape.toFixed(1)}%
+                    </div>
+                  </CardFooter>
+                </Card>
+              )}
+            </>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
+import { useTimeRangeData } from './useTimeRangeData'
 
 interface ModusData {
   modus: string
@@ -19,7 +20,8 @@ interface ModusAndPlaceData {
 }
 
 export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
-  const { selectedYear } = useMapContext()
+  const { timeRange } = useMapContext()
+  const dateRanges = useTimeRangeData()
   const [data, setData] = useState<ModusAndPlaceData>({
     modusList: [],
     placesList: [],
@@ -27,9 +29,9 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
   })
 
   useEffect(() => {
-    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
-    if (selectedYear === null) {
-      console.log('⏳ ModusAndPlace: Waiting for selectedYear to be set...')
+    // Don't fetch until time range has selections
+    if (dateRanges.length === 0) {
+      console.log('⏳ ModusAndPlace: Waiting for time range selections...')
       return
     }
     
@@ -37,15 +39,23 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
       try {
         setData(prev => ({ ...prev, loading: true }))
 
-        const params = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName, year: selectedYear } 
-          : { year: selectedYear }
+        // Fetch data for all date ranges in parallel
+        const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const params = barangayName && barangayName !== "General Dashboard" 
+            ? { barangay: barangayName, startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() } 
+            : { startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() }
 
-        const crimes = await fetchCrimes(params)
+          return fetchCrimes(params)
+        })
+
+        const results = await Promise.all(fetchPromises)
+        
+        // Aggregate all crimes
+        const allCrimes = results.flat()
 
         // Group by modus
         const modusMap = new Map<string, number>()
-        crimes.forEach(crime => {
+        allCrimes.forEach(crime => {
           if (crime.modus && crime.modus.trim() !== '') {
             const modus = crime.modus.trim()
             modusMap.set(modus, (modusMap.get(modus) || 0) + 1)
@@ -54,7 +64,7 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
 
         // Group by type of place
         const placeMap = new Map<string, number>()
-        crimes.forEach(crime => {
+        allCrimes.forEach(crime => {
           if (crime.typeOfPlace && crime.typeOfPlace.trim() !== '') {
             const place = crime.typeOfPlace.trim()
             placeMap.set(place, (placeMap.get(place) || 0) + 1)
@@ -88,7 +98,7 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
     }
 
     loadData()
-  }, [barangayName, selectedYear])
+  }, [barangayName, timeRange, dateRanges])
 
   return data
 }

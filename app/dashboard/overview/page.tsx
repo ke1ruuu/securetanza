@@ -16,40 +16,6 @@ function OverviewContent() {
   const { loading, error } = useDashboardData(barangayName);
   const { theme } = useTheme();
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className={`flex h-screen items-center justify-center transition-colors duration-700 ${
-        theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
-      }`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-          <p className="text-lg font-semibold">Loading dashboard data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className={`flex h-screen items-center justify-center transition-colors duration-700 ${
-        theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
-      }`}>
-        <div className="text-center">
-          <p className="text-lg font-semibold text-red-500 mb-4">Error loading data</p>
-          <p className="text-sm text-slate-500">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${
       theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
@@ -75,7 +41,22 @@ function OverviewContent() {
         theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"
       }`}>
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
-          <OverviewTab barangayName={barangayName} />
+          {error ? (
+            <div className="max-w-[1400px] mx-auto">
+              <div className="text-center py-12">
+                <p className="text-lg font-semibold text-red-500 mb-4">Error loading data</p>
+                <p className="text-sm text-slate-500">{error}</p>
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="mt-4 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          ) : (
+            <OverviewTab barangayName={barangayName} />
+          )}
         </div>
       </main>
     </div>

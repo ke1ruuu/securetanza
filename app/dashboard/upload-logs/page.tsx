@@ -59,6 +59,7 @@ function UploadLogsContent() {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     }).format(date);
   };
 
@@ -129,67 +130,87 @@ function UploadLogsContent() {
       }`}>
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className={`p-6 rounded-xl border ${
-              theme === "dark" 
-                ? "bg-slate-900/50 border-slate-800" 
-                : "bg-white border-slate-200"
-            }`}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
-                  <FileSpreadsheet className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {total}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-pulse">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={`p-6 rounded-xl border ${
+                  theme === "dark" 
+                    ? "bg-slate-900/50 border-slate-800" 
+                    : "bg-white border-slate-200"
+                }`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-lg ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                    <div className="flex-1">
+                      <div className={`h-8 w-16 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                      <div className={`h-4 w-24 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                    </div>
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
-                    Total Uploads
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className={`p-6 rounded-xl border ${
+                theme === "dark" 
+                  ? "bg-slate-900/50 border-slate-800" 
+                  : "bg-white border-slate-200"
+              }`}>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
+                    <FileSpreadsheet className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {total}
+                    </div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      Total Uploads
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className={`p-6 rounded-xl border ${
-              theme === "dark" 
-                ? "bg-slate-900/50 border-slate-800" 
-                : "bg-white border-slate-200"
-            }`}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {logs.filter(l => l.status === 'success').length}
+              <div className={`p-6 rounded-xl border ${
+                theme === "dark" 
+                  ? "bg-slate-900/50 border-slate-800" 
+                  : "bg-white border-slate-200"
+              }`}>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                    <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
-                    Successful
+                  <div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {logs.filter(l => l.status === 'success').length}
+                    </div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      Successful
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className={`p-6 rounded-xl border ${
-              theme === "dark" 
-                ? "bg-slate-900/50 border-slate-800" 
-                : "bg-white border-slate-200"
-            }`}>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
-                  <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                    {logs.reduce((sum, log) => sum + log.recordsImported, 0).toLocaleString()}
+              <div className={`p-6 rounded-xl border ${
+                theme === "dark" 
+                  ? "bg-slate-900/50 border-slate-800" 
+                  : "bg-white border-slate-200"
+              }`}>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
+                    <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
-                    Total Records
+                  <div>
+                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                      {logs.reduce((sum, log) => sum + log.recordsImported, 0).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">
+                      Total Records
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Upload Logs Table */}
           <div className={`rounded-xl border overflow-hidden ${
@@ -204,11 +225,57 @@ function UploadLogsContent() {
             </div>
 
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                  <p className="text-slate-500 dark:text-slate-400">Loading logs...</p>
-                </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className={`${
+                    theme === "dark" ? "bg-slate-800/50" : "bg-slate-50"
+                  }`}>
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        File Name
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Size
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Records
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        Uploaded At
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 animate-pulse">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                      <tr key={i}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-5 w-5 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                            <div className={`h-4 w-64 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={`h-4 w-20 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={`h-6 w-16 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className={`h-6 w-24 rounded-lg ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-4 w-4 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                            <div className={`h-4 w-32 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             ) : logs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">

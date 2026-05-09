@@ -6,9 +6,8 @@ import { useState, useCallback, Suspense } from "react";
 import MapHeader from "@/components/layout/map-header";
 import BarangayFilter from "@/components/layout/barangay-filter";
 import CrimeTypeFilter from "@/components/layout/crime-type-filter";
-
 import RealTimeClock from "@/components/layout/real-time-clock";
-import TimeFilter, { TimeFilterState } from "@/components/layout/time-filter";
+import TimeFilter from "@/components/layout/time-filter";
 
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
@@ -17,23 +16,11 @@ import MapLegend from "@/components/map/map-legend";
 
 const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
   ssr: false,
-  loading: () => (
-    <div className="h-full w-full bg-[#0f172a] flex items-center justify-center">
-      <span className="text-[#0EA5E9] text-sm font-semibold tracking-widest animate-pulse">
-        Initializing SECURE OS…
-      </span>
-    </div>
-  ),
 });
 
 function HomeContent() {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [timeFilters, setTimeFilters] = useState<TimeFilterState>({
-    selectedDate: new Date(),
-    timeRange: "24h",
-    selectedHour: null,
-  });
   
   const { setIsTimeFilterActive, setTimeFilter } = useMapContext();
 
@@ -45,13 +32,11 @@ function HomeContent() {
     // Clear time filter when closing
     if (!isActive) {
       console.log('Clearing time filter');
-      setTimeFilter(null, null);
+      setTimeFilter(null, null, 0);
     }
   }, [setIsTimeFilterActive, setTimeFilter]);
 
-  const handleFilterChange = useCallback((filters: TimeFilterState) => {
-    setTimeFilters(filters);
-    // You can use these filters to update the map data
+  const handleFilterChange = useCallback((filters: any) => {
     console.log("Filter changed:", filters);
   }, []);
 
@@ -86,36 +71,43 @@ function HomeContent() {
       <div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${
         isFilterActive ? 'pt-0' : 'pt-16'
       }`}>
-        <div className={`absolute left-6 transition-all duration-500 ease-in-out flex gap-3 ${
-          isFilterActive ? 'top-6' : 'top-20'
+        {/* Top Left Filters */}
+        <div className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row gap-2 sm:gap-3 ${
+          isFilterActive ? 'top-3 sm:top-4 lg:top-6' : 'top-[72px] sm:top-20'
         }`}>
           <BarangayFilter />
           <CrimeTypeFilter />
         </div>
 
-        <div className={`absolute right-6 transition-all duration-500 ease-in-out ${
-          isFilterActive ? 'top-6' : 'top-20'
+        {/* Top Right Legend */}
+        <div className={`absolute right-3 sm:right-4 lg:right-6 transition-all duration-500 ease-in-out ${
+          isFilterActive ? 'top-3 sm:top-4 lg:top-6' : 'top-[72px] sm:top-20'
         }`}>
           <MapLegend />
         </div>
 
-        <div className="absolute bottom-6 right-6">
+        {/* Bottom Right Controls */}
+        <div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6">
           <RightSidebarControls />
         </div>
 
-        {/* Time Filter - appears at bottom when filter is active with slide up animation */}
-        <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-in-out ${
-          isFilterActive ? 'bottom-6 opacity-100' : '-bottom-32 opacity-0'
+        {/* Time Filter - appears at bottom when filter is active */}
+        <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-in-out px-3 sm:px-0 ${
+          isFilterActive ? 'bottom-3 sm:bottom-4 lg:bottom-6 opacity-100' : '-bottom-32 opacity-0'
         }`}>
-          <TimeFilter
-            onFilterChange={handleFilterChange}
-            isPlaying={isPlaying}
-            onPlayPauseToggle={handlePlayPauseToggle}
-          />
+          {isFilterActive && (
+            <TimeFilter
+              key="time-filter-active"
+              onFilterChange={handleFilterChange}
+              isPlaying={isPlaying}
+              onPlayPauseToggle={handlePlayPauseToggle}
+            />
+          )}
         </div>
 
-        <div className={`absolute left-6 transition-all duration-500 ease-in-out ${
-          isFilterActive ? 'bottom-[120px]' : 'bottom-6'
+        {/* Real Time Clock */}
+        <div className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
+          isFilterActive ? 'bottom-[100px] sm:bottom-[120px]' : 'bottom-3 sm:bottom-4 lg:bottom-6'
         }`}>
           <RealTimeClock
             onFilterToggle={handleFilterToggle}

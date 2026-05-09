@@ -167,7 +167,7 @@ export function useThreatLevels() {
   useEffect(() => {
     async function loadFilteredThreatData() {
       if (!isTimeFilterActive || !timeFilterDate) {
-        console.log('Time filter not active or no date, clearing filtered counts')
+        console.log('⏰ Time filter not active or no date, clearing filtered counts')
         setFilteredBarangayCrimeCounts({})
         return
       }
@@ -175,8 +175,7 @@ export function useThreatLevels() {
       try {
         const params = new URLSearchParams()
         
-        // Use the EXACT selected date, not a 60-day range
-        // This ensures we only show crimes from the specific date being viewed
+        // Use the EXACT selected date for the entire day
         const startDate = new Date(timeFilterDate)
         startDate.setHours(0, 0, 0, 0)
         
@@ -187,7 +186,8 @@ export function useThreatLevels() {
         params.set('startDateCommitted', startDate.toISOString())
         params.set('endDateCommitted', endDate.toISOString())
         
-        // Pass hour as a parameter to the API
+        // Only pass hour if it's specified (for hour-based filtering)
+        // For date-based filtering (Rebel Inc style), hour will be null
         if (timeFilterHour !== null) {
           params.set('hour', timeFilterHour.toString())
         }
@@ -197,9 +197,9 @@ export function useThreatLevels() {
           params.set('year', selectedYear.toString())
         }
         
-        console.log('🔍 Fetching filtered crimes for SPECIFIC DATE:', {
+        console.log('🔍 Fetching filtered crimes:', {
           date: timeFilterDate.toLocaleDateString(),
-          hour: timeFilterHour,
+          hour: timeFilterHour === null ? 'ALL DAY' : timeFilterHour,
           year: selectedYear,
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString()
@@ -209,13 +209,17 @@ export function useThreatLevels() {
         const result = await response.json()
         
         console.log('📊 Filtered crime counts result:', {
+          date: timeFilterDate.toLocaleDateString(),
+          hour: timeFilterHour === null ? 'ALL DAY' : timeFilterHour,
           totalCrimes: result.data?.totalCrimes,
           barangayCount: result.data?.barangayCount,
           barangayCounts: result.data?.barangayCounts
         })
         
         if (result.success) {
-          setFilteredBarangayCrimeCounts(result.data.barangayCounts)
+          const counts = result.data.barangayCounts;
+          console.log('✅ Setting filtered counts:', counts);
+          setFilteredBarangayCrimeCounts(counts);
         }
       } catch (error) {
         console.error('Error loading filtered threat data:', error)

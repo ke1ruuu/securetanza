@@ -22,7 +22,7 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
   selectedBarangay,
   onClickBarangay,
 }) => {
-  const { hotspotMode, hotspotMonth, hotspotYear, hoveredThreatLevel, setHoveredBarangay, timeFilterDate, timeFilterHour, timeFilterHourCrimeCount, isTimeFilterActive, selectedCrimeType, selectedYear } =
+  const { hotspotMode, hotspotMonth, hotspotYear, hoveredThreatLevel, setHoveredBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedCrimeType, selectedYear } =
     useMapContext();
   
   const { barangayCrimeCounts, filteredBarangayCrimeCounts, thresholds, loading } = useThreatLevels();
@@ -32,8 +32,8 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
   React.useEffect(() => {
     if (isTimeFilterActive) {
       console.log('🗺️ TIME FILTER ACTIVE - Barangay Layer Update:', {
+        timeFilterDate: timeFilterDate?.toLocaleDateString(),
         timeFilterHour,
-        timeFilterHourCrimeCount,
         filteredBarangaysLength: Object.keys(filteredBarangayCrimeCounts).length,
         filteredCounts: filteredBarangayCrimeCounts,
       });
@@ -49,22 +49,7 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
         console.log('⚪ No barangays to highlight (all transparent)');
       }
     }
-  }, [isTimeFilterActive, timeFilterHour, filteredBarangayCrimeCounts]);
-
-  // Get the threat level color for the current hour based on total crimes using dynamic thresholds
-  const getHourThreatLevel = () => {
-    if (!isTimeFilterActive || timeFilterHourCrimeCount === 0) return 'secure';
-    return getThreatLevelFromCount(timeFilterHourCrimeCount, thresholds);
-  };
-
-  const hourThreatLevel = getHourThreatLevel();
-  const hourColor = THREAT_COLORS[hourThreatLevel];
-
-  console.log('⏰ Hour Threat Level:', { 
-    timeFilterHourCrimeCount, 
-    hourThreatLevel, 
-    hourColor 
-  });
+  }, [isTimeFilterActive, timeFilterDate, timeFilterHour, filteredBarangayCrimeCounts]);
 
   const getThreatLevel = (barangayName: string) => {
     // Normalize barangay name to uppercase for matching
@@ -83,15 +68,32 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
       return getThreatLevelFromCount(count, scaledThresholds);
     }
     
-    // When time filter is active, ALL barangays with crimes use the hour's threat level
-    // Otherwise use base counts
+    // When time filter is active (hour-based filtering)
+    // Calculate dynamic thresholds based on THIS HOUR's data distribution
     if (isTimeFilterActive) {
-      const hasFilteredCrimes = (filteredBarangayCrimeCounts[normalizedName] || filteredBarangayCrimeCounts[barangayName] || 0) > 0;
-      if (hasFilteredCrimes) {
-        console.log(`✅ ${barangayName} has crimes, using ${hourThreatLevel}`);
-        return hourThreatLevel; // Use hour's overall threat level
-      }
-      return 'secure'; // No crimes at this hour
+      const count = filteredBarangayCrimeCounts[normalizedName] || filteredBarangayCrimeCounts[barangayName] || 0;
+      
+      if (count === 0) return 'secure';
+      
+      // Calculate thresholds based on this hour's crime distribution
+      const hourCrimeCounts = Object.values(filteredBarangayCrimeCounts).filter(c => c > 0);
+      
+      if (hourCrimeCounts.length === 0) return 'secure';
+      
+      // Use quartiles of THIS HOUR's data
+      const sortedCounts = [...hourCrimeCounts].sort((a, b) => a - b);
+      const q1Index = Math.floor(sortedCounts.length * 0.25);
+      const q2Index = Math.floor(sortedCounts.length * 0.50);
+      const q3Index = Math.floor(sortedCounts.length * 0.75);
+      
+      const hourThresholds = {
+        low: Math.max(1, sortedCounts[q1Index] || 1),
+        moderate: Math.max(2, sortedCounts[q2Index] || 2),
+        high: Math.max(3, sortedCounts[q3Index] || 3),
+        critical: Math.max(4, (sortedCounts[q3Index] || 3) + 1)
+      };
+      
+      return getThreatLevelFromCount(count, hourThresholds);
     }
     
     // Normal mode: use individual barangay counts with dynamic thresholds
@@ -106,8 +108,15 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     if (selectedCrimeType) {
       return (crimeTypeCounts[normalizedName] || crimeTypeCounts[barangayName] || 0) > 0;
     }
+    
     // Check if this barangay has crimes in the filtered time period
-    return isTimeFilterActive && ((filteredBarangayCrimeCounts[normalizedName] || filteredBarangayCrimeCounts[barangayName] || 0) > 0);
+    // When time filter is active (date-based), check filteredBarangayCrimeCounts
+    if (isTimeFilterActive) {
+      const count = filteredBarangayCrimeCounts[normalizedName] || filteredBarangayCrimeCounts[barangayName] || 0;
+      return count > 0;
+    }
+    
+    return false;
   };
 
   // Don't render the layer until data is loaded to prevent color flickering
@@ -200,12 +209,12 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     return {
       color:
         isSelected || (hoveredThreatLevel && isFocusMatch) ? "#ffffff" : color,
-      weight: isSelected || (hoveredThreatLevel && isFocusMatch) ? 5 : 1.5,
-      opacity: isSelected || (hoveredThreatLevel && isFocusMatch) ? 0.3 : 0.5,
+      weight: isSelected || (hoveredThreatLevel && isFocusMatch) ? 5 : 2.5,
+      opacity: isSelected || (hoveredThreatLevel && isFocusMatch) ? 0.9 : 0.7,
       fillColor: color,
       fillOpacity:
         isSelected || (hoveredThreatLevel && isFocusMatch) ? 0.35 : 0.45,
-      dashArray: isSelected || (hoveredThreatLevel && isFocusMatch) ? "" : "2",
+      dashArray: isSelected || (hoveredThreatLevel && isFocusMatch) ? "" : "",
     };
   };
 
@@ -277,7 +286,7 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
   return (
     <Pane name="barangay-pane" style={{ zIndex: 450 }}>
       <GeoJSON
-        key={`${selectedBarangay}-${hoveredThreatLevel}-${hotspotMonth}-${hotspotYear}-${loading}-${isTimeFilterActive}-${timeFilterHour}-${timeFilterHourCrimeCount}-${Object.keys(filteredBarangayCrimeCounts).length}-${selectedCrimeType}-${Object.keys(crimeTypeCounts).length}-${selectedYear}-${Object.keys(barangayCrimeCounts).length}-${thresholds.low}-${thresholds.moderate}-${thresholds.high}-${thresholds.critical}`}
+        key={`${selectedBarangay}-${hoveredThreatLevel}-${hotspotMonth}-${hotspotYear}-${loading}-${isTimeFilterActive}-${timeFilterDate?.getTime()}-${timeFilterHour}-${Object.keys(filteredBarangayCrimeCounts).length}-${selectedCrimeType}-${Object.keys(crimeTypeCounts).length}-${selectedYear}-${Object.keys(barangayCrimeCounts).length}-${thresholds.low}-${thresholds.moderate}-${thresholds.high}-${thresholds.critical}`}
         data={data}
         style={styleFeature}
         onEachFeature={onEachFeature}

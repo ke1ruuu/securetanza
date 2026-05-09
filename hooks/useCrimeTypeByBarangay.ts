@@ -10,7 +10,7 @@ export interface BarangayCrimeTypeCounts {
 export function useCrimeTypeByBarangay() {
   const [crimeTypeCounts, setCrimeTypeCounts] = useState<BarangayCrimeTypeCounts>({});
   const [loading, setLoading] = useState(false);
-  const { selectedCrimeType, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear } = useMapContext();
+  const { selectedCrimeType, selectedYear, timeFilterDate, timeFilterHour, isTimeFilterActive } = useMapContext();
 
   useEffect(() => {
     async function fetchCrimeTypeByBarangay() {
@@ -19,12 +19,18 @@ export function useCrimeTypeByBarangay() {
         return;
       }
 
+      // Don't fetch until selectedYear is set (unless time filter is active)
+      if (!isTimeFilterActive && selectedYear === null) {
+        console.log('⏳ CrimeTypeByBarangay: Waiting for selectedYear to be set...')
+        return;
+      }
+
       setLoading(true);
       try {
         const params = new URLSearchParams();
         params.append("incidentType", selectedCrimeType);
-
-        // Add time filter if active
+        
+        // If time filter is active, use it (takes precedence)
         if (isTimeFilterActive && timeFilterDate) {
           const startDate = new Date(timeFilterDate);
           const endDate = new Date(timeFilterDate);
@@ -43,7 +49,7 @@ export function useCrimeTypeByBarangay() {
           params.append("startDateCommitted", startDate.toISOString());
           params.append("endDateCommitted", endDate.toISOString());
         } else if (selectedYear) {
-          // Add year filter if no time filter is active
+          // Use year filter
           params.append("year", selectedYear.toString());
         }
 
@@ -74,7 +80,7 @@ export function useCrimeTypeByBarangay() {
     }
 
     fetchCrimeTypeByBarangay();
-  }, [selectedCrimeType, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear]);
+  }, [selectedCrimeType, selectedYear, timeFilterDate, timeFilterHour, isTimeFilterActive]);
 
   return { crimeTypeCounts, loading };
 }

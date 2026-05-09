@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes, fetchCrimeStats } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
+import { useTimeRangeData } from './useTimeRangeData'
 
 interface CrimeByType {
   type: string
@@ -47,7 +48,8 @@ interface AnalyticsData {
 }
 
 export function useAnalyticsData(barangayName?: string): AnalyticsData {
-  const { selectedYear } = useMapContext()
+  const { timeRange } = useMapContext()
+  const dateRanges = useTimeRangeData()
   const [data, setData] = useState<AnalyticsData>({
     crimesByType: [],
     crimesByMonth: [],
@@ -74,9 +76,9 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
   })
 
   useEffect(() => {
-    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
-    if (selectedYear === null) {
-      console.log('⏳ Analytics: Waiting for selectedYear to be set...')
+    // Don't fetch until time range has selections
+    if (dateRanges.length === 0) {
+      console.log('⏳ Analytics: Waiting for time range selections...')
       return
     }
     
@@ -86,22 +88,70 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
 
         console.log('📊 Loading Analytics Data:', {
           barangayName,
-          selectedYear,
+          timeRange,
+          dateRanges: dateRanges.map(r => ({ start: r.start.toISOString(), end: r.end.toISOString() })),
           timestamp: new Date().toISOString()
         })
 
-        // Fetch crime statistics and raw crime data
-        const statsParams = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName, year: selectedYear || undefined } 
-          : { year: selectedYear || undefined }
+        // Fetch data for all date ranges in parallel
+        const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const statsParams = barangayName && barangayName !== "General Dashboard" 
+            ? { barangay: barangayName, startDate: start.toISOString(), endDate: end.toISOString() } 
+            : { startDate: start.toISOString(), endDate: end.toISOString() }
 
-        const [stats, crimes] = await Promise.all([
-          fetchCrimeStats(statsParams),
-          fetchCrimes({ 
-            barangay: statsParams?.barangay,
-            year: selectedYear || undefined
-          })
-        ])
+          const [stats, crimes] = await Promise.all([
+            fetchCrimeStats(statsParams),
+            fetchCrimes({ 
+              barangay: statsParams?.barangay,
+              startDateCommitted: start.toISOString(),
+              endDateCommitted: end.toISOString()
+            })
+          ])
+          
+          return { stats, crimes }
+        })
+
+        const results = await Promise.all(fetchPromises)
+        
+        // Aggregate all results
+        let allCrimes: any[] = []
+        let aggregatedStats = {
+          crimesByType: new Map<string, number>(),
+          crimesByMonth: Array(12).fill(0),
+          crimesByBarangay: new Map<string, number>()
+        }
+
+        results.forEach(({ stats, crimes }) => {
+          if (stats) {
+            // Aggregate crimes by type
+            stats.crimesByType.forEach((item: any) => {
+              const current = aggregatedStats.crimesByType.get(item.type) || 0
+              aggregatedStats.crimesByType.set(item.type, current + item.count)
+            })
+            
+            // Aggregate monthly activity
+            stats.activity.forEach((count: number, index: number) => {
+              aggregatedStats.crimesByMonth[index] += count
+            })
+            
+            // Aggregate crimes by barangay
+            stats.crimesByBarangay.forEach((item: any) => {
+              const current = aggregatedStats.crimesByBarangay.get(item.barangay) || 0
+              aggregatedStats.crimesByBarangay.set(item.barangay, current + item.count)
+            })
+          }
+          
+          allCrimes = allCrimes.concat(crimes)
+        })
+
+        // Convert aggregated maps to arrays
+        const stats = {
+          crimesByType: Array.from(aggregatedStats.crimesByType.entries()).map(([type, count]) => ({ type, count })),
+          activity: aggregatedStats.crimesByMonth,
+          crimesByBarangay: Array.from(aggregatedStats.crimesByBarangay.entries()).map(([barangay, count]) => ({ barangay, count }))
+        }
+        
+        const crimes = allCrimes
 
         if (!stats) {
           throw new Error('Failed to fetch statistics')
@@ -124,7 +174,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
 
         console.log('📊 Analytics Data Loaded:', {
           barangayName,
-          selectedYear,
+          timeRange,
           totalCrimes: crimes.length,
           statsActivity: stats?.activity,
           statsActivitySum: stats?.activity.reduce((a, b) => a + b, 0),
@@ -297,6 +347,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
 
       } catch (error) {
         console.error('Error loading analytics data:', error)
+        
         setData(prev => ({
           ...prev,
           loading: false,
@@ -306,7 +357,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
     }
 
     loadAnalyticsData()
-  }, [barangayName, selectedYear])
+  }, [barangayName, timeRange, dateRanges])
 
   return data
 }

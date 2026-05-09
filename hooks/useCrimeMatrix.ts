@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
+import { useTimeRangeData } from './useTimeRangeData'
 
 interface CrimeMatrixData {
   crimeType: string
@@ -8,14 +9,15 @@ interface CrimeMatrixData {
 }
 
 export function useCrimeMatrix(barangayName?: string) {
+  const { timeRange } = useMapContext()
+  const dateRanges = useTimeRangeData()
   const [matrixData, setMatrixData] = useState<CrimeMatrixData[]>([])
   const [loading, setLoading] = useState(true)
-  const { selectedYear } = useMapContext()
 
   useEffect(() => {
-    // Don't fetch until selectedYear is set (wait for MapContext to initialize)
-    if (selectedYear === null) {
-      console.log('⏳ CrimeMatrix: Waiting for selectedYear to be set...')
+    // Don't fetch until time range has selections
+    if (dateRanges.length === 0) {
+      console.log('⏳ CrimeMatrix: Waiting for time range selections...')
       return
     }
     
@@ -23,16 +25,24 @@ export function useCrimeMatrix(barangayName?: string) {
       try {
         setLoading(true)
 
-        const params = barangayName && barangayName !== "General Dashboard" 
-          ? { barangay: barangayName, year: selectedYear } 
-          : { year: selectedYear }
+        // Fetch data for all date ranges in parallel
+        const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const params = barangayName && barangayName !== "General Dashboard" 
+            ? { barangay: barangayName, startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() } 
+            : { startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() }
 
-        const crimes = await fetchCrimes(params)
+          return fetchCrimes(params)
+        })
 
-        // Group crimes by type and month (already filtered by year from API)
+        const results = await Promise.all(fetchPromises)
+        
+        // Aggregate all crimes
+        const allCrimes = results.flat()
+
+        // Group crimes by type and month
         const crimeTypeMap = new Map<string, number[]>()
 
-        crimes.forEach(crime => {
+        allCrimes.forEach(crime => {
           const crimeDate = new Date(crime.dateCommitted)
           const month = crimeDate.getMonth() // 0-11
           const type = crime.incidentType
@@ -68,7 +78,7 @@ export function useCrimeMatrix(barangayName?: string) {
     }
 
     loadMatrixData()
-  }, [barangayName, selectedYear])
+  }, [barangayName, timeRange, dateRanges])
 
   return { matrixData, loading }
 }
