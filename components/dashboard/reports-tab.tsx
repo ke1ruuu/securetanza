@@ -10,7 +10,14 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
-  Loader2
+  Loader2,
+  TrendingUp,
+  LayoutDashboard,
+  Grid,
+  Lightbulb,
+  Search,
+  PieChart,
+  ClipboardList
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -374,49 +381,49 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                   key: 'includeExecutiveSummary', 
                   label: 'Executive Summary', 
                   desc: 'Key findings overview',
-                  icon: '📋'
+                  icon: <ClipboardList className="h-8 w-8" />
                 },
                 { 
                   key: 'includeOverview', 
                   label: 'Overview', 
                   desc: 'Current statistics',
-                  icon: '📊'
+                  icon: <LayoutDashboard className="h-8 w-8" />
                 },
                 { 
                   key: 'includeTrends', 
                   label: 'Trends', 
                   desc: 'Historical patterns',
-                  icon: '📈'
+                  icon: <TrendingUp className="h-8 w-8" />
                 },
                 { 
                   key: 'includeTimePatterns', 
                   label: 'Time Patterns', 
                   desc: 'Peak hours analysis',
-                  icon: '⏰'
+                  icon: <Clock className="h-8 w-8" />
                 },
                 { 
                   key: 'includeCrimeTypes', 
                   label: 'Classification', 
                   desc: 'Crime type breakdown',
-                  icon: '🔍'
+                  icon: <PieChart className="h-8 w-8" />
                 },
                 { 
                   key: 'includeBarangayComparison', 
                   label: 'Comparison', 
                   desc: 'Cross-barangay data',
-                  icon: '📍'
+                  icon: <MapPin className="h-8 w-8" />
                 },
                 { 
                   key: 'includeCrimeMatrix', 
                   label: 'Heatmap', 
                   desc: 'Monthly distribution',
-                  icon: '🔥'
+                  icon: <Grid className="h-8 w-8" />
                 },
                 { 
                   key: 'includeRecommendations', 
                   label: 'Recommendations', 
                   desc: 'Strategic insights',
-                  icon: '💡'
+                  icon: <Lightbulb className="h-8 w-8" />
                 },
               ].map((section) => (
                 <button
@@ -448,10 +455,10 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                   </div>
                   
                   {/* Icon */}
-                  <div className={`text-3xl mb-2 transition-transform ${
+                  <div className={`mb-2 transition-transform ${
                     reportConfig[section.key as keyof ReportConfig] 
-                      ? 'scale-110' 
-                      : 'group-hover:scale-105'
+                      ? 'scale-110 text-blue-500' 
+                      : `group-hover:scale-105 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-400'}`
                   }`}>
                     {section.icon}
                   </div>

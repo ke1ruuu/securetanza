@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Settings, User, Upload, Clock, Menu, X, BookOpen } from "lucide-react";
+import { Settings, User, Upload, Calendar, Menu, X, BookOpen } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import UploadModal from "./upload-modal";

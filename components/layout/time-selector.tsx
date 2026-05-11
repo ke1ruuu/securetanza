@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Clock, ChevronDown, Check } from "lucide-react";
+import { Calendar, ChevronDown, Check } from "lucide-react";
 import { useMapContext, FilterMode } from "@/context/MapContext";
 
 export default function TimeSelector() {
@@ -211,7 +211,7 @@ export default function TimeSelector() {
         }`}
         title={mounted ? getDisplayText() : "Select Time Range"}
       >
-        <Clock className="h-4 w-4" />
+        <Calendar className="h-4 w-4" />
       </button>
 
       {/* Dropdown */}

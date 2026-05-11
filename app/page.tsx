@@ -101,14 +101,13 @@ function HomeContent() {
               onFilterChange={handleFilterChange}
               isPlaying={isPlaying}
               onPlayPauseToggle={handlePlayPauseToggle}
+              onClose={() => handleFilterToggle(false)}
             />
           )}
         </div>
 
         {/* Real Time Clock */}
-        <div className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
-          isFilterActive ? 'bottom-[100px] sm:bottom-[120px]' : 'bottom-3 sm:bottom-4 lg:bottom-6'
-        }`}>
+        <div className="absolute left-3 sm:left-4 lg:left-6 bottom-3 sm:bottom-4 lg:bottom-6 transition-all duration-500 ease-in-out">
           <RealTimeClock
             onFilterToggle={handleFilterToggle}
             isFilterActive={isFilterActive}

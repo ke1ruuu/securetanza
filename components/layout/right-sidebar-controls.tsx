@@ -16,6 +16,16 @@ export default function RightSidebarControls() {
     }
   };
 
+  const handleZoomOut = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const currentZoom = map.getZoom();
+    const minZoom = map.getMinZoom();
+    if (currentZoom > minZoom) {
+      map.zoomOut();
+    }
+  };
+
   const handleResetView = () => {
     const map = mapRef.current;
     if (!map || !initialBounds) return;
@@ -36,6 +46,15 @@ export default function RightSidebarControls() {
         title="Zoom In"
       >
         <Plus className="h-5 w-5 group-hover:scale-110 transition-transform" />
+      </button>
+
+      {/* Zoom Out */}
+      <button
+        onClick={handleZoomOut}
+        className="w-11 h-11 rounded-xl bg-[#1E293B]/90 backdrop-blur-xl border border-white/[0.08] flex items-center justify-center text-slate-300 hover:text-white hover:bg-[#1E293B] hover:border-white/[0.12] transition-all duration-200 cursor-pointer group"
+        title="Zoom Out"
+      >
+        <Minus className="h-5 w-5 group-hover:scale-110 transition-transform" />
       </button>
 
       {/* Reset View / Zoom to Default */}

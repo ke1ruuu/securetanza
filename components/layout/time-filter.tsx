@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Play, Pause, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Play, Pause, ChevronLeft, ChevronRight, Calendar, X } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { getThreatLevelFromCount } from "@/hooks/useThreatLevels";
 
@@ -18,6 +18,7 @@ interface TimeFilterProps {
   onFilterChange: (filters: any) => void;
   isPlaying: boolean;
   onPlayPauseToggle: () => void;
+  onClose?: () => void;
 }
 
 interface HourData {
@@ -27,7 +28,7 @@ interface HourData {
   color: string;
 }
 
-export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggle }: TimeFilterProps) {
+export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggle, onClose }: TimeFilterProps) {
   const [availableDates, setAvailableDates] = useState<Date[]>([]);
   const [currentDateIndex, setCurrentDateIndex] = useState<number>(0);
   const [currentHour, setCurrentHour] = useState<number>(0);
@@ -314,14 +315,26 @@ export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggl
         </div>
 
         {/* Info Panel */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <Calendar className="h-5 w-5 text-slate-400" />
-          <div className="text-right">
-            <div className="text-xs text-slate-400">Showing crimes for selected date</div>
-            <div className="text-sm font-semibold text-white">
-              {totalDayCrimes} crimes • {currentHourData?.crimeCount || 0} this hour
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <Calendar className="h-5 w-5 text-slate-400" />
+            <div className="text-right">
+              <div className="text-xs text-slate-400">Showing crimes for selected date</div>
+              <div className="text-sm font-semibold text-white">
+                {totalDayCrimes} crimes • {currentHourData?.crimeCount || 0} this hour
+              </div>
             </div>
           </div>
+          
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors group"
+              title="Close temporal filter"
+            >
+              <X className="h-5 w-5 text-slate-400 group-hover:text-white" />
+            </button>
+          )}
         </div>
       </div>
 
