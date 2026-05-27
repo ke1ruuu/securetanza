@@ -5,4 +5,4 @@ source .env.local
 set +a
 
 # Run the seed script
-npx tsx backend/prisma/seed.ts
+npx tsx backend/prisma/seed-auth.ts

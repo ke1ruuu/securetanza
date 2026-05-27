@@ -131,3 +131,47 @@ model UploadLog {
   @@index([uploadedAt])
   @@index([status])
 }
+
+// Authentication and Authorization Models
+
+model User {
+  id              Int      @id @default(autoincrement())
+  accountNumber   String   @unique @map("account_number") // Unique account number
+  fullName        String   @map("full_name")
+  passwordHash    String   @map("password_hash")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  permissions     UserPermission[]
+  
+  @@map("users")
+  @@index([accountNumber])
+}
+
+model Permission {
+  id              Int      @id @default(autoincrement())
+  permissionName  String   @unique @map("permission_name")  // e.g., "admin", "operational_officer", "privileged_user"
+  description     String?
+  
+  // Relations
+  users           UserPermission[]
+  
+  @@map("permissions")
+}
+
+model UserPermission {
+  userId          Int      @map("user_id")
+  permissionId    Int      @map("permission_id")
+  assignedBy      Int?     @map("assigned_by")            // User ID who assigned this permission
+  assignedAt      DateTime @default(now()) @map("assigned_at")
+  
+  // Relations
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission      Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@id([userId, permissionId])
+  @@map("user_permissions")
+  @@index([userId])
+  @@index([permissionId])
+}

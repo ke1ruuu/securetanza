@@ -193,6 +193,28 @@ exports.Prisma.UploadLogScalarFieldEnum = {
   uploadedAt: 'uploadedAt'
 };
 
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  accountNumber: 'accountNumber',
+  fullName: 'fullName',
+  passwordHash: 'passwordHash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PermissionScalarFieldEnum = {
+  id: 'id',
+  permissionName: 'permissionName',
+  description: 'description'
+};
+
+exports.Prisma.UserPermissionScalarFieldEnum = {
+  userId: 'userId',
+  permissionId: 'permissionId',
+  assignedBy: 'assignedBy',
+  assignedAt: 'assignedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -223,7 +245,10 @@ exports.Prisma.JsonNullValueFilter = {
 exports.Prisma.ModelName = {
   CrimeIncident: 'CrimeIncident',
   Barangay: 'Barangay',
-  UploadLog: 'UploadLog'
+  UploadLog: 'UploadLog',
+  User: 'User',
+  Permission: 'Permission',
+  UserPermission: 'UserPermission'
 };
 
 /**

@@ -94,7 +94,12 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
   const { modusList, placesList, loading: modusPlaceLoading } = useModusAndPlace(barangayName);
   
   // Forecast data for predictive mode
-  const { forecast, loading: forecastLoading, error: forecastError } = useForecast({
+  const { 
+    forecast, 
+    loading: forecastLoading, 
+    error: forecastError,
+    refetch 
+  } = useForecast({
     barangay: barangayName,
     periods: 12,
     validate: true
@@ -1324,8 +1329,26 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
               }`}>
                 Forecast Unavailable
               </h3>
-              <p className="text-slate-500 mb-4">{forecastError}</p>
-              <p className="text-sm text-slate-400">Make sure the forecast API is running on port 8000</p>
+              <p className="text-slate-500 mb-4">
+                {forecastError.includes("Failed to fetch") 
+                  ? "Predictive Analytics Engine is currently offline." 
+                  : forecastError}
+              </p>
+              <p className="text-sm text-slate-400 max-w-md text-center">
+                {forecastError.includes("Failed to fetch")
+                  ? "The local AI service (FastAPI) on port 8000 is not responding. Please ensure the forecasting server is running to generate crime predictions."
+                  : "An unexpected error occurred while generating the forecast. Please try again later."}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className={`mt-6 px-6 py-2 rounded-xl font-bold text-sm transition-all duration-200 ${
+                  theme === "dark"
+                    ? "bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 border border-purple-500/30"
+                    : "bg-purple-500 text-white hover:bg-purple-600 shadow-lg shadow-purple-500/20"
+                }`}
+              >
+                Retry Connection
+              </button>
             </div>
           ) : forecast ? (
             <>
@@ -1398,11 +1421,42 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <p className={`text-sm font-bold uppercase tracking-wider ${
-                          theme === "dark" ? "text-emerald-400" : "text-emerald-600"
-                        }`}>
-                          Model MAPE
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className={`text-sm font-bold uppercase tracking-wider ${
+                            theme === "dark" ? "text-emerald-400" : "text-emerald-600"
+                          }`}>
+                            Model MAPE
+                          </p>
+                          <HoverCard>
+                            <HoverCardTrigger asChild>
+                              <button className="cursor-help">
+                                <HelpCircle className={`h-3.5 w-3.5 ${theme === "dark" ? "text-emerald-400/60" : "text-emerald-600/60"}`} />
+                              </button>
+                            </HoverCardTrigger>
+                            <HoverCardContent className={`w-80 ${theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"}`}>
+                              <div className="space-y-2">
+                                <h4 className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                                  MAPE (Mean Absolute Percentage Error)
+                                </h4>
+                                <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                                  Measures the average prediction error as a percentage. Lower is better.
+                                </p>
+                                <div className={`text-xs font-mono p-2 rounded ${theme === "dark" ? "bg-slate-900 text-emerald-400" : "bg-slate-100 text-emerald-600"}`}>
+                                  MAPE = (|Actual - Forecast| / Actual) × 100
+                                </div>
+                                <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                                  <strong>Interpretation:</strong>
+                                </p>
+                                <ul className={`text-xs space-y-1 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                                  <li>• &lt; 15%: <strong className="text-emerald-500">Excellent</strong></li>
+                                  <li>• 15-25%: <strong className="text-blue-500">Good</strong></li>
+                                  <li>• 25-40%: <strong className="text-amber-500">Moderate</strong></li>
+                                  <li>• &gt; 40%: <strong className="text-red-500">Poor</strong></li>
+                                </ul>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </div>
                         <p className={`text-2xl font-black ${
                           theme === "dark" ? "text-white" : "text-slate-900"
                         }`}>
@@ -1461,11 +1515,60 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                 theme === "dark" ? "bg-[#1e293b]" : "bg-white"
               }`}>
                 <CardHeader>
-                  <CardTitle className={`text-lg font-bold ${
-                    theme === "dark" ? "text-white" : "text-slate-900"
-                  }`}>
-                    Crime Forecast - Next 12 Months
-                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className={`text-lg font-bold ${
+                      theme === "dark" ? "text-white" : "text-slate-900"
+                    }`}>
+                      Crime Forecast - Next 12 Months
+                    </CardTitle>
+                    <HoverCard>
+                      <HoverCardTrigger asChild>
+                        <button className="cursor-help">
+                          <HelpCircle className={`h-4 w-4 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`} />
+                        </button>
+                      </HoverCardTrigger>
+                      <HoverCardContent className={`w-96 ${theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"}`}>
+                        <div className="space-y-3">
+                          <h4 className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                            Understanding the Forecast Chart
+                          </h4>
+                          
+                          <div>
+                            <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`}>
+                              Forecast Line (Solid)
+                            </p>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                              The predicted number of crimes for each month based on historical patterns.
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`}>
+                              Upper Bound (Dashed)
+                            </p>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                              The maximum expected crimes (95% confidence). There's only a 2.5% chance actual crimes will exceed this.
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`}>
+                              Lower Bound (Dashed)
+                            </p>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                              The minimum expected crimes (95% confidence). There's only a 2.5% chance actual crimes will be below this.
+                            </p>
+                          </div>
+
+                          <div className={`p-2 rounded ${theme === "dark" ? "bg-slate-900/50 border border-slate-700" : "bg-slate-50 border border-slate-200"}`}>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                              <strong>Example:</strong> If forecast is 45 crimes with bounds of 30-60, we're 95% confident the actual number will be between 30 and 60 crimes.
+                            </p>
+                          </div>
+                        </div>
+                      </HoverCardContent>
+                    </HoverCard>
+                  </div>
                   <p className="text-sm text-slate-500">
                     Predicted crime trends with 95% confidence intervals
                   </p>
@@ -1554,11 +1657,68 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                   theme === "dark" ? "bg-[#1e293b]" : "bg-white"
                 }`}>
                   <CardHeader>
-                    <CardTitle className={`text-lg font-bold ${
-                      theme === "dark" ? "text-white" : "text-slate-900"
-                    }`}>
-                      Validation Results
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className={`text-lg font-bold ${
+                        theme === "dark" ? "text-white" : "text-slate-900"
+                      }`}>
+                        Validation Results
+                      </CardTitle>
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <button className="cursor-help">
+                            <HelpCircle className={`h-4 w-4 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`} />
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent className={`w-96 ${theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"}`}>
+                          <div className="space-y-3">
+                            <h4 className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                              Understanding Validation
+                            </h4>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                              We test the model's accuracy by comparing its predictions with actual 2026 crime data.
+                            </p>
+                            
+                            <div>
+                              <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-blue-400" : "text-blue-600"}`}>
+                                Actual
+                              </p>
+                              <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                                The real number of crimes that occurred in that month.
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-purple-400" : "text-purple-600"}`}>
+                                Forecast
+                              </p>
+                              <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                                What the model predicted for that month.
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-amber-400" : "text-amber-600"}`}>
+                                Error
+                              </p>
+                              <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                                The difference between actual and forecast. Positive means we under-predicted, negative means we over-predicted.
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className={`text-xs font-semibold mb-1 ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                                Accuracy Indicators
+                              </p>
+                              <ul className={`text-xs space-y-1 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                                <li>• <strong className="text-emerald-500">Good</strong>: Error &lt; 20%</li>
+                                <li>• <strong className="text-amber-500">Moderate</strong>: Error 20-40%</li>
+                                <li>• <strong className="text-red-500">Poor</strong>: Error &gt; 40%</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    </div>
                     <p className="text-sm text-slate-500">
                       Comparing predictions with actual 2026 data
                     </p>
@@ -1618,12 +1778,61 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
                       ))}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex-col items-start gap-1 text-sm px-6 pb-6">
-                    <div className="flex items-center gap-2 font-semibold leading-none">
-                      Validation MAE: {forecast.validation.mae.toFixed(2)} crimes/month
+                  <CardFooter className="flex-col items-start gap-2 text-sm px-6 pb-6">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold leading-none">Validation MAE:</span>
+                      <span className={theme === "dark" ? "text-white" : "text-slate-900"}>
+                        {forecast.validation.mae.toFixed(2)} crimes/month
+                      </span>
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <button className="cursor-help">
+                            <HelpCircle className={`h-3.5 w-3.5 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`} />
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent className={`w-80 ${theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"}`}>
+                          <div className="space-y-2">
+                            <h4 className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                              MAE (Mean Absolute Error)
+                            </h4>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                              The average difference between predicted and actual values, measured in number of crimes.
+                            </p>
+                            <div className={`text-xs font-mono p-2 rounded ${theme === "dark" ? "bg-slate-900 text-blue-400" : "bg-slate-100 text-blue-600"}`}>
+                              MAE = Average(|Actual - Forecast|)
+                            </div>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                              <strong>Example:</strong> MAE of 5.2 means on average, predictions are off by about 5 crimes per month.
+                            </p>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
                     </div>
-                    <div className="text-muted-foreground leading-none">
-                      Mean Absolute Percentage Error: {forecast.validation.mape.toFixed(1)}%
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground leading-none">MAPE:</span>
+                      <span className={theme === "dark" ? "text-white" : "text-slate-900"}>
+                        {forecast.validation.mape.toFixed(1)}%
+                      </span>
+                      <HoverCard>
+                        <HoverCardTrigger asChild>
+                          <button className="cursor-help">
+                            <HelpCircle className={`h-3.5 w-3.5 ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`} />
+                          </button>
+                        </HoverCardTrigger>
+                        <HoverCardContent className={`w-80 ${theme === "dark" ? "bg-slate-800 border-slate-700" : "bg-white"}`}>
+                          <div className="space-y-2">
+                            <h4 className={`text-sm font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                              Validation MAPE
+                            </h4>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-300" : "text-slate-600"}`}>
+                              Shows how accurate the model is when tested against real 2026 data, expressed as a percentage.
+                            </p>
+                            <p className={`text-xs ${theme === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                              <strong>Note:</strong> High MAPE here may indicate that 2026 has significantly different crime patterns than 2023-2025 (which is actually good news if crime decreased!).
+                            </p>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
                     </div>
                   </CardFooter>
                 </Card>

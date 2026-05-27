@@ -2,16 +2,38 @@
 
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 function DashboardRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
+  const { user } = useAuth();
+  
   useEffect(() => {
-    // Redirect to overview page with query params
+    if (!user) return;
+
     const params = searchParams.toString();
-    router.replace(`/dashboard/overview${params ? `?${params}` : ""}`);
-  }, [router, searchParams]);
+    const qs = params ? `?${params}` : "";
+
+    // Admin goes to overview by default
+    if (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) {
+      router.replace(`/dashboard/overview${qs}`);
+      return;
+    }
+
+    // Privileged users redirect based on their first available permission
+    if (user.permissions.includes("privileged_map_view")) {
+      router.replace(`/dashboard/overview${qs}`);
+    } else if (user.permissions.includes("privileged_cases_view")) {
+      router.replace(`/dashboard/cases${qs}`);
+    } else if (user.permissions.includes("privileged_analytics_view")) {
+      router.replace(`/dashboard/analytics${qs}`);
+    } else {
+      // If no module permissions, maybe they only have config?
+      router.replace(`/dashboard/overview${qs}`);
+    }
+  }, [router, searchParams, user]);
 
   return (
     <div className="flex h-screen items-center justify-center bg-[#0f172a]">

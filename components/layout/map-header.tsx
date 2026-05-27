@@ -3,25 +3,28 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Settings, User, Upload, Clock, Menu, X, BookOpen } from "lucide-react";
+import { Upload, Menu, X, BookOpen, Settings } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import UploadModal from "./upload-modal";
 import TimeSelector from "./time-selector";
+import UserMenu from "./user-menu";
 
 interface MapHeaderProps {
   isVisible: boolean;
 }
 
 const navItems = [
-  { id: "map", label: "Map", href: "/" },
-  { id: "overview", label: "Overview", path: "/dashboard/overview" },
-  { id: "incidents", label: "Cases", path: "/dashboard/cases" },
-  { id: "analytics", label: "Analytics", path: "/dashboard/analytics" },
-  { id: "reports", label: "Reports", path: "/dashboard/reports" },
+  { id: "map", label: "Map", href: "/", permission: "privileged_map_view" },
+  { id: "overview", label: "Overview", path: "/dashboard/overview", permission: "privileged_map_view" },
+  { id: "incidents", label: "Cases", path: "/dashboard/cases", permission: "privileged_cases_view" },
+  { id: "analytics", label: "Analytics", path: "/dashboard/analytics", permission: "privileged_analytics_view" },
+  { id: "reports", label: "Reports", path: "/dashboard/reports", permission: "privileged_analytics_view" },
 ];
 
 export default function MapHeader({ isVisible }: MapHeaderProps) {
+  const { user } = useAuth();
   const { selectedBarangay, setSelectedBarangay } = useMapContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -65,6 +68,17 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
     return pathname === item.path;
   };
 
+  // Filter navigation items based on user permissions
+  const filteredNavItems = navItems.filter((item) => {
+    if (!user) return false;
+    // Admin has access to everything
+    if (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) {
+      return true;
+    }
+    // Check specific module permission
+    return user.permissions.includes(item.permission);
+  });
+
   return (
     <header 
       className={`w-full bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06] pointer-events-auto z-50 transition-transform duration-500 ease-in-out ${
@@ -97,7 +111,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
         {/* Desktop Navigation - Hidden on mobile */}
         <nav className="hidden lg:flex items-center gap-1 h-full absolute left-1/2 -translate-x-1/2">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const isActive = isNavItemActive(item);
             const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
 
@@ -129,7 +143,6 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
             <TimeSelector />
           </div>
           
-          
           {/* Upload Button */}
           <button
             onClick={() => setShowUploadModal(true)}
@@ -139,31 +152,8 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
             <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
 
-          {/* Help/Docs Button */}
-          <Link
-            href="/docs"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
-            title="User Guide"
-          >
-            <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </Link>
-          
-          {/* Settings - Hidden on mobile */}
-          <Link
-            href={buildDashboardUrl("/dashboard/config")}
-            className="hidden sm:flex w-10 h-10 rounded-lg items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
-            title="Settings"
-          >
-            <Settings className="h-5 w-5" />
-          </Link>
-          
-          {/* Profile - Hidden on mobile */}
-          <button
-            className="hidden sm:flex w-10 h-10 rounded-lg items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] transition-all duration-200 cursor-pointer"
-            title="Profile"
-          >
-            <User className="h-5 w-5" />
-          </button>
+          {/* User Menu */}
+          <UserMenu />
 
           {/* Mobile Menu Button - Only on mobile */}
           <button
@@ -184,7 +174,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
       {mobileMenuOpen && (
         <div className="lg:hidden border-t border-white/[0.06] bg-[#0F172A]/95 backdrop-blur-xl">
           <nav className="px-4 py-3 space-y-1">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const isActive = isNavItemActive(item);
               const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
 
@@ -204,29 +194,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
               );
             })}
             
-            {/* Mobile-only menu items */}
-            <div className="pt-2 mt-2 border-t border-white/[0.06] space-y-1">
-              <Link
-                href="/docs"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-200 no-underline"
-              >
-                <BookOpen className="h-5 w-5" />
-                User Guide
-              </Link>
-              <Link
-                href={buildDashboardUrl("/dashboard/config")}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-200 no-underline"
-              >
-                <Settings className="h-5 w-5" />
-                Settings
-              </Link>
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-[15px] font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors duration-200 text-left"
-              >
-                <User className="h-5 w-5" />
-                Profile
-              </button>
-            </div>
+            {/* Mobile-only menu items - Removed as they are now in UserMenu */}
           </nav>
         </div>
       )}
