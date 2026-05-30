@@ -35,7 +35,7 @@ function DocsContent() {
           <h2 className="text-3xl font-bold">Welcome to SecureTanza</h2>
           <p className="text-lg text-slate-600 dark:text-slate-400">
             SecureTanza is a comprehensive crime mapping and analytics system designed for Tanza, Cavite. 
-            It provides real-time visualization, statistical analysis, and predictive insights to help law 
+            It provides real-time visualization, statistical analysis, and insights to help law 
             enforcement and local government make data-driven decisions for public safety.
           </p>
           
@@ -64,9 +64,9 @@ function DocsContent() {
               theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
             }`}>
               <Brain className="h-8 w-8 text-emerald-500 mb-3" />
-              <h3 className="text-lg font-semibold mb-2">Predictive Forecasting</h3>
+              <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                AI-powered crime prediction using ARIMA models with validation and confidence intervals.
+                Comprehensive crime analysis with interactive charts and statistical insights.
               </p>
             </div>
             
@@ -233,85 +233,6 @@ function DocsContent() {
       )
     },
     {
-      id: "predictive",
-      title: "Predictive Analytics",
-      icon: Brain,
-      content: (
-        <div className="space-y-6">
-          <h2 className="text-3xl font-bold">Predictive Analytics</h2>
-          <p className="text-slate-600 dark:text-slate-400">
-            AI-powered crime forecasting using advanced statistical models.
-          </p>
-
-          <div className={`p-6 rounded-xl border-2 ${
-            theme === "dark" ? "bg-purple-500/10 border-purple-500/30" : "bg-purple-50 border-purple-200"
-          }`}>
-            <div className="flex items-start gap-4">
-              <Brain className="h-8 w-8 text-purple-500 shrink-0" />
-              <div>
-                <h3 className="text-lg font-semibold mb-2">How It Works</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  The system uses ARIMA (AutoRegressive Integrated Moving Average) models trained on 
-                  historical crime data from 2023-2025 to predict future crime patterns with 95% confidence intervals.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Understanding the Metrics</h3>
-            
-            <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
-            }`}>
-              <h4 className="font-semibold mb-2">MAPE (Mean Absolute Percentage Error)</h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
-                Measures average prediction error. Lower is better.
-              </p>
-              <div className="space-y-1 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                  <span>&lt; 15%: Excellent</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                  <span>15-25%: Good</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <span>25-40%: Moderate</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span>&gt; 40%: Poor</span>
-                </div>
-              </div>
-            </div>
-
-            <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
-            }`}>
-              <h4 className="font-semibold mb-2">Using Predictions</h4>
-              <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                <li className="flex items-start gap-2">
-                  <Lightbulb className="h-4 w-4 mt-0.5 text-yellow-500 shrink-0" />
-                  <span><strong>For Planning:</strong> Allocate resources based on predicted hotspots</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Lightbulb className="h-4 w-4 mt-0.5 text-yellow-500 shrink-0" />
-                  <span><strong>For Prevention:</strong> Implement measures in high-risk areas</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Lightbulb className="h-4 w-4 mt-0.5 text-yellow-500 shrink-0" />
-                  <span><strong>For Budgeting:</strong> Forecast resource needs and staffing</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )
-    },
-    {
       id: "reports",
       title: "Reports & Export",
       icon: FileText,
@@ -388,16 +309,6 @@ function DocsContent() {
                   "Clear browser cache",
                   "Try a different browser",
                   "Check if database is accessible"
-                ]
-              },
-              {
-                problem: "Forecast Not Available",
-                solutions: [
-                  "Verify forecast API is running (port 8000)",
-                  "Check .env.local has correct API URL",
-                  "Ensure training data exists (2023-2025)",
-                  "Review browser console for errors",
-                  "Contact system administrator"
                 ]
               },
               {
