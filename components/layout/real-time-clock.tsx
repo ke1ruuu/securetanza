@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Filter } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface RealTimeClockProps {
   onFilterToggle: (isActive: boolean) => void;
@@ -24,7 +24,7 @@ export default function RealTimeClock({ onFilterToggle, isFilterActive }: RealTi
   if (!mounted) {
     return (
       <div className="pointer-events-auto opacity-0">
-        <div className="h-[56px] w-[180px] rounded-xl bg-[#0F172A]/70" />
+        <div className="h-[56px] w-[56px] rounded-xl bg-[#0F172A] border border-white/[0.08]" />
       </div>
     );
   }
@@ -52,39 +52,40 @@ export default function RealTimeClock({ onFilterToggle, isFilterActive }: RealTi
 
   return (
     <div className="pointer-events-auto flex items-center gap-3">
-      <div className="flex items-center gap-3 h-[56px] pl-4 pr-5 rounded-xl bg-[#0F172A]/70 backdrop-blur-xl border border-white/[0.08]">
-        <div className="w-8 h-8 rounded-full bg-white/[0.06] border border-white/[0.06] flex items-center justify-center">
-          <Clock className="h-4 w-4 text-[#0EA5E9]" />
+      {/* Time & Date Display - Only shown when NOT in filter active mode */}
+      {!isFilterActive && (
+        <div className="flex items-center gap-3 h-[56px] pl-4 pr-5 rounded-xl bg-[#0F172A]/70 backdrop-blur-xl border border-white/[0.08] shadow-lg animate-in fade-in slide-in-from-left-2 duration-350">
+          <div className="w-8 h-8 rounded-full bg-white/10 border border-white/10 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-[#0EA5E9]" />
+          </div>
+          <div className="flex flex-col">
+            <span
+              className="text-[14px] font-bold text-white leading-tight tabular-nums"
+              style={{ fontFamily: "var(--font-manrope)" }}
+            >
+              {formatTime(time)}
+            </span>
+            <span
+              className="text-[10px] font-medium text-slate-300 leading-tight"
+              style={{ fontFamily: "var(--font-inter)" }}
+            >
+              {formatDay(time)}, {formatDate(time)}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col">
-          <span
-            className="text-[14px] font-bold text-white leading-tight tabular-nums"
-            style={{ fontFamily: "var(--font-manrope)" }}
-          >
-            {formatTime(time)}
-          </span>
-          <span
-            className="text-[10px] font-medium text-slate-500 leading-tight"
-            style={{ fontFamily: "var(--font-inter)" }}
-          >
-            {formatDay(time)}, {formatDate(time)}
-          </span>
-        </div>
-      </div>
+      )}
       
       <button 
         onClick={() => onFilterToggle(!isFilterActive)}
-        className={`h-[56px] w-[56px] rounded-xl backdrop-blur-xl border transition-colors ${
+        className={`group h-[56px] w-[56px] rounded-xl backdrop-blur-xl border transition-all duration-200 flex items-center justify-center shadow-lg ${
           isFilterActive
-            ? "bg-[#0EA5E9]/20 border-[#0EA5E9]/40 hover:bg-[#0EA5E9]/30"
-            : "bg-[#0F172A]/70 border-white/[0.08] hover:bg-[#0F172A]/90"
+            ? "bg-[#0EA5E9] border-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white"
+            : "bg-[#0F172A]/70 border-white/[0.08] hover:bg-[#0F172A]/90 text-[#0EA5E9]"
         }`}
         aria-label="Filter"
         aria-pressed={isFilterActive}
       >
-        <Filter className={`h-5 w-5 mx-auto transition-colors ${
-          isFilterActive ? "text-[#0EA5E9]" : "text-slate-400"
-        }`} />
+        <Clock className="h-5 w-5 transition-transform group-hover:scale-110 duration-200" />
       </button>
     </div>
   );

@@ -7,6 +7,7 @@ import { Upload, Menu, X, BookOpen, Settings } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import UploadModal from "./upload-modal";
 import TimeSelector from "./time-selector";
 import UserMenu from "./user-menu";
@@ -81,7 +82,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
   return (
     <header 
-      className={`w-full bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06] pointer-events-auto z-50 transition-transform duration-500 ease-in-out ${
+      className={`w-full border-b pointer-events-auto z-50 transition-all duration-500 ease-in-out bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06] ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >
@@ -91,18 +92,26 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           href="/"
           className="flex items-center gap-2 sm:gap-2.5 no-underline shrink-0 group"
         >
-          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center relative">
             <Image
               src="/SC LOGO W 1.png"
               alt="SECURE Tanza Logo"
               width={34}
               height={34}
-              className="object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-200"
+              className="hidden dark:block object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-200"
+              priority
+            />
+            <Image
+              src="/SC LOGO 2.png"
+              alt="SECURE Tanza Logo"
+              width={34}
+              height={34}
+              className="block dark:hidden object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-200"
               priority
             />
           </div>
           <span
-            className="text-[15px] sm:text-[17px] font-bold text-white/90 tracking-tight leading-none whitespace-nowrap"
+            className="text-[15px] sm:text-[17px] font-bold tracking-tight leading-none whitespace-nowrap text-slate-900 dark:text-white/90"
             style={{ fontFamily: "var(--font-manrope)" }}
           >
             Secure Tanza
@@ -121,15 +130,15 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
                 href={href}
                 className={`relative flex items-center h-full px-4 xl:px-5 text-[14px] xl:text-[15px] font-medium tracking-wide no-underline transition-colors duration-200 ${
                   isActive
-                    ? "text-[#0EA5E9]"
-                    : "text-slate-400 hover:text-white"
+                    ? "text-[#4e86fd] dark:text-[#0EA5E9]"
+                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
                 }`}
                 style={{ fontFamily: "var(--font-inter)" }}
               >
                 {item.label}
                 {/* Active indicator bar */}
                 {isActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#0EA5E9] rounded-full" />
+                  <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-[#4e86fd] dark:bg-[#0EA5E9]" />
                 )}
               </Link>
             );
@@ -146,7 +155,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           {/* Upload Button */}
           <button
             onClick={() => setShowUploadModal(true)}
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 hover:border-[#0EA5E9]/30 transition-all duration-200 cursor-pointer"
+            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
             title="Upload Data"
           >
             <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -158,7 +167,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           {/* Mobile Menu Button - Only on mobile */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
+            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center transition-all duration-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.06]"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -172,7 +181,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-white/[0.06] bg-[#0F172A]/95 backdrop-blur-xl">
+        <div className="lg:hidden border-t backdrop-blur-xl border-slate-200 bg-white/95 dark:border-white/[0.06] dark:bg-[#0F172A]/95">
           <nav className="px-4 py-3 space-y-1">
             {filteredNavItems.map((item) => {
               const isActive = isNavItemActive(item);
@@ -184,8 +193,8 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
                   href={href}
                   className={`block px-4 py-3 rounded-lg text-[15px] font-medium tracking-wide no-underline transition-colors duration-200 ${
                     isActive
-                      ? "text-[#0EA5E9] bg-[#0EA5E9]/10"
-                      : "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+                      ? "text-[#4e86fd] bg-[#4e86fd]/10 dark:text-[#0EA5E9] dark:bg-[#0EA5E9]/10"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.06]"
                   }`}
                   style={{ fontFamily: "var(--font-inter)" }}
                 >

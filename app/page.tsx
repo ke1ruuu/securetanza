@@ -56,7 +56,7 @@ function HomeContent() {
     <main className="relative h-screen w-screen bg-[#020617] overflow-hidden text-slate-100 font-sans">
       <div className="fixed top-0 left-0 right-0 z-50 transition-transform duration-500 ease-in-out">
         <Suspense fallback={
-          <div className="w-full h-16 bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06]" />
+          <div className="w-full h-16 bg-[#0F172A] border-b border-white/[0.06]" />
         }>
           <MapHeader isVisible={!isFilterActive} />
         </Suspense>
@@ -107,7 +107,7 @@ function HomeContent() {
 
         {/* Real Time Clock */}
         <div className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
-          isFilterActive ? 'bottom-[100px] sm:bottom-[120px]' : 'bottom-3 sm:bottom-4 lg:bottom-6'
+          isFilterActive ? 'bottom-[100px] sm:bottom-4 lg:bottom-6' : 'bottom-3 sm:bottom-4 lg:bottom-6'
         }`}>
           <RealTimeClock
             onFilterToggle={handleFilterToggle}

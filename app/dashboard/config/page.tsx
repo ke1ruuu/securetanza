@@ -70,18 +70,18 @@ function ConfigContent() {
 
 	if (user && !user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin")) {
 		return (
-			<div className={`flex flex-col h-screen ${theme === "dark" ? "bg-[#0f172a] text-white" : "bg-[#f1f5f9] text-slate-900"}`}>
-				<header className="w-full bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06] pointer-events-auto z-50">
+			<div className={`flex flex-col h-screen ${"bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-white"}`}>
+				<header className={`w-full border-b pointer-events-auto z-50 ${"bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06]"}`}>
 					<div className="flex items-center h-16 px-8">
 						<button
 							onClick={() => router.back()}
-							className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200">
+							className={`flex items-center gap-2 transition-colors duration-200 ${"text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}>
 							<ArrowLeft className="h-5 w-5" />
 							<span className="text-sm font-medium">Back</span>
 						</button>
 						<div className="ml-8 flex items-center gap-3">
 							<Shield className="h-5 w-5 text-[#0EA5E9]" />
-							<h1 className="text-lg font-semibold text-white">System Configuration</h1>
+							<h1 className={`text-lg font-semibold ${"text-slate-900 dark:text-white"}`}>System Configuration</h1>
 						</div>
 					</div>
 				</header>
@@ -308,33 +308,33 @@ function ConfigContent() {
 	return (
 		<div
 			className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${
-				theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
+				"bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100"
 			}`}>
-			<header className={`w-full bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06] pointer-events-auto z-50`}>
+			<header className={`w-full border-b pointer-events-auto z-50 ${"bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06]"}`}>
 				<div className="flex items-center h-16 px-8">
 					<button
 						onClick={() => router.back()}
-						className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200">
+						className={`flex items-center gap-2 transition-colors duration-200 ${"text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}>
 						<ArrowLeft className="h-5 w-5" />
 						<span className="text-sm font-medium">Back</span>
 					</button>
 					<div className="ml-8 flex items-center gap-3">
 						<Shield className="h-5 w-5 text-[#0EA5E9]" />
-						<h1 className="text-lg font-semibold text-white">Privileged Access Management</h1>
+						<h1 className={`text-lg font-semibold ${"text-slate-900 dark:text-white"}`}>Privileged Access Management</h1>
 					</div>
 				</div>
 			</header>
 
 			<div
 				className={`flex items-center gap-1 px-8 py-4 border-b ${
-					theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
+					"bg-white/60 border-slate-200/60 dark:bg-[#0f172a]/80 dark:border-white/[0.04]"
 				}`}>
 				<button
 					onClick={() => setActiveTab("settings")}
 					className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						activeTab === "settings"
-							? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
-							: "text-slate-400 hover:text-slate-500 hover:bg-white/[0.04]"
+							? theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] border border-sky-200"
+							: theme === 'dark' ? "text-slate-400 hover:text-slate-300 hover:bg-white/[0.04]" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
 					}`}>
 					Privileged Users
 				</button>
@@ -342,8 +342,8 @@ function ConfigContent() {
 					onClick={() => setActiveTab("upload-logs")}
 					className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						activeTab === "upload-logs"
-							? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
-							: "text-slate-400 hover:text-slate-500 hover:bg-white/[0.04]"
+							? theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] border border-sky-200"
+							: theme === 'dark' ? "text-slate-400 hover:text-slate-300 hover:bg-white/[0.04]" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
 					}`}>
 					Activity Logs
 				</button>
@@ -351,20 +351,20 @@ function ConfigContent() {
 					onClick={() => setActiveTab("preferences")}
 					className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
 						activeTab === "preferences"
-							? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
-							: "text-slate-400 hover:text-slate-500 hover:bg-white/[0.04]"
+							? theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] border border-sky-200"
+							: theme === 'dark' ? "text-slate-400 hover:text-slate-300 hover:bg-white/[0.04]" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
 					}`}>
 					System Preferences
 				</button>
 			</div>
 
-			<main className={`flex-1 flex flex-col min-w-0 overflow-hidden ${theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"}`}>
+			<main className={`flex-1 flex flex-col min-w-0 overflow-hidden ${"bg-[#f1f5f9] dark:bg-[#0f172a]"}`}>
 				<div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
 					{activeTab === "settings" ? (
 						<div className="flex flex-col gap-6 max-w-6xl mx-auto h-full">
 							<div
 								className={`rounded-2xl border p-8 ${
-									theme === "dark" ? "bg-slate-900/40 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm"
+									"bg-white border-slate-200 shadow-sm dark:bg-slate-900/40 dark:border-white/[0.04]"
 								}`}>
 								<div className="flex justify-between items-start mb-8">
 									<div className="space-y-1">
@@ -402,11 +402,11 @@ function ConfigContent() {
 
 								<div
 									className={`rounded-xl border overflow-hidden ${
-										theme === "dark" ? "bg-slate-900/60 border-white/[0.04]" : "bg-white border-slate-200"
+										"bg-white border-slate-200 dark:bg-slate-900/60 dark:border-white/[0.04]"
 									}`}>
 									<table className="w-full text-left">
 										<thead>
-											<tr className={theme === "dark" ? "bg-white/5" : "bg-slate-50"}>
+											<tr className={"bg-slate-50 dark:bg-white/5"}>
 												<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Account No.</th>
 												<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Full Name</th>
 												<th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -445,8 +445,8 @@ function ConfigContent() {
 																		key={idx}
 																		className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight ${
 																			p.name.includes("admin")
-																				? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-																				: "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
+																				? theme === 'dark' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-200"
+																				: theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] border border-sky-200"
 																		}`}>
 																		{p.name.replace("privileged_", "").replace("_view", "").replace(/_/g, " ")}
 																	</span>
@@ -485,13 +485,13 @@ function ConfigContent() {
 									{[1, 2, 3].map((i) => (
 										<div
 											key={i}
-											className={`p-6 rounded-xl border ${theme === "dark" ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+											className={`p-6 rounded-xl border ${"bg-white border-slate-200 dark:bg-slate-900/50 dark:border-slate-800"}`}>
 											<div className="flex items-center gap-4">
-												<div className={`w-12 h-12 rounded-lg ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+												<div className={`w-12 h-12 rounded-lg ${"bg-slate-300 dark:bg-white/10"}`}></div>
 												<div className="flex-1">
 													<div
-														className={`h-8 w-16 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-													<div className={`h-4 w-24 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
+														className={`h-8 w-16 rounded mb-2 ${"bg-slate-300 dark:bg-white/10"}`}></div>
+													<div className={`h-4 w-24 rounded ${"bg-slate-300 dark:bg-white/10"}`}></div>
 												</div>
 											</div>
 										</div>
@@ -500,7 +500,7 @@ function ConfigContent() {
 							) : (
 								<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 									<div
-										className={`p-6 rounded-xl border ${theme === "dark" ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+										className={`p-6 rounded-xl border ${"bg-white border-slate-200 dark:bg-slate-900/50 dark:border-slate-800"}`}>
 										<div className="flex items-center gap-4">
 											<div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
 												<FileSpreadsheet className="h-6 w-6 text-blue-600 dark:text-blue-400" />
@@ -512,7 +512,7 @@ function ConfigContent() {
 										</div>
 									</div>
 									<div
-										className={`p-6 rounded-xl border ${theme === "dark" ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+										className={`p-6 rounded-xl border ${"bg-white border-slate-200 dark:bg-slate-900/50 dark:border-slate-800"}`}>
 										<div className="flex items-center gap-4">
 											<div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
 												<CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
@@ -526,7 +526,7 @@ function ConfigContent() {
 										</div>
 									</div>
 									<div
-										className={`p-6 rounded-xl border ${theme === "dark" ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+										className={`p-6 rounded-xl border ${"bg-white border-slate-200 dark:bg-slate-900/50 dark:border-slate-800"}`}>
 										<div className="flex items-center gap-4">
 											<div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
 												<Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
@@ -543,7 +543,7 @@ function ConfigContent() {
 							)}
 
 							<div
-								className={`rounded-xl border overflow-hidden ${theme === "dark" ? "bg-slate-900/50 border-slate-800" : "bg-white border-slate-200"}`}>
+								className={`rounded-xl border overflow-hidden ${"bg-white border-slate-200 dark:bg-slate-900/50 dark:border-slate-800"}`}>
 								<div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
 									<h2 className="text-lg font-semibold text-slate-900 dark:text-white">Upload History</h2>
 									<button
@@ -554,7 +554,7 @@ function ConfigContent() {
 								</div>
 								<div className="overflow-x-auto">
 									<table className="w-full">
-										<thead className={theme === "dark" ? "bg-slate-800/50" : "bg-slate-50"}>
+										<thead className={"bg-slate-50 dark:bg-slate-800/50"}>
 											<tr>
 												<th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
 													File Name
@@ -615,7 +615,7 @@ function ConfigContent() {
 						<div className="flex flex-col gap-6 max-w-6xl mx-auto h-full">
 							<div
 								className={`rounded-2xl border p-8 ${
-									theme === "dark" ? "bg-slate-900/40 border-white/[0.04]" : "bg-white border-slate-200 shadow-sm"
+									"bg-white border-slate-200 shadow-sm dark:bg-slate-900/40 dark:border-white/[0.04]"
 								}`}>
 								<div className="flex justify-between items-start mb-8">
 									<div className="space-y-1">
@@ -629,7 +629,7 @@ function ConfigContent() {
 								<div className="flex flex-col gap-6">
 									<div
 										className={`p-6 rounded-2xl border flex items-center justify-between transition-colors ${
-											theme === "dark" ? "bg-slate-900/60 border-white/[0.04]" : "bg-slate-50 border-slate-200"
+											"bg-slate-50 border-slate-200 dark:bg-slate-900/60 dark:border-white/[0.04]"
 										}`}>
 										<div className="flex items-center gap-4">
 											<div className="w-10 h-10 rounded-xl bg-[#0EA5E9]/10 flex items-center justify-center">
@@ -641,7 +641,7 @@ function ConfigContent() {
 											</div>
 											<div>
 												<h4
-													className={`text-sm font-bold uppercase tracking-widest transition-colors ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+													className={`text-sm font-bold uppercase tracking-widest transition-colors ${"text-slate-900 dark:text-white"}`}>
 													Interface Theme
 												</h4>
 												<p className="text-sm text-slate-500 mt-0.5">
@@ -652,7 +652,7 @@ function ConfigContent() {
 
 										<div
 											className={`flex p-1 rounded-xl border transition-colors ${
-												theme === "dark" ? "bg-slate-900/50 border-white/5" : "bg-slate-200/50 border-slate-200"
+												"bg-slate-200/50 border-slate-200 dark:bg-slate-900/50 dark:border-white/5"
 											}`}>
 											<button
 												onClick={() => setTheme("light")}
@@ -664,7 +664,7 @@ function ConfigContent() {
 											<button
 												onClick={() => setTheme("dark")}
 												className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-black uppercase tracking-widest transition-all ${
-													theme === "dark" ? "bg-[#0EA5E9] text-white shadow-lg" : "text-slate-500 hover:text-slate-400"
+													"text-slate-500 hover:text-slate-400 dark:bg-[#0EA5E9] dark:text-white dark:shadow-lg"
 												}`}>
 												<Moon className="h-3 w-3" /> Dark
 											</button>
@@ -681,7 +681,7 @@ function ConfigContent() {
 			{(showCreateModal || showEditModal) && (
 				<div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
 					<div
-						className={`w-full max-w-md rounded-3xl border p-8 ${theme === "dark" ? "bg-slate-900 border-white/10 shadow-2xl" : "bg-white border-slate-200 shadow-xl"}`}>
+						className={`w-full max-w-md rounded-3xl border p-8 ${"bg-white border-slate-200 shadow-xl dark:bg-slate-900 dark:border-white/10 dark:shadow-2xl"}`}>
 						<div className="flex items-center gap-3 mb-6">
 							<div className="w-10 h-10 rounded-2xl bg-[#0EA5E9]/10 flex items-center justify-center">
 								{showCreateModal ? <UserPlus className="h-5 w-5 text-[#0EA5E9]" /> : <Edit className="h-5 w-5 text-[#0EA5E9]" />}

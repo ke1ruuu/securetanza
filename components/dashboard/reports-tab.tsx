@@ -10,7 +10,12 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
-  Loader2
+  Loader2,
+  ClipboardList,
+  TrendingUp,
+  Search,
+  Flame,
+  Lightbulb
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -374,87 +379,97 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                   key: 'includeExecutiveSummary', 
                   label: 'Executive Summary', 
                   desc: 'Key findings overview',
-                  icon: '📋'
+                  icon: ClipboardList,
+                  color: 'text-blue-500 dark:text-blue-400 bg-blue-500/10'
                 },
                 { 
                   key: 'includeOverview', 
                   label: 'Overview', 
                   desc: 'Current statistics',
-                  icon: '📊'
+                  icon: BarChart3,
+                  color: 'text-purple-500 dark:text-purple-400 bg-purple-500/10'
                 },
                 { 
                   key: 'includeTrends', 
                   label: 'Trends', 
                   desc: 'Historical patterns',
-                  icon: '📈'
+                  icon: TrendingUp,
+                  color: 'text-emerald-500 dark:text-emerald-400 bg-emerald-500/10'
                 },
                 { 
                   key: 'includeTimePatterns', 
                   label: 'Time Patterns', 
                   desc: 'Peak hours analysis',
-                  icon: '⏰'
+                  icon: Clock,
+                  color: 'text-amber-500 dark:text-amber-400 bg-amber-500/10'
                 },
                 { 
                   key: 'includeCrimeTypes', 
                   label: 'Classification', 
                   desc: 'Crime type breakdown',
-                  icon: '🔍'
+                  icon: Search,
+                  color: 'text-indigo-500 dark:text-indigo-400 bg-indigo-500/10'
                 },
                 { 
                   key: 'includeBarangayComparison', 
                   label: 'Comparison', 
                   desc: 'Cross-barangay data',
-                  icon: '📍'
+                  icon: MapPin,
+                  color: 'text-rose-500 dark:text-rose-400 bg-rose-500/10'
                 },
                 { 
                   key: 'includeCrimeMatrix', 
                   label: 'Heatmap', 
                   desc: 'Monthly distribution',
-                  icon: '🔥'
+                  icon: Flame,
+                  color: 'text-orange-500 dark:text-orange-400 bg-orange-500/10'
                 },
                 { 
                   key: 'includeRecommendations', 
                   label: 'Recommendations', 
                   desc: 'Strategic insights',
-                  icon: '💡'
+                  icon: Lightbulb,
+                  color: 'text-teal-500 dark:text-teal-400 bg-teal-500/10'
                 },
-              ].map((section) => (
-                <button
-                  key={section.key}
-                  onClick={() => toggleSection(section.key as keyof ReportConfig)}
-                  className={`group relative flex flex-col items-center justify-center p-4 rounded-xl transition-all text-center ${
-                    reportConfig[section.key as keyof ReportConfig]
-                      ? theme === 'dark'
-                        ? 'bg-blue-500/10 border-2 border-blue-500/50 hover:bg-blue-500/15 shadow-lg shadow-blue-500/10'
-                        : 'bg-blue-50 border-2 border-blue-400 hover:bg-blue-100 shadow-lg shadow-blue-200/50'
-                      : theme === 'dark'
-                        ? 'bg-slate-800/30 hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600'
-                        : 'bg-slate-50/50 hover:bg-slate-100 border-2 border-slate-200/50 hover:border-slate-300'
-                  }`}
-                >
-                  {/* Checkbox indicator */}
-                  <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-                    reportConfig[section.key as keyof ReportConfig]
-                      ? theme === 'dark'
-                        ? 'border-blue-400 bg-blue-400'
-                        : 'border-blue-600 bg-blue-600'
-                      : theme === 'dark'
-                        ? 'border-slate-600 group-hover:border-slate-500'
-                        : 'border-slate-300 group-hover:border-slate-400'
-                  }`}>
-                    {reportConfig[section.key as keyof ReportConfig] && (
-                      <CheckCircle2 className="h-3 w-3 text-white" />
-                    )}
-                  </div>
-                  
-                  {/* Icon */}
-                  <div className={`text-3xl mb-2 transition-transform ${
-                    reportConfig[section.key as keyof ReportConfig] 
-                      ? 'scale-110' 
-                      : 'group-hover:scale-105'
-                  }`}>
-                    {section.icon}
-                  </div>
+              ].map((section) => {
+                const IconComponent = section.icon;
+                return (
+                  <button
+                    key={section.key}
+                    onClick={() => toggleSection(section.key as keyof ReportConfig)}
+                    className={`group relative flex flex-col items-center justify-center p-4 rounded-xl transition-all text-center ${
+                      reportConfig[section.key as keyof ReportConfig]
+                        ? theme === 'dark'
+                          ? 'bg-blue-500/10 border-2 border-blue-500/50 hover:bg-blue-500/15 shadow-lg shadow-blue-500/10'
+                          : 'bg-blue-50 border-2 border-blue-400 hover:bg-blue-100 shadow-lg shadow-blue-200/50'
+                        : theme === 'dark'
+                          ? 'bg-slate-800/30 hover:bg-slate-800/50 border-2 border-slate-700/50 hover:border-slate-600'
+                          : 'bg-slate-50/50 hover:bg-slate-100 border-2 border-slate-200/50 hover:border-slate-300'
+                    }`}
+                  >
+                    {/* Checkbox indicator */}
+                    <div className={`absolute top-2 right-2 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                      reportConfig[section.key as keyof ReportConfig]
+                        ? theme === 'dark'
+                          ? 'border-blue-400 bg-blue-400'
+                          : 'border-blue-600 bg-blue-600'
+                        : theme === 'dark'
+                          ? 'border-slate-600 group-hover:border-slate-500'
+                          : 'border-slate-300 group-hover:border-slate-400'
+                    }`}>
+                      {reportConfig[section.key as keyof ReportConfig] && (
+                        <CheckCircle2 className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                    
+                    {/* Icon */}
+                    <div className={`p-2.5 rounded-lg mb-2 transition-transform ${section.color} ${
+                      reportConfig[section.key as keyof ReportConfig] 
+                        ? 'scale-110' 
+                        : 'group-hover:scale-105'
+                    }`}>
+                      <IconComponent className="h-5 w-5" />
+                    </div>
                   
                   {/* Label */}
                   <div className={`text-sm font-semibold mb-1 ${
@@ -470,7 +485,8 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                     {section.desc}
                   </div>
                 </button>
-              ))}
+              );
+            })}
             </div>
           </Card>
         </div>

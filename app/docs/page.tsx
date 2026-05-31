@@ -17,7 +17,12 @@ import {
   Home,
   Lightbulb,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  ClipboardList,
+  TrendingUp,
+  Clock,
+  MapPin,
+  Flame
 } from "lucide-react";
 
 function DocsContent() {
@@ -41,7 +46,7 @@ function DocsContent() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
             <div className={`p-6 rounded-xl border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <Map className="h-8 w-8 text-blue-500 mb-3" />
               <h3 className="text-lg font-semibold mb-2">Interactive Crime Map</h3>
@@ -51,7 +56,7 @@ function DocsContent() {
             </div>
             
             <div className={`p-6 rounded-xl border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <BarChart3 className="h-8 w-8 text-purple-500 mb-3" />
               <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
@@ -61,7 +66,7 @@ function DocsContent() {
             </div>
             
             <div className={`p-6 rounded-xl border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <Brain className="h-8 w-8 text-emerald-500 mb-3" />
               <h3 className="text-lg font-semibold mb-2">Advanced Analytics</h3>
@@ -71,7 +76,7 @@ function DocsContent() {
             </div>
             
             <div className={`p-6 rounded-xl border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <FileText className="h-8 w-8 text-amber-500 mb-3" />
               <h3 className="text-lg font-semibold mb-2">Report Generation</h3>
@@ -98,7 +103,7 @@ function DocsContent() {
             <h3 className="text-xl font-semibold">Map Controls</h3>
             
             <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <h4 className="font-semibold mb-2">Top Left Controls</h4>
               <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
@@ -114,7 +119,7 @@ function DocsContent() {
             </div>
 
             <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <h4 className="font-semibold mb-2">Threat Levels</h4>
               <div className="space-y-2 text-sm">
@@ -142,7 +147,7 @@ function DocsContent() {
             </div>
 
             <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <h4 className="font-semibold mb-2">Time-Based Filtering</h4>
               <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-400 list-decimal list-inside">
@@ -171,7 +176,7 @@ function DocsContent() {
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Overview Tab</h3>
             <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <h4 className="font-semibold mb-3">Key Metrics</h4>
               <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
@@ -197,7 +202,7 @@ function DocsContent() {
             <h3 className="text-xl font-semibold mt-6">Analytics Tab</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className={`p-4 rounded-lg border ${
-                theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+                "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
               }`}>
                 <h4 className="font-semibold mb-2">Historical Mode</h4>
                 <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
@@ -213,7 +218,7 @@ function DocsContent() {
               </div>
 
               <div className={`p-4 rounded-lg border ${
-                theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+                "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
               }`}>
                 <h4 className="font-semibold mb-2">Predictive Mode</h4>
                 <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
@@ -248,31 +253,36 @@ function DocsContent() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
-                { icon: "📋", title: "Executive Summary", desc: "Key findings overview" },
-                { icon: "📊", title: "Overview", desc: "Current statistics" },
-                { icon: "📈", title: "Trends", desc: "Historical patterns" },
-                { icon: "⏰", title: "Time Patterns", desc: "Peak hours analysis" },
-                { icon: "🔍", title: "Classification", desc: "Crime type breakdown" },
-                { icon: "📍", title: "Comparison", desc: "Cross-barangay data" },
-                { icon: "🔥", title: "Heatmap", desc: "Monthly distribution" },
-                { icon: "💡", title: "Recommendations", desc: "Strategic insights" },
-              ].map((section, index) => (
-                <div key={index} className={`p-4 rounded-lg border ${
-                  theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{section.icon}</span>
-                    <div>
-                      <h4 className="font-semibold text-sm">{section.title}</h4>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">{section.desc}</p>
+                { icon: ClipboardList, title: "Executive Summary", desc: "Key findings overview", color: "text-blue-500" },
+                { icon: BarChart3, title: "Overview", desc: "Current statistics", color: "text-purple-500" },
+                { icon: TrendingUp, title: "Trends", desc: "Historical patterns", color: "text-emerald-500" },
+                { icon: Clock, title: "Time Patterns", desc: "Peak hours analysis", color: "text-amber-500" },
+                { icon: Search, title: "Classification", desc: "Crime type breakdown", color: "text-indigo-500" },
+                { icon: MapPin, title: "Comparison", desc: "Cross-barangay data", color: "text-rose-500" },
+                { icon: Flame, title: "Heatmap", desc: "Monthly distribution", color: "text-orange-500" },
+                { icon: Lightbulb, title: "Recommendations", desc: "Strategic insights", color: "text-teal-500" },
+              ].map((section, index) => {
+                const IconComponent = section.icon;
+                return (
+                  <div key={index} className={`p-4 rounded-lg border ${
+                    "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0">
+                        <IconComponent className={`h-5 w-5 ${section.color}`} />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm">{section.title}</h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">{section.desc}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className={`p-4 rounded-lg border ${
-              theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+              "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
             }`}>
               <h4 className="font-semibold mb-2">Generating a Report</h4>
               <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-400 list-decimal list-inside">
@@ -333,7 +343,7 @@ function DocsContent() {
               }
             ].map((issue, index) => (
               <div key={index} className={`p-4 rounded-lg border ${
-                theme === "dark" ? "bg-slate-800/50 border-slate-700" : "bg-slate-50 border-slate-200"
+                "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
               }`}>
                 <h4 className="font-semibold mb-2 flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -359,31 +369,33 @@ function DocsContent() {
 
   return (
     <div className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${
-      theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
+      "bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100"
     }`}>
       {/* Header */}
-      <header className={`w-full bg-[#0F172A]/80 backdrop-blur-xl border-b border-white/[0.06] z-50`}>
+      <header className={`w-full border-b z-50 ${"bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06]"}`}>
         <div className="flex items-center justify-between h-16 px-8">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors duration-200"
+              className={`flex items-center gap-2 transition-colors duration-200 ${"text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}
             >
               <ArrowLeft className="h-5 w-5" />
               <span className="text-sm font-medium">Back</span>
             </button>
             
-            <div className="h-5 w-px bg-white/10"></div>
+            <div className={`h-5 w-px ${"bg-slate-200 dark:bg-white/10"}`}></div>
             
             <div className="flex items-center gap-3">
-              <BookOpen className="h-5 w-5 text-[#0EA5E9]" />
-              <h1 className="text-lg font-semibold text-white">User Guide</h1>
+              <BookOpen className={`h-5 w-5 ${theme === 'dark' ? "text-[#0EA5E9]" : "text-[#0284C7]"}`} />
+              <h1 className={`text-lg font-semibold ${"text-slate-900 dark:text-white"}`}>User Guide</h1>
             </div>
           </div>
 
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0EA5E9]/10 text-[#0EA5E9] hover:bg-[#0EA5E9]/20 transition-colors"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] hover:bg-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] hover:bg-sky-100"
+            }`}
           >
             <Home className="h-4 w-4" />
             <span className="text-sm font-medium">Home</span>
@@ -395,7 +407,7 @@ function DocsContent() {
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar Navigation */}
         <aside className={`w-64 border-r overflow-y-auto ${
-          theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
+          "bg-white/60 border-slate-200/60 dark:bg-[#0f172a]/80 dark:border-white/[0.04]"
         }`}>
           <div className="p-4 space-y-1">
             {sections.map((section) => {
@@ -408,8 +420,8 @@ function DocsContent() {
                   onClick={() => setActiveSection(section.id)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
                     isActive
-                      ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
-                      : "text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                      ? theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] border border-sky-200"
+                      : theme === 'dark' ? "text-slate-400 hover:text-white hover:bg-white/[0.04]" : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
@@ -422,7 +434,7 @@ function DocsContent() {
 
         {/* Content Area */}
         <main className={`flex-1 overflow-y-auto ${
-          theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"
+          "bg-[#f1f5f9] dark:bg-[#0f172a]"
         }`}>
           <div className="max-w-4xl mx-auto p-8">
             {activeContent && activeContent.content}

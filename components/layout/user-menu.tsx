@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { LogOut, User as UserIcon, Shield, Settings, BookOpen } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
 
   if (!user) return null;
@@ -50,15 +52,17 @@ export default function UserMenu() {
       {/* User Button */}
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all duration-200"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/[0.06]"
         title={user.fullName}
       >
-        <div className="w-8 h-8 rounded-lg bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 flex items-center justify-center">
-          <UserIcon className="h-4 w-4 text-[#0EA5E9]" />
+        <div className={`w-8 h-8 rounded-lg border flex items-center justify-center ${
+          "bg-[#4e86fd]/10 border-[#4e86fd]/20 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20"
+        }`}>
+          <UserIcon className={`h-4 w-4 ${"text-[#4e86fd] dark:text-[#0EA5E9]"}`} />
         </div>
         <div className="hidden lg:block text-left">
-          <p className="text-sm font-medium text-white leading-none">{user.fullName}</p>
-          <p className="text-xs text-slate-500 leading-none mt-1">
+          <p className={`text-sm font-medium leading-none ${"text-slate-900 dark:text-white"}`}>{user.fullName}</p>
+          <p className={`text-xs leading-none mt-1 ${"text-slate-500 dark:text-slate-400"}`}>
             {getPermissionLabel(primaryPermission)}
           </p>
         </div>
@@ -74,18 +78,22 @@ export default function UserMenu() {
           />
 
           {/* Menu */}
-          <div className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden">
+          <div className={`absolute right-0 mt-2 w-72 backdrop-blur-xl border rounded-xl shadow-2xl z-50 overflow-hidden ${
+            "bg-white/95 border-slate-200 dark:bg-slate-900/95 dark:border-white/10"
+          }`}>
             {/* User Info */}
-            <div className="p-4 border-b border-white/10">
+            <div className={`p-4 border-b ${"border-slate-200 dark:border-white/10"}`}>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 flex items-center justify-center">
-                  <UserIcon className="h-6 w-6 text-[#0EA5E9]" />
+                <div className={`w-12 h-12 rounded-xl border flex items-center justify-center ${
+                  "bg-[#4e86fd]/10 border-[#4e86fd]/20 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20"
+                }`}>
+                  <UserIcon className={`h-6 w-6 ${"text-[#4e86fd] dark:text-[#0EA5E9]"}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">
+                  <p className={`text-sm font-semibold truncate ${"text-slate-900 dark:text-white"}`}>
                     {user.fullName}
                   </p>
-                  <p className="text-xs text-slate-400 truncate">
+                  <p className={`text-xs truncate ${"text-slate-500 dark:text-slate-400"}`}>
                     {user.accountNumber}
                   </p>
                 </div>
@@ -93,18 +101,20 @@ export default function UserMenu() {
             </div>
 
             {/* Permissions */}
-            <div className="p-4 border-b border-white/10">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <div className={`p-4 border-b ${"border-slate-200 dark:border-white/10"}`}>
+              <p className={`text-xs font-semibold uppercase tracking-wider mb-2 ${"text-slate-500 dark:text-slate-400"}`}>
                 Permissions
               </p>
               <div className="flex flex-wrap gap-2">
                 {user.permissions.map((permission) => (
                   <div
                     key={permission}
-                    className="flex items-center gap-1.5 px-2.5 py-1 bg-[#0EA5E9]/10 border border-[#0EA5E9]/20 rounded-lg"
+                    className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg ${
+                      "bg-[#4e86fd]/10 border-[#4e86fd]/20 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20"
+                    }`}
                   >
-                    <Shield className="h-3 w-3 text-[#0EA5E9]" />
-                    <span className="text-xs font-medium text-[#0EA5E9]">
+                    <Shield className={`h-3 w-3 ${"text-[#4e86fd] dark:text-[#0EA5E9]"}`} />
+                    <span className={`text-xs font-medium ${"text-[#4e86fd] dark:text-[#0EA5E9]"}`}>
                       {getPermissionLabel(permission)}
                     </span>
                   </div>
@@ -113,12 +123,14 @@ export default function UserMenu() {
             </div>
 
             {/* Menu Items */}
-            <div className="p-2 border-b border-white/10 space-y-1">
+            <div className={`p-2 border-b space-y-1 ${"border-slate-200 dark:border-white/10"}`}>
               {(user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) && (
                 <Link
                   href="/dashboard/config"
                   onClick={() => setShowMenu(false)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 no-underline ${
+                    "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
+                  }`}
                 >
                   <Settings className="h-4 w-4" />
                   System Settings
@@ -127,7 +139,9 @@ export default function UserMenu() {
               <Link
                 href="/docs"
                 onClick={() => setShowMenu(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] transition-all duration-200 no-underline"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 no-underline ${
+                  "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
+                }`}
               >
                 <BookOpen className="h-4 w-4" />
                 User Guide
