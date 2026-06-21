@@ -82,7 +82,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
   return (
     <header 
-      className={`w-full border-b pointer-events-auto z-50 transition-all duration-500 ease-in-out bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06] ${
+      className={`w-full backdrop-blur-xl border-b pointer-events-auto z-50 transition-all duration-500 ease-in-out bg-white/80 border-slate-200 dark:bg-[#0F172A]/80 dark:border-white/[0.06] ${
         isVisible ? 'translate-y-0' : '-translate-y-full'
       }`}
     >

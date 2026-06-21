@@ -17,12 +17,7 @@ import {
   Home,
   Lightbulb,
   AlertCircle,
-  CheckCircle2,
-  ClipboardList,
-  TrendingUp,
-  Clock,
-  MapPin,
-  Flame
+  CheckCircle2
 } from "lucide-react";
 
 function DocsContent() {
@@ -253,32 +248,27 @@ function DocsContent() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
-                { icon: ClipboardList, title: "Executive Summary", desc: "Key findings overview", color: "text-blue-500" },
-                { icon: BarChart3, title: "Overview", desc: "Current statistics", color: "text-purple-500" },
-                { icon: TrendingUp, title: "Trends", desc: "Historical patterns", color: "text-emerald-500" },
-                { icon: Clock, title: "Time Patterns", desc: "Peak hours analysis", color: "text-amber-500" },
-                { icon: Search, title: "Classification", desc: "Crime type breakdown", color: "text-indigo-500" },
-                { icon: MapPin, title: "Comparison", desc: "Cross-barangay data", color: "text-rose-500" },
-                { icon: Flame, title: "Heatmap", desc: "Monthly distribution", color: "text-orange-500" },
-                { icon: Lightbulb, title: "Recommendations", desc: "Strategic insights", color: "text-teal-500" },
-              ].map((section, index) => {
-                const IconComponent = section.icon;
-                return (
-                  <div key={index} className={`p-4 rounded-lg border ${
-                    "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 shrink-0">
-                        <IconComponent className={`h-5 w-5 ${section.color}`} />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold text-sm">{section.title}</h4>
-                        <p className="text-xs text-slate-600 dark:text-slate-400">{section.desc}</p>
-                      </div>
+                { icon: "📋", title: "Executive Summary", desc: "Key findings overview" },
+                { icon: "📊", title: "Overview", desc: "Current statistics" },
+                { icon: "📈", title: "Trends", desc: "Historical patterns" },
+                { icon: "⏰", title: "Time Patterns", desc: "Peak hours analysis" },
+                { icon: "🔍", title: "Classification", desc: "Crime type breakdown" },
+                { icon: "📍", title: "Comparison", desc: "Cross-barangay data" },
+                { icon: "🔥", title: "Heatmap", desc: "Monthly distribution" },
+                { icon: "💡", title: "Recommendations", desc: "Strategic insights" },
+              ].map((section, index) => (
+                <div key={index} className={`p-4 rounded-lg border ${
+                  "bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700"
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{section.icon}</span>
+                    <div>
+                      <h4 className="font-semibold text-sm">{section.title}</h4>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{section.desc}</p>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
 
             <div className={`p-4 rounded-lg border ${
@@ -372,7 +362,7 @@ function DocsContent() {
       "bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100"
     }`}>
       {/* Header */}
-      <header className={`w-full border-b z-50 ${"bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06]"}`}>
+      <header className={`w-full backdrop-blur-xl border-b z-50 ${"bg-white/80 border-slate-200 dark:bg-[#0F172A]/80 dark:border-white/[0.06]"}`}>
         <div className="flex items-center justify-between h-16 px-8">
           <div className="flex items-center gap-4">
             <button

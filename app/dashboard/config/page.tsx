@@ -71,7 +71,7 @@ function ConfigContent() {
 	if (user && !user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin")) {
 		return (
 			<div className={`flex flex-col h-screen ${"bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-white"}`}>
-				<header className={`w-full border-b pointer-events-auto z-50 ${"bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06]"}`}>
+				<header className={`w-full backdrop-blur-xl border-b pointer-events-auto z-50 ${"bg-white/80 border-slate-200 dark:bg-[#0F172A]/80 dark:border-white/[0.06]"}`}>
 					<div className="flex items-center h-16 px-8">
 						<button
 							onClick={() => router.back()}
@@ -310,7 +310,7 @@ function ConfigContent() {
 			className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${
 				"bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100"
 			}`}>
-			<header className={`w-full border-b pointer-events-auto z-50 ${"bg-white border-slate-200 dark:bg-[#0F172A] dark:border-white/[0.06]"}`}>
+			<header className={`w-full backdrop-blur-xl border-b pointer-events-auto z-50 ${"bg-white/80 border-slate-200 dark:bg-[#0F172A]/80 dark:border-white/[0.06]"}`}>
 				<div className="flex items-center h-16 px-8">
 					<button
 						onClick={() => router.back()}

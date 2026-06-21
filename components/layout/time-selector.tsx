@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Calendar, ChevronDown, Check } from "lucide-react";
+import { Clock, ChevronDown, Check } from "lucide-react";
 import { useMapContext, FilterMode } from "@/context/MapContext";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -205,10 +205,12 @@ export default function TimeSelector() {
       {/* Trigger Button - Icon Only */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
+        className={`w-10 h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer ${
+          "bg-white border-slate-200 hover:border-blue-500 hover:shadow-sm text-blue-600 dark:bg-white/[0.04] dark:border-white/[0.08] dark:hover:border-blue-500/30 dark:hover:bg-white/[0.06] dark:text-blue-400"
+        }`}
         title={mounted ? getDisplayText() : "Select Time Range"}
       >
-        <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <Clock className="h-4 w-4" />
       </button>
 
       {/* Dropdown */}
