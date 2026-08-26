@@ -9,17 +9,35 @@ export async function GET(request: NextRequest) {
     const endDateCommitted = searchParams.get('endDateCommitted')
     const hour = searchParams.get('hour') // Optional hour filter (0-23)
     const year = searchParams.get('year') // Optional year filter
+    const incidentType = searchParams.get('incidentType') // Optional crime type filter
+    const barangay = searchParams.get('barangay') // Optional single barangay filter
 
     console.log('🔍 Barangay Counts API Request:', { 
       startDateCommitted, 
       endDateCommitted, 
       hour, 
       year,
+      incidentType,
+      barangay,
       url: request.url 
     })
 
-    // Build where clause for date filtering
+    // Build where clause for filtering
     const where: any = {}
+
+    if (incidentType) {
+      where.incidentType = {
+        contains: incidentType,
+        mode: 'insensitive'
+      }
+    }
+
+    if (barangay) {
+      where.barangay = {
+        equals: barangay,
+        mode: 'insensitive'
+      }
+    }
     
     if (startDateCommitted && endDateCommitted) {
       where.dateCommitted = {

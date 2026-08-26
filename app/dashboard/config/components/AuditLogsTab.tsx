@@ -222,7 +222,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 			<div className="flex items-start justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/5">
 				<div className="flex items-center gap-2.5">
 					<div className={`p-1.5 rounded-lg ${meta.color}`}>
-						{React.cloneElement(meta.icon as React.ReactElement, { className: "h-3.5 w-3.5" })}
+						{React.cloneElement(meta.icon as React.ReactElement<{ className?: string }>, { className: "h-3.5 w-3.5" })}
 					</div>
 					<div>
 						<div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-0.5">Audit Trail</div>
@@ -337,7 +337,7 @@ function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
 		>
 			<td className="px-5 py-3.5">
 				<span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.color}`}>
-					{React.cloneElement(meta.icon as React.ReactElement, { className: "h-3 w-3" })}
+					{React.cloneElement(meta.icon as React.ReactElement<{ className?: string }>, { className: "h-3 w-3" })}
 					{meta.label}
 				</span>
 			</td>

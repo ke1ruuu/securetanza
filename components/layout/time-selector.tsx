@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Clock, ChevronDown, Check } from "lucide-react";
 import { useMapContext, FilterMode } from "@/context/MapContext";
-import { useTheme } from "@/context/ThemeContext";
 
 export default function TimeSelector() {
   const { selectedYear, availableYears, setSelectedYear, timeRange, setTimeRange } = useMapContext();
@@ -190,7 +189,6 @@ export default function TimeSelector() {
     return null;
   }
 
-  const { theme } = useTheme();
 
   if (!mounted) {
     return (

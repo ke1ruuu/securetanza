@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/backend/lib/prisma'
 import * as XLSX from 'xlsx'
 import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper'
+import { NotificationEngine, BatchRecordItem } from '@/backend/lib/notification-engine'
+import { getSession } from '@/lib/auth'
 
-// POST /api/crimes/upload - Upload Excel file with crime data
+// POST /api/crimes/upload - Upload Excel/CSV file with crime data
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession()
     const formData = await request.formData()
     const file = formData.get('file') as File
 
@@ -16,15 +19,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate file type
-    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+    // Validate file type (supports xlsx, xls, csv)
+    if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
       return NextResponse.json(
-        { success: false, error: 'Invalid file type. Please upload an Excel file.' },
+        { success: false, error: 'Invalid file type. Please upload an Excel (.xlsx, .xls) or CSV file.' },
         { status: 400 }
       )
     }
 
-    // Read Excel file
+    // Read Excel/CSV file
     const arrayBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(arrayBuffer, { type: 'array' })
     const firstSheet = workbook.Sheets[workbook.SheetNames[0]]
@@ -32,12 +35,12 @@ export async function POST(request: NextRequest) {
 
     if (jsonData.length === 0) {
       return NextResponse.json(
-        { success: false, error: 'Excel file is empty' },
+        { success: false, error: 'Uploaded file is empty' },
         { status: 400 }
       )
     }
 
-    console.log(`📊 Processing ${jsonData.length} rows from Excel file`)
+    console.log(`📊 Processing ${jsonData.length} rows from ${file.name}`)
 
     // Process and insert data
     const results = {
@@ -46,6 +49,8 @@ export async function POST(request: NextRequest) {
       skipped: 0,
       errors: [] as string[],
     }
+
+    const insertedBatchRecords: BatchRecordItem[] = []
 
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i]
@@ -98,7 +103,7 @@ export async function POST(request: NextRequest) {
         const longitude = normalizedRow.lng ? parseFloat(normalizedRow.lng) : null
 
         // Insert into database
-        await prisma.crimeIncident.create({
+        const createdIncident = await prisma.crimeIncident.create({
           data: {
             blotterNo: normalizedRow.blotter_no || null,
             dateEncoded: dateEncoded,
@@ -148,6 +153,22 @@ export async function POST(request: NextRequest) {
           },
         })
 
+        insertedBatchRecords.push({
+          id: createdIncident.id,
+          barangay: createdIncident.barangay,
+          incidentType: createdIncident.incidentType,
+          dateCommitted: createdIncident.dateCommitted,
+          timeCommitted: createdIncident.timeCommitted,
+          isCrime: createdIncident.isCrime,
+          heinous: createdIncident.heinous,
+          sensational: createdIncident.sensational,
+          threatGrp: createdIncident.threatGrp,
+          suspectIsEGO: createdIncident.suspectIsEGO,
+          victimIsEGO: createdIncident.victimIsEGO,
+          offense: createdIncident.offense,
+          modus: createdIncident.modus,
+        })
+
         results.inserted++
       } catch (error) {
         results.skipped++
@@ -159,10 +180,34 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped`)
 
+    // 1. Record UploadLog
+    const uploadLog = await prisma.uploadLog.create({
+      data: {
+        fileName: file.name,
+        fileSize: file.size,
+        recordsImported: results.inserted,
+        status: results.inserted === 0 ? 'failed' : results.skipped > 0 ? 'partial' : 'success',
+        errorMessage: results.errors.length > 0 ? results.errors.slice(0, 5).join('; ') : null,
+        uploadedBy: session?.fullName || session?.accountNumber || 'Operational Officer',
+      },
+    })
+
+    // 2. Trigger Post-Ingestion Notification Engine
+    const generatedNotifsCount = await NotificationEngine.evaluateBatch({
+      uploadLogId: uploadLog.id,
+      fileName: file.name,
+      totalRows: jsonData.length,
+      insertedRecords: insertedBatchRecords,
+      skippedRows: results.skipped,
+      errors: results.errors,
+    })
+
     return NextResponse.json({
       success: true,
-      message: `Successfully uploaded ${results.inserted} records`,
+      message: `Successfully uploaded ${results.inserted} records. Generated ${generatedNotifsCount} analytical notification(s).`,
       data: results,
+      uploadLogId: uploadLog.id,
+      notificationsGenerated: generatedNotifsCount,
     })
   } catch (error) {
     console.error('Error uploading file:', error)

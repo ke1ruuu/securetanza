@@ -13,7 +13,7 @@ const updateUserSchema = z.object({
 // PUT /api/users/[id] - Update user (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -25,7 +25,8 @@ export async function PUT(
       );
     }
 
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
     const body = await request.json();
     const validatedData = updateUserSchema.parse(body);
 
@@ -105,7 +106,7 @@ export async function PUT(
 // DELETE /api/users/[id] - Delete user (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getSession();
@@ -117,7 +118,8 @@ export async function DELETE(
       );
     }
 
-    const userId = parseInt(params.id);
+    const { id } = await params;
+    const userId = parseInt(id);
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({

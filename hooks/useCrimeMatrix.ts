@@ -17,10 +17,9 @@ export function useCrimeMatrix(barangayName?: string) {
   useEffect(() => {
     // Don't fetch until time range has selections
     if (dateRanges.length === 0) {
-      console.log('⏳ CrimeMatrix: Waiting for time range selections...')
       return
     }
-    
+
     async function loadMatrixData() {
       try {
         setLoading(true)

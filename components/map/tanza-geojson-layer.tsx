@@ -22,8 +22,19 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
   selectedBarangay,
   onClickBarangay,
 }) => {
-  const { hotspotMode, hotspotMonth, hotspotYear, hoveredThreatLevel, setHoveredBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedCrimeType, selectedYear } =
-    useMapContext();
+  const {
+    hotspotMode,
+    hotspotMonth,
+    hotspotYear,
+    hoveredThreatLevel,
+    setHoveredBarangay,
+    timeFilterDate,
+    timeFilterHour,
+    isTimeFilterActive,
+    selectedCrimeType,
+    selectedYear,
+    timeRange,
+  } = useMapContext();
   
   const { barangayCrimeCounts, filteredBarangayCrimeCounts, thresholds, loading } = useThreatLevels();
   const { crimeTypeCounts, loading: crimeTypeLoading } = useCrimeTypeByBarangay();
@@ -283,10 +294,14 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     }
   };
 
+  const timeRangeKey = `${timeRange.mode}-${timeRange.selections.map(s => `${s.year}_${s.quarter ?? ''}_${s.month ?? ''}_${s.halfYear ?? ''}_${s.day ? new Date(s.day).getTime() : ''}`).join(',')}`;
+  const crimeCountsKey = Object.entries(crimeTypeCounts).map(([b, c]) => `${b}:${c}`).join('|');
+  const baseCountsKey = Object.entries(barangayCrimeCounts).map(([b, c]) => `${b}:${c}`).join('|');
+
   return (
     <Pane name="barangay-pane" style={{ zIndex: 450 }}>
       <GeoJSON
-        key={`${selectedBarangay}-${hoveredThreatLevel}-${hotspotMonth}-${hotspotYear}-${loading}-${isTimeFilterActive}-${timeFilterDate?.getTime()}-${timeFilterHour}-${Object.keys(filteredBarangayCrimeCounts).length}-${selectedCrimeType}-${Object.keys(crimeTypeCounts).length}-${selectedYear}-${Object.keys(barangayCrimeCounts).length}-${thresholds.low}-${thresholds.moderate}-${thresholds.high}-${thresholds.critical}`}
+        key={`${selectedBarangay}-${hoveredThreatLevel}-${hotspotMonth}-${hotspotYear}-${loading}-${crimeTypeLoading}-${isTimeFilterActive}-${timeFilterDate?.getTime()}-${timeFilterHour}-${selectedCrimeType}-${timeRangeKey}-${crimeCountsKey}-${baseCountsKey}-${thresholds.low}-${thresholds.moderate}-${thresholds.high}-${thresholds.critical}`}
         data={data}
         style={styleFeature}
         onEachFeature={onEachFeature}

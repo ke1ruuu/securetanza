@@ -186,7 +186,7 @@ const landingOptions = [
 
 export default function AccountSettingsTab() {
 	const { theme, setTheme } = useTheme();
-	const [syncWithSystem, setSyncWithSystem] = useState(theme === "system");
+	const [syncWithSystem, setSyncWithSystem] = useState(false);
 	const [landingPage, setLandingPage] = useState<string>(() => {
 		if (typeof window !== "undefined") {
 			return localStorage.getItem("landingPage") ?? "dashboard";
@@ -196,16 +196,23 @@ export default function AccountSettingsTab() {
 
 	const handleSyncToggle = (val: boolean) => {
 		setSyncWithSystem(val);
-		if (val) setTheme("system" as any);
+		if (val && typeof window !== "undefined") {
+			const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+			setTheme(prefersDark ? "dark" : "light");
+		}
 	};
 
 	const handleThemeSelect = (id: string) => {
 		if (id === "system") {
 			setSyncWithSystem(true);
+			if (typeof window !== "undefined") {
+				const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+				setTheme(prefersDark ? "dark" : "light");
+			}
 		} else {
 			setSyncWithSystem(false);
+			setTheme(id as "light" | "dark");
 		}
-		setTheme(id as any);
 	};
 
 	const handleLandingSelect = (id: string) => {

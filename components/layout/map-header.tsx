@@ -7,10 +7,10 @@ import { Upload, Menu, X, BookOpen, Settings } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { useTheme } from "@/context/ThemeContext";
 import UploadModal from "./upload-modal";
 import TimeSelector from "./time-selector";
 import UserMenu from "./user-menu";
+import NotificationBell from "@/components/notifications/notification-bell";
 
 interface MapHeaderProps {
   isVisible: boolean;
@@ -160,6 +160,9 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           >
             <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </button>
+
+          {/* Notification Bell */}
+          <NotificationBell />
 
           {/* User Menu */}
           <UserMenu />

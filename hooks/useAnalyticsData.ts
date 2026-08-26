@@ -78,20 +78,12 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
   useEffect(() => {
     // Don't fetch until time range has selections
     if (dateRanges.length === 0) {
-      console.log('⏳ Analytics: Waiting for time range selections...')
       return
     }
-    
+
     async function loadAnalyticsData() {
       try {
         setData(prev => ({ ...prev, loading: true, error: null }))
-
-        console.log('📊 Loading Analytics Data:', {
-          barangayName,
-          timeRange,
-          dateRanges: dateRanges.map(r => ({ start: r.start.toISOString(), end: r.end.toISOString() })),
-          timestamp: new Date().toISOString()
-        })
 
         // Fetch data for all date ranges in parallel
         const fetchPromises = dateRanges.map(async ({ start, end }) => {
@@ -172,22 +164,6 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
 
         const peakHour = hourlyDistribution.indexOf(Math.max(...hourlyDistribution))
 
-        console.log('📊 Analytics Data Loaded:', {
-          barangayName,
-          timeRange,
-          totalCrimes: crimes.length,
-          statsActivity: stats?.activity,
-          statsActivitySum: stats?.activity.reduce((a, b) => a + b, 0),
-          crimeYears: [...new Set(crimes.map(c => new Date(c.dateCommitted).getFullYear()))],
-          hourlyDistribution,
-          peakHour,
-          sampleCrimes: crimes.slice(0, 3).map(c => ({
-            date: c.dateCommitted,
-            timeCommitted: c.timeCommitted,
-            hour: c.timeCommitted ? parseInt(c.timeCommitted.split(':')[0], 10) : null
-          }))
-        })
-
         // Threat level thresholds (matching map legend)
         const THREAT_THRESHOLDS = {
           low: 2,
@@ -256,17 +232,6 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
         const currentThreatLevel = getThreatLevel(currentQuarterCrimes)
         const previousThreatLevel = getThreatLevel(previousQuarterCrimes)
 
-        console.log('📊 Quarterly Trend Calculation:', {
-          barangayName,
-          currentQuarter: currentQuarter.quarterLabel,
-          currentQuarterCrimes,
-          previousQuarter: previousQuarter.quarterLabel,
-          previousQuarterCrimes,
-          quarterlyTrend,
-          currentThreatLevel,
-          previousThreatLevel
-        })
-
         // Determine trend direction based on crime count changes
         let trendDirection: 'improved' | 'worsened' | 'stable' = 'stable'
         if (currentQuarterCrimes < previousQuarterCrimes) {
@@ -297,28 +262,11 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
           ? Math.round((clearedAndSolvedCrimes / crimes.length) * 100)
           : 0
 
-        console.log('📊 Resolution & Safety Calculation:', {
-          totalCrimes: crimes.length,
-          clearedOnly: clearedCrimes,
-          clearedAndSolved: clearedAndSolvedCrimes,
-          resolutionRate: `${resolutionRate}%`,
-          safetyIndex: `${safetyIndex}%`
-        })
-
         // Process monthly data using stats.activity to match the Overview tab
         const monthlyData = stats.activity.map((count, i) => ({
           month: i + 1,
           count
         }))
-
-        console.log('📊 Setting Analytics State:', {
-          timePatterns: {
-            hourlyDistribution,
-            peakHour
-          },
-          monthlyData,
-          totalCrimesFromArray: crimes.length
-        })
 
         setData({
           crimesByType: stats.crimesByType,

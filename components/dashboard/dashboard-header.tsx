@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useMapContext } from "@/context/MapContext";
 import { useTheme } from "@/context/ThemeContext";
+import NotificationBell from "@/components/notifications/notification-bell";
 
 interface HeaderProps {
   barangayName: string;
@@ -48,11 +49,7 @@ export default function DashboardHeader({ barangayName }: HeaderProps) {
             }`}
           />
         </div>
-        <Button variant="ghost" size="icon" className={`h-7 w-7 sm:h-8 sm:w-8 transition-all ${
-          theme === 'dark' ? "text-slate-600 hover:text-white" : "text-slate-400 hover:text-slate-800"
-        }`}>
-          <Bell className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-        </Button>
+        <NotificationBell />
       </div>
     </header>
   );
