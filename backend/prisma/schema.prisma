@@ -127,9 +127,79 @@ model UploadLog {
   uploadedBy      String?  @map("uploaded_by")            // User who uploaded (optional)
   uploadedAt      DateTime @default(now()) @map("uploaded_at")
   
+  notifications   Notification[]
+
   @@map("upload_logs")
   @@index([uploadedAt])
   @@index([status])
+}
+
+// ==========================================
+// NOTIFICATION & INTELLIGENCE RULE MODELS
+// ==========================================
+
+enum NotificationSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum NotificationCategory {
+  PEAK_HOUR
+  CRIME_ACTIVITY
+  DATASET_PROCESSING
+  SYSTEM
+}
+
+enum RuleConditionType {
+  HOURLY_PERCENT_EXCEEDS
+  BARANGAY_INCREASE_PERCENT
+  HEINOUS_CRIME_DETECTED
+  SPECIFIC_CRIME_THRESHOLD
+  UPLOAD_VALIDATION_ERROR_RATE
+}
+
+model Notification {
+  id          String               @id @default(cuid())
+  title       String
+  message     String               @db.Text
+  category    NotificationCategory
+  severity    NotificationSeverity @default(INFO)
+
+  uploadLogId String?              @map("upload_log_id")
+  uploadLog   UploadLog?           @relation(fields: [uploadLogId], references: [id], onDelete: Cascade)
+
+  metadata    Json?
+  isRead      Boolean              @default(false) @map("is_read")
+  readAt      DateTime?            @map("read_at")
+  isArchived  Boolean              @default(false) @map("is_archived")
+  archivedAt  DateTime?            @map("archived_at")
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([severity])
+  @@index([category])
+  @@index([isRead])
+  @@index([isArchived])
+  @@index([uploadLogId])
+  @@map("notifications")
+}
+
+model NotificationRule {
+  id            String               @id @default(cuid())
+  ruleKey       String               @unique @map("rule_key")
+  name          String
+  description   String?              @db.Text
+  category      NotificationCategory
+  conditionType RuleConditionType    @map("condition_type")
+  parameters    Json
+  severity      NotificationSeverity @default(WARNING)
+  isEnabled     Boolean              @default(true) @map("is_enabled")
+  updatedBy     Int?                 @map("updated_by")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+  createdAt     DateTime             @default(now()) @map("created_at")
+
+  @@map("notification_rules")
 }
 
 // Authentication and Authorization Models

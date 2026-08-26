@@ -7,10 +7,17 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 // Routes that don't require authentication
-const publicRoutes = ['/login'];
+const publicRoutes = ['/', '/login', '/docs'];
 
 // API routes that don't require authentication
-const publicApiRoutes = ['/api/auth/login', '/api/auth/session', '/api/auth/logout'];
+const publicApiRoutes = [
+  '/api/auth/login',
+  '/api/auth/session',
+  '/api/auth/logout',
+  '/api/notifications',
+  '/api/crimes',
+  '/api/barangays',
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,7 +36,12 @@ export async function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get('session');
 
   if (!sessionCookie) {
-    // Redirect to login if no session
+    // For API routes, return 401 JSON instead of HTML redirect
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Redirect to login for protected pages
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
@@ -40,7 +52,13 @@ export async function middleware(request: NextRequest) {
     await jwtVerify(sessionCookie.value, JWT_SECRET);
     return NextResponse.next();
   } catch (error) {
-    // Invalid or expired token - redirect to login
+    // Invalid or expired token
+    if (pathname.startsWith('/api/')) {
+      const response = NextResponse.json({ error: 'Session expired' }, { status: 401 });
+      response.cookies.delete('session');
+      return response;
+    }
+
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     

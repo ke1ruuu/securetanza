@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useMapContext } from "@/context/MapContext";
+import { useTimeRangeData } from "@/hooks/useTimeRangeData";
 
 export interface CrimeTypeStats {
   type: string;
@@ -64,57 +65,104 @@ export function useCrimeTypes(): CrimeTypesData {
   const [stats, setStats] = useState<CrimeTypeStats[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { selectedBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear } = useMapContext();
+  const {
+    selectedBarangay,
+    timeFilterDate,
+    timeFilterHour,
+    isTimeFilterActive,
+    selectedYear,
+    timeRange,
+  } = useMapContext();
+  const dateRanges = useTimeRangeData();
 
   useEffect(() => {
     async function fetchCrimeTypes() {
       setLoading(true);
       try {
-        const params = new URLSearchParams();
-        
-        if (selectedBarangay) {
-          params.append("barangay", selectedBarangay);
-        }
+        const typeCountMap: Record<string, number> = {};
+        let totalCount = 0;
 
-        // Add time filter if active
         if (isTimeFilterActive && timeFilterDate) {
+          // 1. Time Filter takes precedence
           const startDate = new Date(timeFilterDate);
           const endDate = new Date(timeFilterDate);
-          
+
           if (timeFilterHour !== null) {
-            // Filter by specific hour
             startDate.setHours(timeFilterHour, 0, 0, 0);
             endDate.setHours(timeFilterHour, 59, 59, 999);
           } else {
-            // Filter by entire day
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 999);
           }
-          
+
+          const params = new URLSearchParams();
+          if (selectedBarangay) params.append("barangay", selectedBarangay);
           params.append("startDate", startDate.toISOString());
           params.append("endDate", endDate.toISOString());
+
+          const response = await fetch(`/api/crimes/stats?${params.toString()}`);
+          if (!response.ok) throw new Error("Failed to fetch crime types");
+          const data = await response.json();
+
+          if (data.success && data.data?.crimesByType) {
+            data.data.crimesByType.forEach((c: { type?: string; incidentType?: string; count?: number; _count?: { incidentType: number } }) => {
+              const name = c.type || c.incidentType || "Other";
+              const count = c.count || c._count?.incidentType || 0;
+              typeCountMap[name] = (typeCountMap[name] || 0) + count;
+              totalCount += count;
+            });
+          }
+        } else if (dateRanges.length > 0) {
+          // 2. Granular TimeRange (Year, Quarter, Month, Half-Year, Day)
+          const results = await Promise.all(
+            dateRanges.map(async ({ start, end }) => {
+              const params = new URLSearchParams();
+              if (selectedBarangay) params.append("barangay", selectedBarangay);
+              params.append("startDate", start.toISOString());
+              params.append("endDate", end.toISOString());
+
+              const res = await fetch(`/api/crimes/stats?${params.toString()}`);
+              if (!res.ok) return null;
+              return res.json();
+            })
+          );
+
+          results.forEach((result) => {
+            if (result?.success && result.data?.crimesByType) {
+              result.data.crimesByType.forEach((c: { type?: string; incidentType?: string; count?: number; _count?: { incidentType: number } }) => {
+                const name = c.type || c.incidentType || "Other";
+                const count = c.count || c._count?.incidentType || 0;
+                typeCountMap[name] = (typeCountMap[name] || 0) + count;
+                totalCount += count;
+              });
+            }
+          });
         } else if (selectedYear) {
-          // Add year filter if no time filter is active
+          // 3. Fallback to Year
+          const params = new URLSearchParams();
+          if (selectedBarangay) params.append("barangay", selectedBarangay);
           params.append("year", selectedYear.toString());
+
+          const response = await fetch(`/api/crimes/stats?${params.toString()}`);
+          if (!response.ok) throw new Error("Failed to fetch crime types");
+          const data = await response.json();
+
+          if (data.success && data.data?.crimesByType) {
+            data.data.crimesByType.forEach((c: { type?: string; incidentType?: string; count?: number; _count?: { incidentType: number } }) => {
+              const name = c.type || c.incidentType || "Other";
+              const count = c.count || c._count?.incidentType || 0;
+              typeCountMap[name] = (typeCountMap[name] || 0) + count;
+              totalCount += count;
+            });
+          }
         }
 
-        const response = await fetch(`/api/crimes/stats?${params.toString()}`);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch crime types");
-        }
+        const sortedStats: CrimeTypeStats[] = Object.entries(typeCountMap)
+          .map(([type, count]) => ({ type, count }))
+          .sort((a, b) => b.count - a.count);
 
-        const data = await response.json();
-        
-        if (data.success && data.data.crimesByType) {
-          // Sort by count descending and take top 5
-          const sortedTypes = data.data.crimesByType
-            .sort((a: CrimeTypeStats, b: CrimeTypeStats) => b.count - a.count)
-            .slice(0, 5);
-          
-          setStats(sortedTypes);
-          setTotal(data.data.totalCrimes || 0);
-        }
+        setStats(sortedStats);
+        setTotal(totalCount);
       } catch (error) {
         console.error("Error fetching crime types:", error);
         setStats([]);
@@ -125,7 +173,15 @@ export function useCrimeTypes(): CrimeTypesData {
     }
 
     fetchCrimeTypes();
-  }, [selectedBarangay, timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear]);
+  }, [
+    selectedBarangay,
+    timeFilterDate,
+    timeFilterHour,
+    isTimeFilterActive,
+    selectedYear,
+    timeRange,
+    dateRanges,
+  ]);
 
   return { stats, total, loading };
 }

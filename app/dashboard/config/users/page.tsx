@@ -95,7 +95,6 @@ export default function UserManagementPage() {
         setSuccess('User created successfully');
         setShowCreateModal(false);
         setFormData({
-          identifier: '',
           accountNumber: '',
           fullName: '',
           password: '',
@@ -131,7 +130,6 @@ export default function UserManagementPage() {
         setShowEditModal(false);
         setSelectedUser(null);
         setFormData({
-          identifier: '',
           accountNumber: '',
           fullName: '',
           password: '',
@@ -269,7 +267,6 @@ export default function UserManagementPage() {
           <button
             onClick={() => {
               setFormData({
-                identifier: '',
                 accountNumber: '',
                 fullName: '',
                 password: '',
@@ -362,19 +359,6 @@ export default function UserManagementPage() {
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.identifier}
-                    onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-[#0EA5E9]"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
                     Account Number
                   </label>
                   <input
@@ -457,18 +441,6 @@ export default function UserManagementPage() {
             <div className="bg-slate-800 border border-slate-700 rounded-lg max-w-md w-full p-6">
               <h2 className="text-xl font-bold text-white mb-4">Edit User</h2>
               <form onSubmit={handleUpdate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.identifier}
-                    onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-[#0EA5E9]"
-                  />
-                </div>
-
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-1">
                     Account Number
