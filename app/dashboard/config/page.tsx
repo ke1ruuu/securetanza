@@ -109,7 +109,7 @@ function ConfigContent() {
 				</aside>
 
 				{/* Content Area */}
-				<div className="flex-1 overflow-y-auto p-8 custom-scrollbar scroll-smooth">
+				<div data-scroll className="flex-1 overflow-y-auto p-8 custom-scrollbar scroll-smooth">
 					{activeTab === "profile" && <ProfileTab />}
 					{activeTab === "access-security" && <AccessSecurityTab />}
 					{activeTab === "audit-logs" && <AuditLogsTab />}
