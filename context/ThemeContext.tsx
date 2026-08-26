@@ -30,12 +30,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		if (!mounted) return;
 
-		// Update local storage and toggle the class globally
-		localStorage.setItem("theme", theme);
-		if (theme === "dark") {
-			document.documentElement.classList.add("dark");
+		const applyTheme = () => {
+			localStorage.setItem("theme", theme);
+			if (theme === "dark") {
+				document.documentElement.classList.add("dark");
+			} else {
+				document.documentElement.classList.remove("dark");
+			}
+		};
+
+		// Use View Transitions API for a smooth crossfade if supported
+		if (!document.startViewTransition) {
+			applyTheme();
 		} else {
-			document.documentElement.classList.remove("dark");
+			document.startViewTransition(applyTheme);
 		}
 	}, [theme, mounted]);
 
