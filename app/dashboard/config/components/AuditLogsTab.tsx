@@ -18,7 +18,28 @@ import {
 	Database,
 	ArrowUpFromLine,
 	Eye,
+	LogIn,
+	LogOut,
+	ChevronLeft,
+	ChevronRight,
+	ChevronsLeft,
+	ChevronsRight,
 } from "lucide-react";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 /* ─────────────────────── Types ─────────────────────── */
 
@@ -33,7 +54,7 @@ interface UploadLog {
 	uploadedAt: string;
 }
 
-type ActionType = "Upload" | "Import" | "Read" | "Export" | "Settings";
+type ActionType = "Login" | "Logout" | "Upload" | "Import" | "Read" | "Export" | "Settings";
 type AuditFilter = "All" | ActionType;
 
 interface UnifiedLog {
@@ -55,14 +76,16 @@ interface UnifiedLog {
 
 /* ─────────────────────── Constants ─────────────────────── */
 
-const AUDIT_FILTERS: AuditFilter[] = ["All", "Upload", "Import", "Read", "Export", "Settings"];
+const AUDIT_FILTERS: AuditFilter[] = ["All", "Login", "Logout", "Upload", "Import", "Read", "Export", "Settings"];
 
 const ACTION_META: Record<ActionType, { color: string; icon: React.ReactNode; label: string }> = {
-	Upload:   { color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",       icon: <ArrowUpFromLine className="h-3 w-3" />, label: "Upload"   },
-	Import:   { color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",        icon: <Database        className="h-3 w-3" />, label: "Import"   },
-	Read:     { color: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300", icon: <Eye            className="h-3 w-3" />, label: "Read"     },
-	Export:   { color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",    icon: <Download        className="h-3 w-3" />, label: "Export"   },
-	Settings: { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300",        icon: <Shield          className="h-3 w-3" />, label: "Settings" },
+	Login:    { color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",  icon: <LogIn           className="h-3 w-3" />, label: "Login"    },
+	Logout:   { color: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",              icon: <LogOut          className="h-3 w-3" />, label: "Logout"   },
+	Upload:   { color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",              icon: <ArrowUpFromLine className="h-3 w-3" />, label: "Upload"   },
+	Import:   { color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",              icon: <Database        className="h-3 w-3" />, label: "Import"   },
+	Read:     { color: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",      icon: <Eye             className="h-3 w-3" />, label: "Read"     },
+	Export:   { color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",          icon: <Download        className="h-3 w-3" />, label: "Export"   },
+	Settings: { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300",              icon: <Shield          className="h-3 w-3" />, label: "Settings" },
 };
 
 const SEVERITY_COLOR: Record<string, string> = {
@@ -79,44 +102,62 @@ const OUTCOME_META: Record<string, { color: string; icon: React.ReactNode }> = {
 
 const MOCK_UNIFIED_LOGS: UnifiedLog[] = [
 	{
-		id: 1, action: "Settings", details: "Changed default landing page to Dashboard",
+		id: 1, action: "Login", details: "Successful sign-in from Chrome on Windows",
+		user: "jdoe (Admin)", time: "5 mins ago",
+		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/auth/login",
+		severity: "low", outcome: "success",
+	},
+	{
+		id: 2, action: "Login", details: "Failed sign-in — invalid password (attempt 3/5)",
+		user: "bwilson (Officer)", time: "8 mins ago",
+		ip: "10.0.0.31", session: "sess_ANON", resource: "/auth/login",
+		severity: "high", outcome: "failure",
+	},
+	{
+		id: 3, action: "Logout", details: "Session ended — manual sign-out",
+		user: "treyes (Analyst)", time: "22 mins ago",
+		ip: "10.0.0.77", session: "sess_5P9Nv6", resource: "/auth/logout",
+		severity: "low", outcome: "success",
+	},
+	{
+		id: 4, action: "Settings", details: "Changed default landing page to Dashboard",
 		user: "jdoe (Admin)", time: "10 mins ago",
 		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/config/ui/landing",
 		severity: "medium", outcome: "success",
 	},
 	{
-		id: 2, action: "Export", details: "Exported 500 incident records (CSV)",
+		id: 5, action: "Export", details: "Exported 500 incident records (CSV)",
 		user: "psmith (Officer)", time: "1 hour ago",
 		ip: "10.0.0.8", session: "sess_4C1Zy2", resource: "/incidents/export",
 		severity: "medium", outcome: "success",
 	},
 	{
-		id: 3, action: "Import", details: "Imported incident_batch_0825.csv — 1,240 records",
+		id: 6, action: "Import", details: "Imported incident_batch_0825.csv — 1,240 records",
 		user: "jdoe (Admin)", time: "3 hours ago",
 		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/data/import",
 		severity: "high", outcome: "success",
 		fileName: "incident_batch_0825.csv", fileSize: 2048576, recordsImported: 1240,
 	},
 	{
-		id: 4, action: "Read", details: "Viewed restricted Heinous Crime Case #45021",
+		id: 7, action: "Read", details: "Viewed restricted Heinous Crime Case #45021",
 		user: "ajackson (Investigator)", time: "5 hours ago",
 		ip: "10.0.0.22", session: "sess_8D5Wq1", resource: "/cases/45021",
 		severity: "high", outcome: "success",
 	},
 	{
-		id: 5, action: "Settings", details: "Updated 2FA security requirements",
+		id: 8, action: "Settings", details: "Updated 2FA security requirements",
 		user: "jdoe (Admin)", time: "1 day ago",
 		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/config/security/2fa",
 		severity: "high", outcome: "success",
 	},
 	{
-		id: 6, action: "Upload", details: "Uploaded profile photo — user #1102",
+		id: 9, action: "Upload", details: "Uploaded profile photo — user #1102",
 		user: "mlopez (Officer)", time: "1 day ago",
 		ip: "10.0.0.55", session: "sess_2F6Tm9", resource: "/users/1102/photo",
 		severity: "low", outcome: "success",
 	},
 	{
-		id: 7, action: "Import", details: "Import failed — malformed CSV headers",
+		id: 10, action: "Import", details: "Import failed — malformed CSV headers",
 		user: "jdoe (Admin)", time: "2 days ago",
 		ip: "192.168.1.42", session: "sess_7K2Rp4", resource: "/data/import",
 		severity: "high", outcome: "failure",
@@ -124,7 +165,7 @@ const MOCK_UNIFIED_LOGS: UnifiedLog[] = [
 		errorMessage: "Column header mismatch on row 1: expected 'incident_id', got 'id'",
 	},
 	{
-		id: 8, action: "Read", details: "Bulk-viewed 82 cold-case summaries",
+		id: 11, action: "Read", details: "Bulk-viewed 82 cold-case summaries",
 		user: "treyes (Analyst)", time: "3 days ago",
 		ip: "10.0.0.77", session: "sess_5P9Nv6", resource: "/cases/cold-cases",
 		severity: "medium", outcome: "warning",
@@ -327,6 +368,9 @@ export default function AuditLogsTab() {
 	const [totalLogs,   setTotalLogs]   = useState(0);
 	const [activeFilter, setActiveFilter] = useState<AuditFilter>("All");
 
+	const [currentPage, setCurrentPage] = useState(1);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
+
 	const [hoveredLog, setHoveredLog] = useState<UnifiedLog | null>(null);
 	const [pinnedLog,  setPinnedLog]  = useState<UnifiedLog | null>(null);
 	const [pinnedPos,  setPinnedPos]  = useState({ x: 0, y: 0 });
@@ -374,6 +418,9 @@ export default function AuditLogsTab() {
 		activeFilter === "All"
 			? MOCK_UNIFIED_LOGS
 			: MOCK_UNIFIED_LOGS.filter((l) => l.action === activeFilter);
+
+	const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+	const paginatedLogs = filteredLogs.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
 	/* ── Card positioning ── */
 	const CARD_W  = 320;
@@ -476,7 +523,10 @@ export default function AuditLogsTab() {
 						{AUDIT_FILTERS.map((filter) => (
 							<button
 								key={filter}
-								onClick={() => setActiveFilter(filter)}
+								onClick={() => {
+									setActiveFilter(filter);
+									setCurrentPage(1);
+								}}
 								className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
 									activeFilter === filter
 										? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
@@ -502,13 +552,13 @@ export default function AuditLogsTab() {
 									</tr>
 								</thead>
 								<tbody className="divide-y divide-slate-100 dark:divide-white/5">
-									{filteredLogs.length === 0 ? (
+									{paginatedLogs.length === 0 ? (
 										<tr>
 											<td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
 												No {activeFilter} events found.
 											</td>
 										</tr>
-									) : filteredLogs.map((log) => (
+									) : paginatedLogs.map((log) => (
 										<LogRow
 											key={log.id}
 											log={log}
@@ -519,6 +569,85 @@ export default function AuditLogsTab() {
 									))}
 								</tbody>
 							</table>
+						</div>
+
+						{/* ── Pagination Footer ── */}
+						<div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50">
+							<div className="text-sm text-slate-500 dark:text-slate-400">
+								{filteredLogs.length > 0 ? (
+									<>
+										{Math.min((currentPage - 1) * rowsPerPage + 1, filteredLogs.length)} to {Math.min(currentPage * rowsPerPage, filteredLogs.length)} of {filteredLogs.length} row(s) selected.
+									</>
+								) : (
+									"0 row(s) selected."
+								)}
+							</div>
+							<div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-300">
+								<div className="flex items-center gap-2">
+									<span className="text-slate-500 dark:text-slate-400">Rows per page</span>
+									<Select
+										value={rowsPerPage.toString()}
+										onValueChange={(val) => {
+											setRowsPerPage(Number(val));
+											setCurrentPage(1);
+										}}
+									>
+										<SelectTrigger className="w-[70px] h-8 text-xs bg-transparent border-slate-300 dark:border-white/20">
+											<SelectValue placeholder={rowsPerPage.toString()} />
+										</SelectTrigger>
+										<SelectContent>
+											{[5, 10, 20, 50].map((size) => (
+												<SelectItem key={size} value={size.toString()}>
+													{size}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+									Page {currentPage} of {Math.max(1, totalPages)}
+								</div>
+								<div className="flex items-center gap-1">
+									<Pagination className="mx-0 w-auto">
+										<PaginationContent>
+											<PaginationItem>
+												<PaginationLink
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(1); }}
+													className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+												>
+													<ChevronsLeft className="h-4 w-4" />
+												</PaginationLink>
+											</PaginationItem>
+											<PaginationItem>
+												<PaginationPrevious
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p - 1)); }}
+													className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+													text=""
+												/>
+											</PaginationItem>
+											<PaginationItem>
+												<PaginationNext
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p + 1)); }}
+													className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+													text=""
+												/>
+											</PaginationItem>
+											<PaginationItem>
+												<PaginationLink
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(totalPages); }}
+													className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+												>
+													<ChevronsRight className="h-4 w-4" />
+												</PaginationLink>
+											</PaginationItem>
+										</PaginationContent>
+									</Pagination>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
