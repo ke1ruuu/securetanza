@@ -22,7 +22,7 @@ export default function CrimeTypeFilter() {
 	}, []);
 
 	return (
-		<div ref={filterRef} className="pointer-events-auto relative">
+		<div ref={filterRef} data-tour="crime-type-filter" className="pointer-events-auto relative">
 			{/* ── Trigger Button ── */}
 			<button
 				onClick={() => setFilterOpen(!filterOpen)}

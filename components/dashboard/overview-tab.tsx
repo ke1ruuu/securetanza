@@ -218,7 +218,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
       </div>
 
       {/* Top Stats Cards */}
-      <div className={`grid grid-cols-1 gap-6 ${isGeneralDashboard ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+      <div data-tour="overview-stats" className={`grid grid-cols-1 gap-6 ${isGeneralDashboard ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         {/* Total Crimes (All Time) */}
         <Card className={`border-0 shadow-lg overflow-hidden ${
           theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'
@@ -323,7 +323,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
         {/* ═══════════════════════════════════════════════════ */}
         {/* Crime Trend — Area/Line Chart (2 columns)          */}
         {/* ═══════════════════════════════════════════════════ */}
-        <Card className={`lg:col-span-2 border-0 shadow-lg ${
+        <Card data-tour="overview-trend" className={`lg:col-span-2 border-0 shadow-lg ${
           theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'
         }`}>
           <CardContent className="p-6 pb-2">
@@ -397,7 +397,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
         {/* ═══════════════════════════════════════════════════ */}
         {/* Crime Distribution — Pie Chart                     */}
         {/* ═══════════════════════════════════════════════════ */}
-        <Card className={`border-0 shadow-lg ${
+        <Card data-tour="overview-distribution" className={`border-0 shadow-lg ${
           theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'
         }`}>
           <CardContent className="p-6 pb-2">
@@ -471,7 +471,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
       </div>
 
       {/* Recent Crime Activity - Full Width Table */}
-      <Card className={`border-0 shadow-lg overflow-hidden ${
+      <Card data-tour="overview-activity-table" className={`border-0 shadow-lg overflow-hidden ${
         theme === 'dark' ? 'bg-[#1e293b]' : 'bg-white'
       }`}>
         <CardContent className="p-0">
@@ -482,6 +482,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
               Recent Crime Activity
             </h3>
             <Link 
+              data-tour="overview-view-cases"
               href={`/dashboard/cases${barangayName && barangayName !== "General Dashboard" ? `?name=${encodeURIComponent(barangayName)}` : ''}`} 
               className="text-sm font-medium text-blue-500 hover:text-blue-600 transition-colors"
             >

@@ -222,7 +222,10 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         </div>
       </div>
       {/* Trend Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div
+        data-tour="analytics-metrics"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+      >
         {/* Overall Trend Card */}
         <Card
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-gradient-to-br from-blue-500/10 to-blue-600/5" : "bg-gradient-to-br from-blue-50 to-blue-100"}`}
@@ -532,6 +535,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         {/* LEFT COLUMN: Time Patterns (Full height for specific barangay) */}
         {/* ═══════════════════════════════════════════════════ */}
         <Card
+          data-tour="analytics-time-patterns"
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"} ${!isGeneralDashboard ? 'lg:row-span-2' : ''} flex flex-col`}
         >
           <CardHeader className="items-center">
@@ -608,6 +612,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         {/* RIGHT COLUMN: Crime Types Distribution             */}
         {/* ═══════════════════════════════════════════════════ */}
         <Card
+          data-tour="analytics-crime-types"
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"} flex flex-col`}
         >
           <CardHeader>
@@ -710,6 +715,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         {/* Monthly Crime Trends — Line Chart with Area        */}
         {/* ═══════════════════════════════════════════════════ */}
         <Card
+          data-tour="analytics-monthly-trends"
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"} flex flex-col`}
         >
           <CardHeader>
@@ -830,6 +836,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         {/* ═══════════════════════════════════════════════════ */}
         {isGeneralDashboard && (
           <Card
+            data-tour="analytics-barangay-comparison"
             className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"} flex flex-col`}
           >
             <CardHeader>
@@ -939,6 +946,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         {/* Crime Modus (Method of Operation)                  */}
         {/* ═══════════════════════════════════════════════════ */}
         <Card
+          data-tour="analytics-modus"
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"} flex flex-col`}
         >
           <CardHeader>
@@ -1075,6 +1083,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         {/* Type of Place                                       */}
         {/* ═══════════════════════════════════════════════════ */}
         <Card
+          data-tour="analytics-locations"
           className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"} flex flex-col`}
         >
           <CardHeader>
@@ -1211,7 +1220,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       {/* ═══════════════════════════════════════════════════ */}
       {/* Crime Matrix Heatmap — Full Width                  */}
       {/* ═══════════════════════════════════════════════════ */}
-      <div className="w-full">
+      <div data-tour="analytics-matrix" className="w-full">
         {matrixLoading ? (
           <Card
             className={`border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"}`}

@@ -2,14 +2,16 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { LogOut, User as UserIcon, Shield, Settings, BookOpen } from "lucide-react";
+import { LogOut, User as UserIcon, Shield, Settings, BookOpen, Compass } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useTour } from "@/context/TourContext";
 import { Button } from "@/components/ui/button";
 
 export default function UserMenu() {
   const { user, logout } = useAuth();
   const { theme } = useTheme();
+  const { replayTour } = useTour();
   const [showMenu, setShowMenu] = useState(false);
 
   if (!user) return null;
@@ -48,7 +50,7 @@ export default function UserMenu() {
     : user.permissions[0] || "";
 
   return (
-    <div className="relative">
+    <div className="relative" data-tour="user-menu">
       {/* User Button */}
       <button
         onClick={() => setShowMenu(!showMenu)}
@@ -146,6 +148,20 @@ export default function UserMenu() {
                 <BookOpen className="h-4 w-4" />
                 User Guide
               </Link>
+              {(user.permissions.includes("admin") ||
+                user.permissions.includes("admin_operational_officer") ||
+                user.permissions.includes("privileged_map_view")) && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    replayTour();
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
+                >
+                  <Compass className="h-4 w-4" />
+                  Replay Tour
+                </button>
+              )}
             </div>
 
             {/* Actions */}

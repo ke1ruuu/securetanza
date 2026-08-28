@@ -51,6 +51,7 @@ function OverviewContent() {
 
 			{/* Dashboard Sub-header with Barangay Selector */}
 			<div
+				data-tour="barangay-selector"
 				className={`flex items-center gap-4 px-6 py-3 border-b shrink-0 ${
 					theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
 				}`}>

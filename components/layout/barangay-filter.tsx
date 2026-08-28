@@ -20,7 +20,7 @@ export default function BarangayFilter() {
 	}, [setFilterOpen]);
 
 	return (
-		<div ref={filterRef} className="pointer-events-auto relative">
+		<div ref={filterRef} data-tour="barangay-filter" className="pointer-events-auto relative">
 			{/* ── Trigger Button ── */}
 			<button
 				onClick={() => setFilterOpen(!filterOpen)}

@@ -167,7 +167,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <header className="flex flex-wrap items-end justify-between gap-6 pb-6">
+      <header data-tour="reports-header" className="flex flex-wrap items-end justify-between gap-6 pb-6">
         <div className="max-w-lg">
           <h2 className="text-3xl font-bold tracking-tight mb-1 text-slate-900 dark:text-white">
             Generate Report
@@ -189,7 +189,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* Contents manifest — numbering mirrors the document's own section numbers */}
-        <Card className="gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
+        <Card data-tour="reports-sections" className="gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
           <div className="flex items-baseline justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-white/[0.06]">
             <div>
               <h3 className="font-heading text-base font-medium text-slate-900 dark:text-white">
@@ -291,7 +291,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
         <div className="lg:sticky lg:top-0 lg:self-start">
           <Card className="gap-0 rounded-xl border border-slate-200 bg-white p-5 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
             {/* Cover preview — always paper, because that is what gets produced */}
-            <div className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-900/10 dark:shadow-lg dark:shadow-black/40">
+            <div data-tour="reports-preview" className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-900/10 dark:shadow-lg dark:shadow-black/40">
               <div className="h-[3px] bg-[#0f172a]" />
               <div className="flex aspect-[1/1.24] flex-col px-4 pb-3 pt-5">
                 <p className="text-[6px] font-bold uppercase tracking-[0.2em] text-[#0369a1]">
@@ -351,6 +351,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
             </dl>
 
             <Button
+              data-tour="reports-export"
               onClick={handleExportReport}
               disabled={selectedCount === 0 || loading || waitingForData}
               className="mt-5 h-11 w-full text-sm font-semibold"

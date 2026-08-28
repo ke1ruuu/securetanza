@@ -66,7 +66,9 @@ function HomeContent() {
 				</Suspense>
 			</div>
 
-			<div className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
+			<div
+				data-tour="map-canvas"
+				className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
 				<TanzaMap />
 			</div>
 
@@ -82,6 +84,7 @@ function HomeContent() {
 
 				{/* Top Right Legend */}
 				<div
+					data-tour="map-legend"
 					className={`absolute right-3 sm:right-4 lg:right-6 transition-all duration-500 ease-in-out ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>
@@ -89,7 +92,7 @@ function HomeContent() {
 				</div>
 
 				{/* Bottom Right Controls */}
-				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6">
+				<div data-tour="map-zoom-controls" className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6">
 					<RightSidebarControls />
 				</div>
 
@@ -110,6 +113,7 @@ function HomeContent() {
 
 				{/* Real Time Clock */}
 				<div
+					data-tour="real-time-clock"
 					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
 						isFilterActive ? "bottom-[100px] sm:bottom-4 lg:bottom-6" : "bottom-3 sm:bottom-4 lg:bottom-6"
 					}`}>

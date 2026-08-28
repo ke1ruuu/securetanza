@@ -296,7 +296,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   return (
     <div className="max-w-[1400px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Search Bar */}
-      <div className="relative">
+      <div data-tour="cases-search" className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
         <input
           type="text"
@@ -312,7 +312,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div data-tour="cases-filters" className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Crime Type Filter */}
         <div>
           <label className={`text-sm font-medium mb-2 block ${
@@ -414,7 +414,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cases List */}
-        <Card className={`lg:col-span-2 border-0 shadow-lg ${
+        <Card data-tour="cases-list" className={`lg:col-span-2 border-0 shadow-lg ${
           theme === "dark" ? "bg-[#1e293b]" : "bg-white"
         }`}>
           <CardContent className="p-0">
@@ -588,7 +588,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
         </Card>
 
         {/* Case Details Panel */}
-        <Card className={`border-0 shadow-lg ${
+        <Card data-tour="cases-details-panel" className={`border-0 shadow-lg ${
           theme === "dark" ? "bg-[#1e293b]" : "bg-white"
         }`}>
           <CardContent className="p-6">
