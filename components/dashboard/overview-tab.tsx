@@ -319,7 +319,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div data-tour="overview-charts" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ═══════════════════════════════════════════════════ */}
         {/* Crime Trend — Area/Line Chart (2 columns)          */}
         {/* ═══════════════════════════════════════════════════ */}

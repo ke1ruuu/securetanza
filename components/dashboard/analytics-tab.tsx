@@ -530,7 +530,10 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       </div>
 
       {/* Main Analytics Grid */}
-      <div className={`grid gap-6 sm:gap-8 ${isGeneralDashboard ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 xl:grid-cols-[1fr_1fr]'}`}>
+      <div
+        data-tour="analytics-temporal-trends"
+        className={`grid gap-6 sm:gap-8 ${isGeneralDashboard ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 xl:grid-cols-[1fr_1fr]'}`}
+      >
         {/* ═══════════════════════════════════════════════════ */}
         {/* LEFT COLUMN: Time Patterns (Full height for specific barangay) */}
         {/* ═══════════════════════════════════════════════════ */}
@@ -941,7 +944,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       {/* ═══════════════════════════════════════════════════ */}
       {/* Modus and Type of Place Charts                     */}
       {/* ═══════════════════════════════════════════════════ */}
-      <div className="grid gap-6 sm:gap-8 grid-cols-1 xl:grid-cols-2">
+      <div data-tour="analytics-modus-locations" className="grid gap-6 sm:gap-8 grid-cols-1 xl:grid-cols-2">
         {/* ═══════════════════════════════════════════════════ */}
         {/* Crime Modus (Method of Operation)                  */}
         {/* ═══════════════════════════════════════════════════ */}

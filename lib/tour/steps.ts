@@ -23,27 +23,16 @@ export const TOUR_STAGE_KEY = "secureTanza:tour:stage";
 export const TOUR_PENDING_KEY = "secureTanza:tour:pendingStart";
 
 // ─────────────────────────────────────────────────────────────────────────
-// Stage: Introduce the System (header elements, present on every page)
+// Stage: Introduce the System & Map (app/page.tsx)
 // ─────────────────────────────────────────────────────────────────────────
 export const systemSteps: DriveStep[] = [
-	{
-		element: '[data-tour="brand"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Welcome to Secure Tanza",
-			description:
-				"A live crime-mapping and reporting system for Tanza, Cavite. Let's take a quick look around.",
-			side: "bottom",
-			align: "start",
-		},
-	},
 	{
 		element: '[data-tour="main-nav"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Five Sections",
+			title: "Welcome to Secure Tanza",
 			description:
-				"Map, Overview, Cases, Analytics and Reports \u2014 everything you need is one click away in this bar.",
+				"Navigate across the five core modules: Map, Overview, Cases, Analytics, and Reports.",
 			side: "bottom",
 			align: "center",
 		},
@@ -52,36 +41,34 @@ export const systemSteps: DriveStep[] = [
 		element: '[data-tour="user-menu"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Your Account",
+			title: "Account & Settings",
 			description:
-				"Check notifications, review your permissions, and sign out from here. You can replay this tour anytime from this menu.",
+				"Manage notifications, review security permissions, and replay this tour anytime.",
 			side: "bottom",
 			align: "end",
 		},
 	},
 ];
 
-// ─────────────────────────────────────────────────────────────────────────
-// Stage: Map (app/page.tsx)
-// ─────────────────────────────────────────────────────────────────────────
 export const mapSteps: DriveStep[] = [
 	{
-		element: '[data-tour="barangay-filter"]',
+		element: '[data-tour="map-canvas"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Filter by Barangay",
+			title: "Interactive Crime Map",
 			description:
-				"Search or select a specific barangay to zoom the map and focus the data on that area.",
-			side: "bottom",
-			align: "start",
+				"Visualize live crime density across Tanza. Hover over any barangay for quick stats or click to view in-depth details.",
+			side: "top",
+			align: "center",
 		},
 	},
 	{
-		element: '[data-tour="crime-type-filter"]',
+		element: '[data-tour="map-filters"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Filter by Crime Type",
-			description: "Narrow the map down to a specific category of incident.",
+			title: "Location & Crime Filters",
+			description:
+				"Filter map density and incident records by specific barangay or crime category.",
 			side: "bottom",
 			align: "start",
 		},
@@ -90,53 +77,11 @@ export const mapSteps: DriveStep[] = [
 		element: '[data-tour="map-legend"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Threat Level Legend",
+			title: "Threat Levels & Timeline",
 			description:
-				"Colors show relative incident density \u2014 from Critical down to Low \u2014 calculated live from the current data.",
+				"Track color-coded risk levels from Low to Critical, and use time controls to scrub through historical incident data.",
 			side: "left",
 			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="map-canvas"]',
-		skipMissingElement: true,
-		popover: {
-			title: "The Map",
-			description:
-				"Hover over a barangay for a quick stats popup, or click it to open a detailed breakdown.",
-			side: "top",
-			align: "center",
-		},
-	},
-	{
-		element: '[data-tour="map-zoom-controls"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Zoom & Reset",
-			description: "Zoom in for detail, or snap back to the default view at any time.",
-			side: "left",
-			align: "center",
-		},
-	},
-	{
-		element: '[data-tour="real-time-clock"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Time Playback",
-			description:
-				"Open the time filter to scrub through historical data or play it back over a date range.",
-			side: "top",
-			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="upload-data"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Upload Data",
-			description: "Authorized users can upload new incident records directly from here.",
-			side: "bottom",
-			align: "end",
 		},
 	},
 ];
@@ -149,9 +94,9 @@ export const overviewSteps: DriveStep[] = [
 		element: '[data-tour="barangay-selector"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Switch Barangay",
+			title: "Barangay Scope",
 			description:
-				"Jump between the General Dashboard and any single barangay \u2014 every stat and chart below updates to match. Pick a barangay and the \"Critical Area\" card also swaps out for a \"Barangay View\" badge, since that stat only makes sense across the whole map.",
+				"Switch between the General Dashboard and individual barangays — all metrics, charts, and activity logs update dynamically.",
 			side: "bottom",
 			align: "start",
 		},
@@ -160,52 +105,33 @@ export const overviewSteps: DriveStep[] = [
 		element: '[data-tour="overview-stats"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Key Stats",
+			title: "Key Metrics Snapshot",
 			description:
-				"A quick read on total crimes, the most frequent offense type, and (on the general dashboard) the most critical area.",
+				"Instant overview of total incident volume, most prevalent offense types, and high-density hotspot areas.",
 			side: "bottom",
 			align: "start",
 		},
 	},
 	{
-		element: '[data-tour="overview-trend"]',
+		element: '[data-tour="overview-charts"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Crime Trend",
-			description: "See how incident volume has moved over time at a glance.",
+			title: "Trends & Distribution",
+			description:
+				"Track monthly crime volume progression alongside a categorical breakdown of all recorded offenses.",
 			side: "top",
-			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="overview-distribution"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Crime Distribution",
-			description: "A breakdown of incidents by category, so you can spot what's most common.",
-			side: "top",
-			align: "start",
+			align: "center",
 		},
 	},
 	{
 		element: '[data-tour="overview-activity-table"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Recent Crime Activity",
-			description: "The latest logged incidents, in one scrollable table.",
+			title: "Recent Activity & Case Drill-down",
+			description:
+				"Browse the latest logged incidents with quick links to jump directly into filtered case records.",
 			side: "top",
 			align: "center",
-		},
-	},
-	{
-		element: '[data-tour="overview-view-cases"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Jump to Cases",
-			description:
-				"Ready to dig deeper? This takes you straight to the full case list, already filtered to whatever you're viewing here.",
-			side: "left",
-			align: "end",
 		},
 	},
 ];
@@ -215,22 +141,12 @@ export const overviewSteps: DriveStep[] = [
 // ─────────────────────────────────────────────────────────────────────────
 export const casesSteps: DriveStep[] = [
 	{
-		element: '[data-tour="cases-search"]',
+		element: '[data-tour="cases-controls"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Search Cases",
-			description: "Find a case fast by ID, crime type, or location.",
-			side: "bottom",
-			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="cases-filters"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Filter Cases",
+			title: "Search & Filter Suite",
 			description:
-				"Narrow the list by crime type, date range, barangay, or case status \u2014 combine them for a precise view.",
+				"Find specific incidents instantly by Case ID, keyword, crime category, barangay, date range, or clearance status.",
 			side: "bottom",
 			align: "start",
 		},
@@ -239,8 +155,9 @@ export const casesSteps: DriveStep[] = [
 		element: '[data-tour="cases-list"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Case List",
-			description: "Browse matching cases here and click any row to open its full details.",
+			title: "Case Directory",
+			description:
+				"Browse matching incident records and select any case to inspect its complete dossier.",
 			side: "right",
 			align: "start",
 		},
@@ -249,9 +166,9 @@ export const casesSteps: DriveStep[] = [
 		element: '[data-tour="cases-details-panel"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Case Details",
+			title: "Case Profile & Geo-Context",
 			description:
-				"The selected case's full record \u2014 offense details, location, timing, modus, and a map preview.",
+				"Review comprehensive incident details including modus operandi, timeline, location, and map coordinates.",
 			side: "left",
 			align: "start",
 		},
@@ -266,86 +183,42 @@ export const analyticsSteps: DriveStep[] = [
 		element: '[data-tour="analytics-metrics"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Performance Metrics",
+			title: "Executive KPI Cards",
 			description:
-				"Key quarterly indicators at a glance \u2014 quarterly crime trend percentage, peak hours, case resolution rate, and community safety index.",
+				"Quarterly crime trend percentages, peak incident hours, case resolution rates, and community safety score.",
 			side: "bottom",
 			align: "start",
 		},
 	},
 	{
-		element: '[data-tour="analytics-time-patterns"]',
+		element: '[data-tour="analytics-temporal-trends"]',
 		skipMissingElement: true,
 		popover: {
-			title: "24-Hour Time Patterns",
+			title: "Time Patterns & Offense Breakdown",
 			description:
-				"A 24-hour radar distribution highlighting peak incident hours to help plan law enforcement patrol schedules.",
+				"A 24-hour radar distribution for patrol planning alongside top crime category volume rankings and monthly trajectories.",
 			side: "top",
 			align: "center",
 		},
 	},
 	{
-		element: '[data-tour="analytics-crime-types"]',
+		element: '[data-tour="analytics-modus-locations"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Crime Types Distribution",
+			title: "Modus Operandi & High-Risk Locations",
 			description:
-				"A breakdown of the most common crime categories and their percentage share of all recorded incidents.",
+				"Analyze common criminal methods alongside high-frequency environments like residential, commercial, or public spaces.",
 			side: "top",
 			align: "center",
-		},
-	},
-	{
-		element: '[data-tour="analytics-monthly-trends"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Monthly Crime Trends",
-			description:
-				"Track month-over-month volume changes to identify seasonality and long-term crime trajectories.",
-			side: "top",
-			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="analytics-barangay-comparison"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Barangay Comparison",
-			description:
-				"Compare incident totals across top barangays to spot geographic concentrations and high-density zones.",
-			side: "top",
-			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="analytics-modus"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Modus Operandi",
-			description:
-				"Review the most frequent methods of operation and criminal tactics reported across cases.",
-			side: "top",
-			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="analytics-locations"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Location Types",
-			description:
-				"See which environments \u2014 residential, commercial, or public thoroughfares \u2014 have the highest incident rates.",
-			side: "top",
-			align: "start",
 		},
 	},
 	{
 		element: '[data-tour="analytics-matrix"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Crime Type Matrix",
+			title: "Crime Type Matrix Heatmap",
 			description:
-				"A detailed cross-tabulated heatmap showing monthly distribution across every major crime category.",
+				"A full-spectrum cross-tabulated heatmap showing monthly distribution across every major crime category.",
 			side: "top",
 			align: "center",
 		},
@@ -357,47 +230,25 @@ export const analyticsSteps: DriveStep[] = [
 // ─────────────────────────────────────────────────────────────────────────
 export const reportsSteps: DriveStep[] = [
 	{
-		element: '[data-tour="reports-header"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Generate Reports",
-			description:
-				"Produce customized, professional PDF analytical case studies and summary reports for any barangay and timeframe.",
-			side: "bottom",
-			align: "start",
-		},
-	},
-	{
 		element: '[data-tour="reports-sections"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Select Report Sections",
+			title: "Configure Report Content",
 			description:
-				"Customize the contents of your report by toggling sections \u2014 including Executive Summary, Trends, Time Patterns, and Recommendations.",
+				"Select the analytical sections to include — Executive Summary, Trends, Time Patterns, Modus Operandi, and Recommendations.",
 			side: "right",
 			align: "start",
 		},
 	},
 	{
-		element: '[data-tour="reports-preview"]',
+		element: '[data-tour="reports-export-panel"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Document Cover Preview",
+			title: "Document Preview & PDF Export",
 			description:
-				"See an instant preview of the report cover showing the target area, reporting period, and section count.",
+				"Review document parameters, preview the live publication cover, and compile a publication-ready PDF case study.",
 			side: "left",
 			align: "start",
-		},
-	},
-	{
-		element: '[data-tour="reports-export"]',
-		skipMissingElement: true,
-		popover: {
-			title: "Export to PDF",
-			description:
-				"Compile the selected data and download a publication-ready PDF document directly to your device.",
-			side: "top",
-			align: "center",
 		},
 	},
 ];
@@ -426,22 +277,18 @@ export const TOUR_STAGES: TourStage[] = [
 		id: "overview",
 		path: "/dashboard/overview",
 		steps: overviewSteps,
-		// overview-tab.tsx renders a skeleton (no data-tour attrs at all)
-		// until its dashboard data has loaded.
 		readySelector: '[data-tour="overview-stats"]',
 	},
 	{
 		id: "cases",
 		path: "/dashboard/cases",
 		steps: casesSteps,
-		// incidents-tab.tsx does the same while its case list loads.
-		readySelector: '[data-tour="cases-search"]',
+		readySelector: '[data-tour="cases-controls"]',
 	},
 	{
 		id: "analytics",
 		path: "/dashboard/analytics",
 		steps: analyticsSteps,
-		// analytics-tab.tsx renders a skeleton until analytics data loads.
 		readySelector: '[data-tour="analytics-metrics"]',
 	},
 	{

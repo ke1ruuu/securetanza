@@ -295,119 +295,122 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Search Bar */}
-      <div data-tour="cases-search" className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-        <input
-          type="text"
-          placeholder="Search cases by ID, type, location"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
-            theme === "dark"
-              ? "bg-[#1e293b] border-white/10 text-white placeholder-slate-500"
-              : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
-          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-        />
-      </div>
-
-      {/* Filters */}
-      <div data-tour="cases-filters" className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Crime Type Filter */}
-        <div>
-          <label className={`text-sm font-medium mb-2 block ${
-            theme === "dark" ? "text-slate-400" : "text-slate-600"
-          }`}>
-            Crime Type
-          </label>
-          <select
-            value={crimeTypeFilter}
-            onChange={(e) => setCrimeTypeFilter(e.target.value)}
-            className={`w-full px-4 py-2 rounded-lg border ${
+      {/* Search & Filters Controls */}
+      <div data-tour="cases-controls" className="space-y-6">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
+          <input
+            type="text"
+            placeholder="Search cases by ID, type, location"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
               theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white"
-                : "bg-white border-slate-200 text-slate-900"
+                ? "bg-[#1e293b] border-white/10 text-white placeholder-slate-500"
+                : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
             } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          >
-            {crimeTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
-        {/* Date Range Filter */}
-        <div>
-          <label className={`text-sm font-medium mb-2 block ${
-            theme === "dark" ? "text-slate-400" : "text-slate-600"
-          }`}>
-            Date Range
-          </label>
-          <select
-            value={dateRangeFilter}
-            onChange={(e) => setDateRangeFilter(e.target.value)}
-            className={`w-full px-4 py-2 rounded-lg border ${
-              theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          >
-            <option>(All)</option>
-            <option>(Last 7 Days)</option>
-            <option>(Last 30 Days)</option>
-            <option>(Last 90 Days)</option>
-          </select>
-        </div>
-
-        {/* Barangay Filter - Only show for general dashboard */}
-        {isGeneralDashboard && (
+        {/* Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Crime Type Filter */}
           <div>
             <label className={`text-sm font-medium mb-2 block ${
               theme === "dark" ? "text-slate-400" : "text-slate-600"
             }`}>
-              Barangay
+              Crime Type
             </label>
             <select
-              value={barangayFilter}
-              onChange={(e) => setBarangayFilter(e.target.value)}
+              value={crimeTypeFilter}
+              onChange={(e) => setCrimeTypeFilter(e.target.value)}
               className={`w-full px-4 py-2 rounded-lg border ${
                 theme === "dark"
                   ? "bg-[#1e293b] border-white/10 text-white"
                   : "bg-white border-slate-200 text-slate-900"
               } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
-              {barangays.map((barangay) => (
-                <option key={barangay} value={barangay}>
-                  {barangay}
+              {crimeTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
                 </option>
               ))}
             </select>
           </div>
-        )}
 
-        {/* Status Filter */}
-        <div>
-          <label className={`text-sm font-medium mb-2 block ${
-            theme === "dark" ? "text-slate-400" : "text-slate-600"
-          }`}>
-            Status
-          </label>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className={`w-full px-4 py-2 rounded-lg border ${
-              theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          >
-            {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
+          {/* Date Range Filter */}
+          <div>
+            <label className={`text-sm font-medium mb-2 block ${
+              theme === "dark" ? "text-slate-400" : "text-slate-600"
+            }`}>
+              Date Range
+            </label>
+            <select
+              value={dateRangeFilter}
+              onChange={(e) => setDateRangeFilter(e.target.value)}
+              className={`w-full px-4 py-2 rounded-lg border ${
+                theme === "dark"
+                  ? "bg-[#1e293b] border-white/10 text-white"
+                  : "bg-white border-slate-200 text-slate-900"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            >
+              <option>(All)</option>
+              <option>(Last 7 Days)</option>
+              <option>(Last 30 Days)</option>
+              <option>(Last 90 Days)</option>
+            </select>
+          </div>
+
+          {/* Barangay Filter - Only show for general dashboard */}
+          {isGeneralDashboard && (
+            <div>
+              <label className={`text-sm font-medium mb-2 block ${
+                theme === "dark" ? "text-slate-400" : "text-slate-600"
+              }`}>
+                Barangay
+              </label>
+              <select
+                value={barangayFilter}
+                onChange={(e) => setBarangayFilter(e.target.value)}
+                className={`w-full px-4 py-2 rounded-lg border ${
+                  theme === "dark"
+                    ? "bg-[#1e293b] border-white/10 text-white"
+                    : "bg-white border-slate-200 text-slate-900"
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              >
+                {barangays.map((barangay) => (
+                  <option key={barangay} value={barangay}>
+                    {barangay}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Status Filter */}
+          <div>
+            <label className={`text-sm font-medium mb-2 block ${
+              theme === "dark" ? "text-slate-400" : "text-slate-600"
+            }`}>
+              Status
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className={`w-full px-4 py-2 rounded-lg border ${
+                theme === "dark"
+                  ? "bg-[#1e293b] border-white/10 text-white"
+                  : "bg-white border-slate-200 text-slate-900"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            >
+              {statuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 

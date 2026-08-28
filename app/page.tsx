@@ -75,6 +75,7 @@ function HomeContent() {
 			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
 				{/* Top Left Filters */}
 				<div
+					data-tour="map-filters"
 					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row gap-2 sm:gap-3 ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>

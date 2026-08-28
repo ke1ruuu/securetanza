@@ -289,7 +289,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
 
         {/* Export panel */}
         <div className="lg:sticky lg:top-0 lg:self-start">
-          <Card className="gap-0 rounded-xl border border-slate-200 bg-white p-5 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
+          <Card data-tour="reports-export-panel" className="gap-0 rounded-xl border border-slate-200 bg-white p-5 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
             {/* Cover preview — always paper, because that is what gets produced */}
             <div data-tour="reports-preview" className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-900/10 dark:shadow-lg dark:shadow-black/40">
               <div className="h-[3px] bg-[#0f172a]" />
