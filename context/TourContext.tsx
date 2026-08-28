@@ -21,20 +21,8 @@ export function useTour() {
 	return ctx;
 }
 
-// Permissions that unlock the tour: admins always see it, otherwise the
-// user needs at least the map permission (the tour's first stage lives on
-// the Map page).
-function canSeeTour(permissions: string[] | undefined): boolean {
-	if (!permissions) return false;
-	return (
-		permissions.includes("admin") ||
-		permissions.includes("admin_operational_officer") ||
-		permissions.includes("privileged_map_view")
-	);
-}
-
-// Each stage additionally requires its own module permission, so a user
-// without (say) Cases access never gets auto-navigated into that stage.
+// Permissions for each stage: stage 0 (system-map on "/") is public,
+// while dashboard stages require respective module permissions.
 const STAGE_PERMISSIONS: Record<string, string> = {
 	"system-map": "privileged_map_view",
 	overview: "privileged_map_view",
@@ -44,10 +32,13 @@ const STAGE_PERMISSIONS: Record<string, string> = {
 };
 
 function hasModulePermission(permissions: string[] | undefined, permission: string | undefined): boolean {
-	if (!permissions || !permission) return false;
+	if (!permission) return true;
+	if (!permissions) return false;
 	return (
 		permissions.includes("admin") ||
 		permissions.includes("admin_operational_officer") ||
+		permissions.includes("operational_officer") ||
+		permissions.includes("privileged_user") ||
 		permissions.includes(permission)
 	);
 }
@@ -104,8 +95,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 	const driverRef = useRef<Driver | null>(null);
 	// Tracks the pathname we've already made an auto-start/resume decision
 	// for. TourProvider lives in the root layout and never remounts between
-	// client-side navigations, so a single boolean flag would block every
-	// later stage after the first — this must reset per pathname instead.
+	// client-side navigations, so this resets when navigating away from stage paths.
 	const decidedForPath = useRef<string | null>(null);
 	// Set right before we manually destroy() a driver instance to chain
 	// into the next stage, so the shared onDestroyed handler below knows
@@ -119,17 +109,13 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 		currentPathnameRef.current = pathname;
 	}, [pathname]);
 
-	const eligible = canSeeTour(user?.permissions);
-
 	const runStage = useCallback(
 		(stageIndex: number) => {
 			const stage = TOUR_STAGES[stageIndex];
-			if (!stage || pathname !== stage.path) return;
+			if (!stage) return;
 
-			// Don't run a stage the user doesn't actually have module access
-			// to (e.g. arrived here via a chained/pending resume but their
-			// permissions changed, or lack Cases access).
-			if (!hasModulePermission(user?.permissions, STAGE_PERMISSIONS[stage.id])) {
+			// Don't run a protected dashboard stage if the user lacks module access
+			if (stageIndex > 0 && !hasModulePermission(user?.permissions, STAGE_PERMISSIONS[stage.id])) {
 				writeLocal(TOUR_COMPLETED_KEY, "1");
 				removeLocal(TOUR_STAGE_KEY);
 				return;
@@ -153,14 +139,35 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
 					driverRef.current?.destroy();
 
-					let steps: DriveStep[] = stage.steps;
+					// Filter stage steps to only include elements that exist and are visible
+					const visibleSteps = stage.steps.filter((step) => {
+						if (!step.element) return true;
+						if (typeof step.element === "string") {
+							const el = document.querySelector(step.element) as HTMLElement | null;
+							if (!el) return !step.skipMissingElement;
+							const rect = el.getBoundingClientRect();
+							const style = window.getComputedStyle(el);
+							if (
+								style.display === "none" ||
+								style.visibility === "hidden" ||
+								(rect.width === 0 && rect.height === 0)
+							) {
+								return false;
+							}
+						}
+						return true;
+					});
+
+					if (visibleSteps.length === 0) return;
+
+					let steps: DriveStep[] = visibleSteps;
 
 					if (!isFinalStage && nextStage && nextStageAllowed) {
 						// Attach a completion hook to the last step only, so
 						// finishing this stage's steps hands off to the next
 						// page instead of just closing the tour.
-						steps = stage.steps.map((step, i) => {
-							if (i !== stage.steps.length - 1) return step;
+						steps = visibleSteps.map((step, i) => {
+							if (i !== visibleSteps.length - 1) return step;
 							return {
 								...step,
 								popover: {
@@ -199,18 +206,20 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 					driverRef.current = d;
 					d.drive();
 				});
-			}, 400);
+			}, 350);
 		},
-		[pathname, router, user],
+		[router, user],
 	);
 
 	// Auto-start / auto-resume.
 	useEffect(() => {
-		if (loading || !eligible) return;
+		if (loading) return;
 
 		const stageIndex = TOUR_STAGES.findIndex((s) => s.path === pathname);
-		if (stageIndex === -1 || decidedForPath.current === pathname) return;
-		decidedForPath.current = pathname;
+		if (stageIndex === -1) {
+			decidedForPath.current = null;
+			return;
+		}
 
 		const pending = readLocal(TOUR_PENDING_KEY) === "1";
 		const storedStageIndex = Number(readLocal(TOUR_STAGE_KEY) ?? "0");
@@ -220,16 +229,20 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 		// forward from the previous stage, or a manual replay landed here).
 		if (pending && storedStageIndex === stageIndex) {
 			removeLocal(TOUR_PENDING_KEY);
+			decidedForPath.current = pathname;
 			runStage(stageIndex);
 			return;
 		}
+
+		if (decidedForPath.current === pathname) return;
+		decidedForPath.current = pathname;
 
 		// Fresh, first-ever visit: only auto-start from the very first
 		// stage/page, never mid-way if someone lands deep-linked.
 		if (!completed && stageIndex === 0) {
 			runStage(0);
 		}
-	}, [loading, eligible, pathname, runStage]);
+	}, [loading, pathname, runStage]);
 
 	// Clean up the driver instance whenever we navigate away from a stage
 	// page — driver.js appends its overlay straight to document.body, so it
@@ -242,10 +255,10 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 	}, [pathname]);
 
 	const replayTour = useCallback(() => {
-		if (!eligible) return;
-
 		const firstStage = TOUR_STAGES[0];
+		removeLocal(TOUR_COMPLETED_KEY);
 		writeLocal(TOUR_STAGE_KEY, "0");
+		decidedForPath.current = null;
 
 		if (pathname === firstStage.path) {
 			removeLocal(TOUR_PENDING_KEY);
@@ -256,7 +269,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
 		writeLocal(TOUR_PENDING_KEY, "1");
 		router.push(firstStage.path);
-	}, [eligible, pathname, router, runStage]);
+	}, [pathname, router, runStage]);
 
 	return <TourContext.Provider value={{ replayTour }}>{children}</TourContext.Provider>;
 }
