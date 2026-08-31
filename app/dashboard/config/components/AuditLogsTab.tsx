@@ -140,24 +140,9 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 				z-[9999] w-80 rounded-2xl border shadow-2xl
 				bg-white/95 dark:bg-slate-900/95 backdrop-blur-md
 				border-slate-200 dark:border-white/10
-				text-slate-800 dark:text-white
-				${pinned ? "ring-2 ring-blue-500/40" : ""}
+				text-slate-800 dark:text-white pointer-events-none
 			`}
 			style={style}
-			{...pinned ? {
-				onWheel: (e: React.WheelEvent<HTMLDivElement>) => {
-					const el = e.currentTarget;
-					const body = el.querySelector(".card-body") as HTMLElement | null;
-					if (!body) return;
-					const atTop    = body.scrollTop === 0 && e.deltaY < 0;
-					const atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 1 && e.deltaY > 0;
-					if (atTop || atBottom) {
-						// No more content to scroll inside card — pass wheel to page
-						const page = document.querySelector("[data-scroll]") ?? document.documentElement;
-						page.scrollTop += e.deltaY;
-					}
-				},
-			} : {}}
 		>
 			{/* Header */}
 			<div className="flex items-start justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/5">
@@ -170,14 +155,6 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 						<div className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{log.action} Event</div>
 					</div>
 				</div>
-				{pinned && (
-					<button
-						onClick={onClose}
-						className="ml-2 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-					>
-						<X className="h-3.5 w-3.5" />
-					</button>
-				)}
 			</div>
 
 			{/* Body — max height so it never clips the viewport; scrolls internally if needed */}
@@ -231,10 +208,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 			{/* Footer */}
 			<div className="px-4 py-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
 				<span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{log.id.toString()}</span>
-				{pinned
-					? <span className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">Pinned · click × to close</span>
-					: <span className="text-[10px] text-slate-400 dark:text-slate-500">Click row to pin</span>
-				}
+				<span className="text-[10px] text-slate-400 dark:text-slate-500">Click row for details</span>
 			</div>
 		</div>
 	);
@@ -258,11 +232,10 @@ function AuditField({ icon, label, value, mono }: { icon: React.ReactNode; label
 interface RowProps {
 	log: UnifiedLog;
 	onHover: (log: UnifiedLog | null) => void;
-	onPin: (log: UnifiedLog, e: React.MouseEvent) => void;
-	pinnedId: number | null;
+	onClick: (log: UnifiedLog) => void;
 }
 
-function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
+function LogRow({ log, onHover, onClick }: RowProps) {
 	const meta    = ACTION_META[log.action];
 	const outcome = OUTCOME_META[log.outcome];
 
@@ -270,13 +243,11 @@ function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
 		<tr
 			className={`
 				group cursor-pointer transition-colors
-				${pinnedId === log.id
-					? "bg-blue-50/70 dark:bg-blue-500/[0.06]"
-					: "hover:bg-slate-50/60 dark:hover:bg-white/[0.02]"}
+				hover:bg-slate-50/60 dark:hover:bg-white/[0.02]
 			`}
 			onMouseEnter={() => onHover(log)}
 			onMouseLeave={() => onHover(null)}
-			onClick={(e) => onPin(log, e)}
+			onClick={() => onClick(log)}
 		>
 			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.user}</td>
 			<td className="px-5 py-3.5">
@@ -319,8 +290,7 @@ export default function AuditLogsTab() {
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	const [hoveredLog, setHoveredLog] = useState<UnifiedLog | null>(null);
-	const [pinnedLog,  setPinnedLog]  = useState<UnifiedLog | null>(null);
-	const [pinnedPos,  setPinnedPos]  = useState({ x: 0, y: 0 });
+	const [selectedLog, setSelectedLog] = useState<UnifiedLog | null>(null);
 
 	// Track real cursor position via native listener — bypasses React batching/stale-closure issues
 	const mousePosRef = useRef({ x: 0, y: 0 });
@@ -424,20 +394,17 @@ export default function AuditLogsTab() {
 		setHoveredLog(log);
 	}
 
-	function handlePin(log: UnifiedLog, e: React.MouseEvent) {
-		e.stopPropagation();
-		if (pinnedLog?.id === log.id) { setPinnedLog(null); }
-		else { setPinnedLog(log); setPinnedPos({ x: e.clientX, y: e.clientY }); setHoveredLog(null); }
+	function handleRowClick(log: UnifiedLog) {
+		setSelectedLog(log);
+		setHoveredLog(null);
 	}
 
-	/* Close pinned on outside click */
+	/* Prevent body scroll when modal open */
 	useEffect(() => {
-		function onDocClick(e: MouseEvent) {
-			if (tableRef.current && !tableRef.current.contains(e.target as Node)) setPinnedLog(null);
-		}
-		document.addEventListener("mousedown", onDocClick);
-		return () => document.removeEventListener("mousedown", onDocClick);
-	}, []);
+		if (selectedLog) document.body.style.overflow = "hidden";
+		else document.body.style.overflow = "";
+		return () => { document.body.style.overflow = ""; };
+	}, [selectedLog]);
 
 	return (
 		<div className="flex flex-col items-center w-full h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -475,7 +442,7 @@ export default function AuditLogsTab() {
 						<div className="space-y-0.5">
 							<h3 className="text-lg font-bold text-slate-900 dark:text-white">Activity &amp; Import History</h3>
 							<p className="text-sm text-slate-500 dark:text-slate-400">
-								Hover a row to preview the audit trail — click to pin the card.
+								Hover a row for a quick preview — click to open detailed view.
 							</p>
 						</div>
 						<button
@@ -548,8 +515,7 @@ export default function AuditLogsTab() {
 											key={log.id}
 											log={log}
 											onHover={handleHover}
-											onPin={handlePin}
-											pinnedId={pinnedLog?.id ?? null}
+											onClick={handleRowClick}
 										/>
 									))}
 								</tbody>
@@ -642,21 +608,146 @@ export default function AuditLogsTab() {
 			</div>
 
 			{/* ── Hover tooltip — portaled to body to escape any CSS transform context ── */}
-			{hoveredLog && !pinnedLog && typeof document !== "undefined" && createPortal(
+			{hoveredLog && !selectedLog && typeof document !== "undefined" && createPortal(
 				<div style={getCardStyle()} className="pointer-events-none">
 					<AuditCard log={hoveredLog} />
 				</div>,
 				document.body
 			)}
 
-			{/* ── Pinned card — portaled to body, closes on × or outside-table click ── */}
-			{pinnedLog && typeof document !== "undefined" && createPortal(
-				<AuditCard
-					log={pinnedLog}
-					pinned
-					onClose={() => setPinnedLog(null)}
-					style={getCardStyle(pinnedPos)}
-				/>,
+			{/* ── Detailed Modal ── */}
+			{selectedLog && typeof document !== "undefined" && createPortal(
+				<div 
+					className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" 
+					onClick={() => setSelectedLog(null)}
+				>
+					<div 
+						onClick={e => e.stopPropagation()} 
+						className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+					>
+						{/* Modal Header */}
+						<div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
+							<div className="flex items-center gap-3">
+								<div className={`p-2 rounded-xl ${ACTION_META[selectedLog.action].color}`}>
+									{React.cloneElement(ACTION_META[selectedLog.action].icon as React.ReactElement, { className: "h-5 w-5" })}
+								</div>
+								<div>
+									<h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+										{selectedLog.action} Event
+									</h2>
+									<p className="text-sm text-slate-500 dark:text-slate-400">Detailed audit log record</p>
+								</div>
+							</div>
+							<button 
+								onClick={() => setSelectedLog(null)} 
+								className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+							>
+								<X className="w-5 h-5"/>
+							</button>
+						</div>
+
+						{/* Modal Body */}
+						<div className="p-6 overflow-y-auto space-y-8 flex-1 overscroll-contain">
+							<div>
+								<p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Action Details</p>
+								<div className="text-lg text-slate-800 dark:text-slate-200 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+									{selectedLog.details}
+								</div>
+							</div>
+
+							<div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+								<AuditField icon={<User className="h-4 w-4" />} label="User" value={<span className="text-sm font-medium">{selectedLog.user}</span>} />
+								<AuditField icon={<Clock className="h-4 w-4" />} label="Time" value={<span className="text-sm font-medium">{selectedLog.time}</span>} />
+								<AuditField icon={<Info className="h-4 w-4" />} label="IP Address" value={<span className="text-sm font-medium">{selectedLog.ip}</span>} />
+								<AuditField icon={<Hash className="h-4 w-4" />} label="Session" value={<span className="text-sm font-mono">{selectedLog.session}</span>} />
+								<AuditField 
+									icon={<Shield className="h-4 w-4" />} 
+									label="Severity" 
+									value={<span className={`text-sm font-bold uppercase ${SEVERITY_COLOR[selectedLog.severity]}`}>{selectedLog.severity}</span>} 
+								/>
+								<AuditField 
+									icon={React.cloneElement(OUTCOME_META[selectedLog.outcome].icon as React.ReactElement, { className: "h-4 w-4" })} 
+									label="Outcome" 
+									value={<span className={`text-sm font-bold capitalize ${OUTCOME_META[selectedLog.outcome].color}`}>{selectedLog.outcome}</span>} 
+								/>
+							</div>
+
+							{selectedLog.resource && (
+								<div>
+									<p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Target Resource</p>
+									<code className="text-sm font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-500/20">
+										{selectedLog.resource}
+									</code>
+								</div>
+							)}
+
+							{(selectedLog.fileName || selectedLog.errorMessage) && (
+								<div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-6">
+									{selectedLog.fileName && (
+										<div>
+											<p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">Import Statistics</p>
+											<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+												<div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+													<div className="flex items-center gap-2 text-slate-500 mb-1">
+														<FileSpreadsheet className="h-4 w-4" />
+														<span className="text-xs font-semibold uppercase tracking-wider">File Name</span>
+													</div>
+													<div className="text-sm font-medium text-slate-900 dark:text-white truncate" title={selectedLog.fileName}>
+														{selectedLog.fileName}
+													</div>
+												</div>
+												{selectedLog.fileSize !== undefined && (
+													<div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+														<div className="flex items-center gap-2 text-slate-500 mb-1">
+															<Database className="h-4 w-4" />
+															<span className="text-xs font-semibold uppercase tracking-wider">File Size</span>
+														</div>
+														<div className="text-sm font-medium text-slate-900 dark:text-white">
+															{formatFileSize(selectedLog.fileSize)}
+														</div>
+													</div>
+												)}
+												{selectedLog.recordsImported !== undefined && (
+													<div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+														<div className="flex items-center gap-2 text-slate-500 mb-1">
+															<CheckCircle2 className="h-4 w-4" />
+															<span className="text-xs font-semibold uppercase tracking-wider">Records</span>
+														</div>
+														<div className="text-sm font-medium text-slate-900 dark:text-white">
+															{selectedLog.recordsImported.toLocaleString()}
+														</div>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+									{selectedLog.errorMessage && (
+										<div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-5">
+											<p className="text-xs font-semibold uppercase tracking-wider text-red-500 mb-2 flex items-center gap-2">
+												<AlertCircle className="h-4 w-4" /> Error Details
+											</p>
+											<p className="text-sm text-red-700 dark:text-red-400 font-medium whitespace-pre-wrap">{selectedLog.errorMessage}</p>
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* Modal Footer */}
+						<div className="px-6 py-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+							<div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
+								<span className="text-xs font-medium">Log ID:</span>
+								<code className="text-xs font-mono">{selectedLog.id.toString()}</code>
+							</div>
+							<button 
+								onClick={() => setSelectedLog(null)}
+								className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-slate-900 text-sm font-semibold rounded-lg transition-colors"
+							>
+								Close
+							</button>
+						</div>
+					</div>
+				</div>,
 				document.body
 			)}
 		</div>
