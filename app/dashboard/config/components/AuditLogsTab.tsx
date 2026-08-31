@@ -399,11 +399,21 @@ export default function AuditLogsTab() {
 		setHoveredLog(null);
 	}
 
-	/* Prevent body scroll when modal open */
+	/* Prevent body scroll when modal open & handle Escape key */
 	useEffect(() => {
-		if (selectedLog) document.body.style.overflow = "hidden";
-		else document.body.style.overflow = "";
-		return () => { document.body.style.overflow = ""; };
+		if (selectedLog) {
+			document.body.style.overflow = "hidden";
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (e.key === "Escape") setSelectedLog(null);
+			};
+			document.addEventListener("keydown", handleKeyDown);
+			return () => { 
+				document.body.style.overflow = ""; 
+				document.removeEventListener("keydown", handleKeyDown);
+			};
+		} else {
+			document.body.style.overflow = "";
+		}
 	}, [selectedLog]);
 
 	return (
