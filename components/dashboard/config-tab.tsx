@@ -126,6 +126,7 @@ export default function ConfigTab() {
 
   const handleUpdateRule = async (ruleId: string, updates: Partial<NotificationRule>) => {
     if (!isAdmin) return;
+    if (savingRuleId === ruleId) return;
     const previous = rules.find((r) => r.id === ruleId);
     if (!previous) return;
 

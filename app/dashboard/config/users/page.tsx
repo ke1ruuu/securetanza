@@ -33,6 +33,7 @@ export default function UserManagementPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -79,8 +80,10 @@ export default function UserManagementPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setError('');
     setSuccess('');
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('/api/users', {
@@ -106,15 +109,18 @@ export default function UserManagementPage() {
       }
     } catch (err) {
       setError('Failed to create user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser) return;
+    if (!selectedUser || isSubmitting) return;
 
     setError('');
     setSuccess('');
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`/api/users/${selectedUser.id}`, {
@@ -141,16 +147,19 @@ export default function UserManagementPage() {
       }
     } catch (err) {
       setError('Failed to update user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (userId: number) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    if (isSubmitting || !confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
       return;
     }
 
     setError('');
     setSuccess('');
+    setIsSubmitting(true);
 
     try {
       const response = await fetch(`/api/users/${userId}`, {
@@ -167,6 +176,8 @@ export default function UserManagementPage() {
       }
     } catch (err) {
       setError('Failed to delete user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -337,7 +348,8 @@ export default function UserManagementPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-700/50 rounded-lg transition-colors"
+                          disabled={isSubmitting}
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-slate-700/50 rounded-lg transition-colors disabled:opacity-50"
                           title="Delete User"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -418,7 +430,8 @@ export default function UserManagementPage() {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#0EA5E9] hover:bg-[#0EA5E9]/80 text-white rounded-lg transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 bg-[#0EA5E9] hover:bg-[#0EA5E9]/80 text-white rounded-lg transition-colors disabled:opacity-50"
                   >
                     Create User
                   </button>
@@ -498,7 +511,8 @@ export default function UserManagementPage() {
                 <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-[#0EA5E9] hover:bg-[#0EA5E9]/80 text-white rounded-lg transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-2 bg-[#0EA5E9] hover:bg-[#0EA5E9]/80 text-white rounded-lg transition-colors disabled:opacity-50"
                   >
                     Update User
                   </button>

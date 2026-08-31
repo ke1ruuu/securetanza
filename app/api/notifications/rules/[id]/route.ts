@@ -41,7 +41,7 @@ export async function PUT(
     await prisma.auditLog.create({
       data: {
         action: 'Settings',
-        user: session.userId.toString(),
+        user: session.accountNumber,
         resource: `NotificationRule:${id}`,
         details: `Updated notification rule settings for ${updatedRule.name || id}`,
         outcome: 'success',

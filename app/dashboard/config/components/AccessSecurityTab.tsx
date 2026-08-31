@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { UserPlus, AlertCircle, CheckCircle2, Edit, Trash2, RefreshCw } from "lucide-react";
+import { createPortal } from "react-dom";
+import { UserPlus, AlertCircle, CheckCircle2, Edit, Trash2, RefreshCw, Copy, X, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -40,15 +41,19 @@ export default function AccessSecurityTab() {
 	const [selectedUser, setSelectedUser] = useState<User | null>(null);
 	const [mgmtError, setMgmtError] = useState("");
 	const [mgmtSuccess, setMgmtSuccess] = useState("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isCopied, setIsCopied] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
+	const [newAccount, setNewAccount] = useState<{fullName: string, accountNumber: string, tempPassword?: string} | null>(null);
+	
+	const [currentPage, setCurrentPage] = useState(1);
+	const itemsPerPage = 10;
 
 	const [formData, setFormData] = useState<{
-		identifier?: string;
 		fullName: string;
-		password?: string;
 		permissionIds: number[];
 	}>({
 		fullName: "",
-		password: "",
 		permissionIds: [],
 	});
 
@@ -86,6 +91,8 @@ export default function AccessSecurityTab() {
 
 	const handleCreateUser = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (isSubmitting) return;
+		
 		setMgmtError("");
 		setMgmtSuccess("");
 
@@ -94,6 +101,7 @@ export default function AccessSecurityTab() {
 			return;
 		}
 
+		setIsSubmitting(true);
 		try {
 			const response = await fetch("/api/users", {
 				method: "POST",
@@ -104,17 +112,20 @@ export default function AccessSecurityTab() {
 			if (data.success) {
 				setMgmtSuccess("Privileged user account authorized");
 				setShowCreateModal(false);
-				setFormData({ identifier: "", fullName: "", password: "", permissionIds: [] });
+				setFormData({ fullName: "", permissionIds: [] });
 				fetchUsers();
+				setNewAccount(data.data);
 			} else setMgmtError(data.error || "Failed to authorize user");
 		} catch {
 			setMgmtError("Failed to authorize user");
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
 	const handleUpdateUser = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!selectedUser) return;
+		if (!selectedUser || isSubmitting) return;
 		setMgmtError("");
 		setMgmtSuccess("");
 
@@ -123,6 +134,7 @@ export default function AccessSecurityTab() {
 			return;
 		}
 
+		setIsSubmitting(true);
 		try {
 			const response = await fetch(`/api/users/${selectedUser.id}`, {
 				method: "PUT",
@@ -138,6 +150,8 @@ export default function AccessSecurityTab() {
 			} else setMgmtError(data.error || "Failed to update access");
 		} catch {
 			setMgmtError("Failed to update access");
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
@@ -161,11 +175,14 @@ export default function AccessSecurityTab() {
 		setSelectedUser(user);
 		setFormData({
 			fullName: user.fullName,
-			password: "",
 			permissionIds: user.permissions.map((p) => p.id),
 		});
 		setShowEditModal(true);
 	};
+
+	const totalPages = Math.ceil(users.length / itemsPerPage);
+	const validCurrentPage = Math.min(currentPage, Math.max(1, totalPages));
+	const paginatedUsers = users.slice((validCurrentPage - 1) * itemsPerPage, validCurrentPage * itemsPerPage);
 
 	return (
 		<div className="flex flex-col items-center w-full h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -191,9 +208,7 @@ export default function AccessSecurityTab() {
 							<Button
 								onClick={() => {
 									setFormData({
-										identifier: "",
 										fullName: "",
-										password: "",
 										permissionIds: [],
 									});
 									setShowCreateModal(true);
@@ -243,7 +258,7 @@ export default function AccessSecurityTab() {
 											</td>
 										</tr>
 									) : (
-										users.map((user) => (
+										paginatedUsers.map((user) => (
 											<tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
 												<td className="px-6 py-4 text-slate-500 text-sm font-mono">{user.accountNumber}</td>
 												<td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{user.fullName}</td>
@@ -266,7 +281,7 @@ export default function AccessSecurityTab() {
 													</div>
 												</td>
 												<td className="px-6 py-4 text-right">
-													<div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+													<div className="flex justify-end gap-1 transition-opacity">
 														<button
 															onClick={() => openEditModal(user)}
 															className="p-2 hover:bg-[#0EA5E9]/10 rounded-lg text-slate-400 hover:text-[#0EA5E9] transition-all">
@@ -284,116 +299,207 @@ export default function AccessSecurityTab() {
 									)}
 								</tbody>
 							</table>
+							
+							{users.length > 0 && (
+								<div className="px-6 py-4 border-t border-slate-200 dark:border-white/5 flex items-center justify-between">
+									<span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+										Showing {(validCurrentPage - 1) * itemsPerPage + 1} to {Math.min(validCurrentPage * itemsPerPage, users.length)} of {users.length} officers
+									</span>
+									<div className="flex gap-2">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+											disabled={validCurrentPage === 1}
+											className="h-8 text-xs font-semibold px-4"
+										>
+											Previous
+										</Button>
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+											disabled={validCurrentPage === totalPages}
+											className="h-8 text-xs font-semibold px-4"
+										>
+											Next
+										</Button>
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* Modals for Create/Edit */}
-			{(showCreateModal || showEditModal) && (
-				<div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-					<div className="w-full max-w-md rounded-2xl border p-8 bg-white border-slate-200 shadow-xl dark:bg-slate-900 dark:border-white/10 dark:shadow-2xl">
-						<div className="flex items-center gap-3 mb-6">
-							<div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center">
-								{showCreateModal ? <UserPlus className="h-5 w-5 text-slate-900 dark:text-white" /> : <Edit className="h-5 w-5 text-slate-900 dark:text-white" />}
-							</div>
-							<h2 className="text-xl font-bold text-slate-900 dark:text-white">{showCreateModal ? "Authorize Officer" : "Update Privileged Access"}</h2>
-						</div>
-
-						<form onSubmit={showCreateModal ? handleCreateUser : handleUpdateUser} className="space-y-4">
-							<div className="space-y-1.5">
-								<Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Identifier</Label>
-								<Input
-									className="h-11 bg-transparent border-slate-200 dark:border-white/10 focus:border-slate-900 dark:focus:border-white transition-all"
-									placeholder="e.g. jdoe"
-									value={formData.identifier || ""}
-									onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-									required={showCreateModal}
-								/>
-							</div>
-
-							<div className="space-y-1.5">
-								<Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Full Name</Label>
-								<Input
-									className="h-11 bg-transparent border-slate-200 dark:border-white/10 focus:border-slate-900 dark:focus:border-white transition-all"
-									placeholder="Officer Full Name"
-									value={formData.fullName}
-									onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-									required
-								/>
-							</div>
-
-							<div className="space-y-1.5">
-								<Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Secure Password</Label>
-								<Input
-									type="password"
-									className="h-11 bg-transparent border-slate-200 dark:border-white/10 focus:border-slate-900 dark:focus:border-white transition-all"
-									placeholder={showEditModal ? "Leave empty to keep current" : "Minimum 8 characters"}
-									value={formData.password}
-									onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-									required={showCreateModal}
-								/>
-							</div>
-
-							<div className="space-y-2.5">
-								<Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Authorized Role Types</Label>
-								<div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-1">
-									{availablePermissions.map((p) => {
-										const isSelected = formData.permissionIds.includes(p.id);
-										return (
-											<button
-												key={p.id}
-												type="button"
-												onClick={() => {
-													setFormData((prev) => ({
-														...prev,
-														permissionIds: isSelected
-															? prev.permissionIds.filter((id) => id !== p.id)
-															: [...prev.permissionIds, p.id],
-													}));
-												}}
-												className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
-													isSelected
-														? "bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900"
-														: "bg-transparent border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/20"
-												}`}>
-												<div className="flex flex-col">
-													<span className={`text-[11px] font-bold uppercase tracking-tight ${isSelected ? "text-white dark:text-slate-900" : "text-slate-600 dark:text-slate-400"}`}>
-														{p.permissionName.replace(/_/g, " ")}
-													</span>
-												</div>
-												<div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
-														isSelected ? "bg-white border-white dark:bg-slate-900 dark:border-slate-900" : "border-slate-300 dark:border-slate-600"
-													}`}>
-													{isSelected && <CheckCircle2 className="w-3 h-3 text-slate-900 dark:text-white" />}
-												</div>
-											</button>
-										);
-									})}
+			{/* Modals for Create/Edit/Success */}
+			{(showCreateModal || showEditModal || newAccount) && typeof document !== "undefined" && createPortal(
+				<div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+					{newAccount ? (
+						<div className="w-full max-w-md rounded-2xl border p-8 bg-white border-slate-200 shadow-xl dark:bg-slate-900 dark:border-white/10 dark:shadow-2xl animate-in zoom-in-95 duration-200">
+							<div className="flex items-center justify-between mb-6">
+								<div className="flex items-center gap-3">
+									<div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+										<CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+									</div>
+									<h2 className="text-xl font-bold text-slate-900 dark:text-white">Account Created</h2>
 								</div>
+								<button onClick={() => setNewAccount(null)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+									<X className="w-5 h-5" />
+								</button>
 							</div>
 
-							<div className="flex gap-3 pt-6">
-								<Button
-									type="submit"
-									className="flex-1 h-11 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 rounded-xl font-semibold">
-									{showCreateModal ? "Authorize Account" : "Apply Changes"}
-								</Button>
-								<Button
-									type="button"
-									variant="outline"
-									onClick={() => {
-										setShowCreateModal(false);
-										setShowEditModal(false);
-										setSelectedUser(null);
-									}}
-									className="px-6 h-11 rounded-xl font-semibold">
-									Cancel
-								</Button>
+							<div className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+								<div className="flex items-center gap-3">
+									<span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Full Name:</span>
+									<span className="text-sm font-medium text-slate-900 dark:text-white">{newAccount.fullName}</span>
+								</div>
+								<div className="flex items-center gap-3">
+									<span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Account Number:</span>
+									<span className="text-sm font-medium text-blue-600 dark:text-blue-400">{newAccount.accountNumber}</span>
+								</div>
+								<div className="flex items-center gap-3">
+									<span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Temporary Password:</span>
+									<div className="flex items-center gap-2">
+										<span className="text-sm font-medium text-slate-900 dark:text-white min-w-[100px]">
+											{showPassword ? newAccount.tempPassword : "••••••••••"}
+										</span>
+										<button 
+											onClick={() => setShowPassword(!showPassword)}
+											className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-colors"
+										>
+											{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+										</button>
+									</div>
+								</div>
+								<p className="text-xs text-slate-500 dark:text-slate-400 italic pt-2 border-t border-slate-200 dark:border-white/10 mt-4">Please sign in and change your password.</p>
 							</div>
-						</form>
-					</div>
-				</div>
+
+							<Button
+								onClick={() => {
+									navigator.clipboard.writeText(`Secure Tanza Account Created\nFull Name: ${newAccount.fullName}\nAccount Number: ${newAccount.accountNumber}\nTemporary Password: ${newAccount.tempPassword}\n\nPlease sign in and change your password.`);
+									setIsCopied(true);
+								}}
+								className={`w-full h-11 rounded-xl font-semibold gap-2 transition-all duration-300 ${isCopied ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"}`}>
+								{isCopied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+								{isCopied ? "Credentials Copied!" : "Copy Credentials"}
+							</Button>
+						</div>
+					) : (
+						<div className="w-full max-w-xl rounded-2xl border p-8 bg-white border-slate-200 shadow-xl dark:bg-slate-900 dark:border-white/10 dark:shadow-2xl animate-in zoom-in-95 duration-200">
+							<div className="flex items-center gap-3 mb-6">
+								<div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+									{showCreateModal ? <UserPlus className="h-5 w-5 text-slate-900 dark:text-white" /> : <Edit className="h-5 w-5 text-slate-900 dark:text-white" />}
+								</div>
+								<h2 className="text-xl font-bold text-slate-900 dark:text-white">{showCreateModal ? "Authorize Officer" : "Update Privileged Access"}</h2>
+							</div>
+
+							<form onSubmit={showCreateModal ? handleCreateUser : handleUpdateUser} className="space-y-4">
+								<div className="space-y-1.5">
+									<Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Full Name</Label>
+									<Input
+										className="h-11 bg-transparent border-slate-200 dark:border-white/10 focus:border-slate-900 dark:focus:border-white transition-all"
+										placeholder="Officer Full Name"
+										value={formData.fullName}
+										onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+										required
+									/>
+								</div>
+
+								<div className="space-y-2.5">
+									<Label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Access Control</Label>
+									<div className="grid grid-cols-2 gap-2">
+										{(() => {
+											const isAdminSelected = availablePermissions.some(p => 
+												(p.permissionName === 'admin' || p.permissionName === 'admin_operational_officer') && 
+												formData.permissionIds.includes(p.id)
+											);
+											const isPrivilegeSelected = availablePermissions.some(p => 
+												p.permissionName.startsWith('privileged_') && 
+												formData.permissionIds.includes(p.id)
+											);
+
+											return availablePermissions.map((p) => {
+												const isSelected = formData.permissionIds.includes(p.id);
+												const isAdminRole = p.permissionName === 'admin' || p.permissionName === 'admin_operational_officer';
+												const isPrivilegeRole = p.permissionName.startsWith('privileged_');
+
+												return (
+													<div key={p.id} className="relative group">
+														<button
+															type="button"
+															onClick={() => {
+																setFormData((prev) => {
+																	if (isSelected) {
+																		return { ...prev, permissionIds: prev.permissionIds.filter((id) => id !== p.id) };
+																	}
+
+																	let newIds = [...prev.permissionIds, p.id];
+																	
+																	if (isAdminRole) {
+																		const privilegeIds = availablePermissions.filter(ap => ap.permissionName.startsWith('privileged_')).map(ap => ap.id);
+																		newIds = newIds.filter(id => !privilegeIds.includes(id));
+																	} else if (isPrivilegeRole) {
+																		const adminIds = availablePermissions.filter(ap => ap.permissionName === 'admin' || ap.permissionName === 'admin_operational_officer').map(ap => ap.id);
+																		newIds = newIds.filter(id => !adminIds.includes(id));
+																	}
+
+																	return { ...prev, permissionIds: newIds };
+																});
+															}}
+															className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-left ${
+																isSelected
+																	? "bg-slate-900 border-slate-900 text-white dark:bg-white dark:border-white dark:text-slate-900"
+																	: "bg-transparent border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/20"
+															}`}>
+															<div className="flex flex-col gap-0.5">
+																<span className={`text-[11px] font-bold uppercase tracking-tight ${isSelected ? "text-white dark:text-slate-900" : "text-slate-600 dark:text-slate-400"}`}>
+																	{p.permissionName.replace(/_/g, " ")}
+																</span>
+															</div>
+															<div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+																	isSelected ? "bg-white border-white dark:bg-slate-900 dark:border-slate-900" : "border-slate-300 dark:border-slate-600"
+																}`}>
+																{isSelected && <CheckCircle2 className="w-3 h-3 text-slate-900 dark:text-white" />}
+															</div>
+														</button>
+														{p.description && (
+															<div className="absolute left-1/2 -bottom-2 translate-y-full -translate-x-1/2 w-48 p-2.5 bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[11px] rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[110] shadow-xl pointer-events-none text-center">
+																<div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-b-4 border-b-slate-800 dark:border-b-white"></div>
+																{p.description}
+															</div>
+														)}
+													</div>
+												);
+											});
+										})()}
+									</div>
+								</div>
+
+								<div className="flex gap-3 pt-6">
+									<Button
+										type="submit"
+										disabled={isSubmitting}
+										className="flex-1 h-11 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 rounded-xl font-semibold">
+										{showCreateModal ? "Authorize Account" : "Apply Changes"}
+									</Button>
+									<Button
+										type="button"
+										variant="outline"
+										onClick={() => {
+											setShowCreateModal(false);
+											setShowEditModal(false);
+											setSelectedUser(null);
+										}}
+										className="px-6 h-11 rounded-xl font-semibold">
+										Cancel
+									</Button>
+								</div>
+							</form>
+						</div>
+					)}
+				</div>,
+				document.body
 			)}
 		</div>
 	);

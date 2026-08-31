@@ -82,7 +82,7 @@ export async function PUT(
     await prisma.auditLog.create({
       data: {
         action: 'Settings',
-        user: session.userId.toString(),
+        user: session.accountNumber,
         resource: `User:${userId}`,
         details: `Updated account/permissions for user ${userId}`,
         outcome: 'success',
