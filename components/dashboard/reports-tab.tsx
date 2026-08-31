@@ -8,6 +8,7 @@ import { useMapContext } from "@/context/MapContext";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useCrimeMatrix } from "@/hooks/useCrimeMatrix";
 import { PDFReportGenerator } from "@/lib/pdf-generator";
+import { useAuth } from "@/context/AuthContext";
 
 interface ReportsTabProps {
   barangayName?: string;
@@ -46,6 +47,7 @@ const ALL_OFF = SECTIONS.reduce(
 );
 
 export default function ReportsTab({ barangayName }: ReportsTabProps) {
+  const { user } = useAuth();
   const { selectedYear, timeRange } = useMapContext();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState("");
@@ -149,6 +151,23 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
+
+      // Audit log
+      try {
+        await fetch('/api/audit-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'Export',
+            user: user?.accountNumber || 'system',
+            resource: `Report:${locationSlug}`,
+            details: `Generated and downloaded PDF report for ${locationName}`,
+            outcome: 'success',
+          }),
+        });
+      } catch (e) {
+        console.error('Failed to log audit event', e);
+      }
     } catch (err) {
       console.error('Error exporting report:', err);
       setError(err instanceof Error ? err.message : 'Failed to export the report. Please try again.');

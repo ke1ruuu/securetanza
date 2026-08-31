@@ -37,6 +37,17 @@ export async function PUT(
       },
     });
 
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'Settings',
+        user: session.userId.toString(),
+        resource: `NotificationRule:${id}`,
+        details: `Updated notification rule settings for ${updatedRule.name || id}`,
+        outcome: 'success',
+      },
+    });
+
     return NextResponse.json({
       success: true,
       message: 'Notification rule updated successfully',

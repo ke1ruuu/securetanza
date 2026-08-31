@@ -129,6 +129,17 @@ export async function POST(request: NextRequest) {
       })
     ));
 
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'Settings',
+        user: session.userId.toString(),
+        resource: `User:${user.id}`,
+        details: `Created new user account for ${user.fullName}`,
+        outcome: 'success',
+      },
+    });
+
     return NextResponse.json({
       success: true,
       message: 'User created successfully',

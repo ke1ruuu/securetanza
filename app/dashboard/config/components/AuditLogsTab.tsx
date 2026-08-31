@@ -18,12 +18,12 @@ import {
 	Database,
 	ArrowUpFromLine,
 	Eye,
-	LogIn,
-	LogOut,
+	KeyRound,
 	ChevronLeft,
 	ChevronRight,
 	ChevronsLeft,
 	ChevronsRight,
+	Search,
 } from "lucide-react";
 import {
 	Pagination,
@@ -40,25 +40,26 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 /* ─────────────────────── Types ─────────────────────── */
 
-interface UploadLog {
+interface ImportLog {
 	id: string;
 	fileName: string;
 	fileSize: number;
 	recordsImported: number;
 	status: string;
 	errorMessage?: string;
-	uploadedBy?: string;
-	uploadedAt: string;
+	importedBy?: string;
+	importedAt: string;
 }
 
-type ActionType = "Login" | "Logout" | "Upload" | "Import" | "Read" | "Export" | "Settings";
+type ActionType = "Auth" | "Import" | "Read" | "Export" | "Settings";
 type AuditFilter = "All" | ActionType;
 
 interface UnifiedLog {
-	id: number;
+	id: string | number;
 	action: ActionType;
 	details: string;
 	user: string;
@@ -76,12 +77,10 @@ interface UnifiedLog {
 
 /* ─────────────────────── Constants ─────────────────────── */
 
-const AUDIT_FILTERS: AuditFilter[] = ["All", "Login", "Logout", "Upload", "Import", "Read", "Export", "Settings"];
+const AUDIT_FILTERS: AuditFilter[] = ["All", "Auth", "Import", "Read", "Export", "Settings"];
 
 const ACTION_META: Record<ActionType, { color: string; icon: React.ReactNode; label: string }> = {
-	Login:    { color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",  icon: <LogIn           className="h-3 w-3" />, label: "Login"    },
-	Logout:   { color: "bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300",              icon: <LogOut          className="h-3 w-3" />, label: "Logout"   },
-	Upload:   { color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",              icon: <ArrowUpFromLine className="h-3 w-3" />, label: "Upload"   },
+	Auth:     { color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",  icon: <KeyRound        className="h-3 w-3" />, label: "Auth"     },
 	Import:   { color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",              icon: <Database        className="h-3 w-3" />, label: "Import"   },
 	Read:     { color: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",      icon: <Eye             className="h-3 w-3" />, label: "Read"     },
 	Export:   { color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",          icon: <Download        className="h-3 w-3" />, label: "Export"   },
@@ -100,77 +99,19 @@ const OUTCOME_META: Record<string, { color: string; icon: React.ReactNode }> = {
 	warning: { color: "text-amber-600 dark:text-amber-400",     icon: <AlertCircle  className="h-3.5 w-3.5" /> },
 };
 
-const MOCK_UNIFIED_LOGS: UnifiedLog[] = [
-	{
-		id: 1, action: "Login", details: "Successful sign-in from Chrome on Windows",
-		user: "jdoe (Admin)", time: "5 mins ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/auth/login",
-		severity: "low", outcome: "success",
-	},
-	{
-		id: 2, action: "Login", details: "Failed sign-in — invalid password (attempt 3/5)",
-		user: "bwilson (Officer)", time: "8 mins ago",
-		ip: "10.0.0.31", session: "sess_ANON", resource: "/auth/login",
-		severity: "high", outcome: "failure",
-	},
-	{
-		id: 3, action: "Logout", details: "Session ended — manual sign-out",
-		user: "treyes (Analyst)", time: "22 mins ago",
-		ip: "10.0.0.77", session: "sess_5P9Nv6", resource: "/auth/logout",
-		severity: "low", outcome: "success",
-	},
-	{
-		id: 4, action: "Settings", details: "Changed default landing page to Dashboard",
-		user: "jdoe (Admin)", time: "10 mins ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/config/ui/landing",
-		severity: "medium", outcome: "success",
-	},
-	{
-		id: 5, action: "Export", details: "Exported 500 incident records (CSV)",
-		user: "psmith (Officer)", time: "1 hour ago",
-		ip: "10.0.0.8", session: "sess_4C1Zy2", resource: "/incidents/export",
-		severity: "medium", outcome: "success",
-	},
-	{
-		id: 6, action: "Import", details: "Imported incident_batch_0825.csv — 1,240 records",
-		user: "jdoe (Admin)", time: "3 hours ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/data/import",
-		severity: "high", outcome: "success",
-		fileName: "incident_batch_0825.csv", fileSize: 2048576, recordsImported: 1240,
-	},
-	{
-		id: 7, action: "Read", details: "Viewed restricted Heinous Crime Case #45021",
-		user: "ajackson (Investigator)", time: "5 hours ago",
-		ip: "10.0.0.22", session: "sess_8D5Wq1", resource: "/cases/45021",
-		severity: "high", outcome: "success",
-	},
-	{
-		id: 8, action: "Settings", details: "Updated 2FA security requirements",
-		user: "jdoe (Admin)", time: "1 day ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/config/security/2fa",
-		severity: "high", outcome: "success",
-	},
-	{
-		id: 9, action: "Upload", details: "Uploaded profile photo — user #1102",
-		user: "mlopez (Officer)", time: "1 day ago",
-		ip: "10.0.0.55", session: "sess_2F6Tm9", resource: "/users/1102/photo",
-		severity: "low", outcome: "success",
-	},
-	{
-		id: 10, action: "Import", details: "Import failed — malformed CSV headers",
-		user: "jdoe (Admin)", time: "2 days ago",
-		ip: "192.168.1.42", session: "sess_7K2Rp4", resource: "/data/import",
-		severity: "high", outcome: "failure",
-		fileName: "crime_stats_q2.csv", fileSize: 512000, recordsImported: 0,
-		errorMessage: "Column header mismatch on row 1: expected 'incident_id', got 'id'",
-	},
-	{
-		id: 11, action: "Read", details: "Bulk-viewed 82 cold-case summaries",
-		user: "treyes (Analyst)", time: "3 days ago",
-		ip: "10.0.0.77", session: "sess_5P9Nv6", resource: "/cases/cold-cases",
-		severity: "medium", outcome: "warning",
-	},
-];
+function formatTimeAgo(dateString: string) {
+	const date = new Date(dateString);
+	const now = new Date();
+	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	
+	if (diffInSeconds < 60) return 'Just now';
+	const diffInMinutes = Math.floor(diffInSeconds / 60);
+	if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+	const diffInHours = Math.floor(diffInMinutes / 60);
+	if (diffInHours < 24) return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+	const diffInDays = Math.floor(diffInHours / 24);
+	return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+}
 
 /* ─────────────────────── Helpers ─────────────────────── */
 
@@ -256,12 +197,14 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 					/>
 				</div>
 
-				<div className="pt-1">
-					<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Resource</p>
-					<code className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded">
-						{log.resource}
-					</code>
-				</div>
+				{log.resource && (
+					<div className="pt-1">
+						<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Resource</p>
+						<code className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded">
+							{log.resource}
+						</code>
+					</div>
+				)}
 
 				{(log.fileName || log.errorMessage) && (
 					<div className="pt-1 border-t border-slate-100 dark:border-white/5 space-y-1.5">
@@ -287,7 +230,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 
 			{/* Footer */}
 			<div className="px-4 py-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-				<span className="text-[10px] text-slate-400 dark:text-slate-500">#{log.id.toString().padStart(6, "0")}</span>
+				<span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{log.id.toString()}</span>
 				{pinned
 					? <span className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">Pinned · click × to close</span>
 					: <span className="text-[10px] text-slate-400 dark:text-slate-500">Click row to pin</span>
@@ -335,17 +278,20 @@ function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
 			onMouseLeave={() => onHover(null)}
 			onClick={(e) => onPin(log, e)}
 		>
+			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.user}</td>
 			<td className="px-5 py-3.5">
 				<span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.color}`}>
 					{React.cloneElement(meta.icon as React.ReactElement<{ className?: string }>, { className: "h-3 w-3" })}
 					{meta.label}
 				</span>
 			</td>
+			<td className="px-5 py-3.5 text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap font-mono">
+				#{log.id.toString().substring(0, 8)}...
+			</td>
 			<td className="px-5 py-3.5 text-sm font-medium text-slate-900 dark:text-white max-w-xs">
 				<div className="truncate">{log.details}</div>
 				{log.errorMessage && <div className="text-xs text-red-500 mt-0.5 truncate">{log.errorMessage}</div>}
 			</td>
-			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.user}</td>
 			<td className="px-5 py-3.5">
 				<span className={`inline-flex items-center gap-1 text-xs font-semibold ${outcome.color}`}>
 					{outcome.icon}
@@ -363,10 +309,11 @@ function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
 /* ─────────────────────── Main Tab ─────────────────────── */
 
 export default function AuditLogsTab() {
-	const [uploadLogs,  setUploadLogs]  = useState<UploadLog[]>([]);
+	const [unifiedLogs, setUnifiedLogs] = useState<UnifiedLog[]>([]);
 	const [logsLoading, setLogsLoading] = useState(false);
 	const [totalLogs,   setTotalLogs]   = useState(0);
 	const [activeFilter, setActiveFilter] = useState<AuditFilter>("All");
+	const [searchQuery, setSearchQuery] = useState("");
 
 	const [currentPage, setCurrentPage] = useState(1);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -396,28 +343,49 @@ export default function AuditLogsTab() {
 	const loadLogs = async () => {
 		setLogsLoading(true);
 		try {
-			const res  = await fetch("/api/upload-logs?limit=100");
-			const data = await res.json();
-			if (data.success) { setUploadLogs(data.logs); setTotalLogs(data.total); }
-		} catch (e) { console.error("Error loading upload logs:", e); }
+			// Fetch audit logs
+			const auditRes = await fetch("/api/audit-logs?limit=500");
+			const auditData = await auditRes.json();
+			if (auditData.success) {
+				const formattedLogs = auditData.data.map((log: any) => ({
+					...log,
+					time: formatTimeAgo(log.createdAt || log.time)
+				}));
+				setUnifiedLogs(formattedLogs);
+				setTotalLogs(auditData.meta.total);
+			}
+		} catch (e) { console.error("Error loading logs:", e); }
 		finally { setLogsLoading(false); }
 	};
 
 	useEffect(() => { loadLogs(); }, []);
 
 	/* ── Derived stats ── */
-	const successCount = uploadLogs.filter((l) => l.status === "success").length;
-	const totalRecords = uploadLogs.reduce((sum, l) => sum + l.recordsImported, 0);
+	const importLogs = unifiedLogs.filter((l) => l.action === "Import");
+	const successCount = importLogs.filter((l) => l.outcome === "success").length;
+	const totalRecords = importLogs.reduce((sum, l) => sum + (l.recordsImported || 0), 0);
 
-	const importCount  = MOCK_UNIFIED_LOGS.filter((l) => l.action === "Import").length;
-	const failureCount = MOCK_UNIFIED_LOGS.filter((l) => l.outcome === "failure").length;
-	const highSevCount = MOCK_UNIFIED_LOGS.filter((l) => l.severity === "high").length;
+	const importCount  = unifiedLogs.filter((l) => l.action === "Import").length;
+	const failureCount = unifiedLogs.filter((l) => l.outcome === "failure").length;
+	const highSevCount = unifiedLogs.filter((l) => l.severity === "high").length;
 
 	/* ── Filtered logs ── */
-	const filteredLogs =
+	let filteredLogs =
 		activeFilter === "All"
-			? MOCK_UNIFIED_LOGS
-			: MOCK_UNIFIED_LOGS.filter((l) => l.action === activeFilter);
+			? unifiedLogs
+			: unifiedLogs.filter((l) => l.action === activeFilter);
+
+	if (searchQuery.trim()) {
+		const lowerQuery = searchQuery.toLowerCase();
+		filteredLogs = filteredLogs.filter(
+			(l) =>
+				(l.user && l.user.toLowerCase().includes(lowerQuery)) ||
+				(l.details && l.details.toLowerCase().includes(lowerQuery)) ||
+				(l.ip && l.ip.toLowerCase().includes(lowerQuery)) ||
+				(l.resource && l.resource.toLowerCase().includes(lowerQuery)) ||
+				(l.action && l.action.toLowerCase().includes(lowerQuery))
+		);
+	}
 
 	const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
 	const paginatedLogs = filteredLogs.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
@@ -486,7 +454,7 @@ export default function AuditLogsTab() {
 				{/* ── Summary Cards ── */}
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					{[
-						{ icon: <Shield      className="h-5 w-5 text-blue-500"   />, bg: "bg-blue-100 dark:bg-blue-500/10",   value: MOCK_UNIFIED_LOGS.length, label: "Total Events"  },
+						{ icon: <Shield      className="h-5 w-5 text-blue-500"   />, bg: "bg-blue-100 dark:bg-blue-500/10",   value: unifiedLogs.length, label: "Total Events"  },
 						{ icon: <Database    className="h-5 w-5 text-cyan-500"   />, bg: "bg-cyan-100 dark:bg-cyan-500/10",   value: importCount,              label: "Data Imports"  },
 						{ icon: <XCircle     className="h-5 w-5 text-red-500"    />, bg: "bg-red-100 dark:bg-red-500/10",     value: failureCount,             label: "Failures"      },
 						{ icon: <AlertCircle className="h-5 w-5 text-amber-500"  />, bg: "bg-amber-100 dark:bg-amber-500/10", value: highSevCount,             label: "High Severity" },
@@ -518,24 +486,41 @@ export default function AuditLogsTab() {
 						</button>
 					</div>
 
-					{/* Filter bar */}
-					<div className="flex gap-1.5 flex-wrap">
-						{AUDIT_FILTERS.map((filter) => (
-							<button
-								key={filter}
-								onClick={() => {
-									setActiveFilter(filter);
+					{/* Filter bar & Search */}
+					<div className="flex flex-col sm:flex-row gap-3 justify-between">
+						<div className="flex gap-1.5 flex-wrap">
+							{AUDIT_FILTERS.map((filter) => (
+								<button
+									key={filter}
+									onClick={() => {
+										setActiveFilter(filter);
+										setCurrentPage(1);
+									}}
+									className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+										activeFilter === filter
+											? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+											: "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+									}`}
+								>
+									{filter}
+								</button>
+							))}
+						</div>
+						<div className="relative w-full sm:w-64 flex-shrink-0">
+							<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+								<Search className="h-4 w-4 text-slate-400" />
+							</div>
+							<Input
+								type="text"
+								placeholder="Search logs..."
+								value={searchQuery}
+								onChange={(e) => {
+									setSearchQuery(e.target.value);
 									setCurrentPage(1);
 								}}
-								className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-									activeFilter === filter
-										? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-										: "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-								}`}
-							>
-								{filter}
-							</button>
-						))}
+								className="pl-9 h-9 text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10"
+							/>
+						</div>
 					</div>
 
 					{/* Table */}
@@ -544,7 +529,7 @@ export default function AuditLogsTab() {
 							<table className="w-full">
 								<thead className="bg-slate-50 dark:bg-slate-950/50">
 									<tr>
-										{["Action", "Details", "User", "Outcome", "Severity", "Time"].map((h) => (
+										{["User", "Action", "ID", "Details", "Outcome", "Severity", "Time"].map((h) => (
 											<th key={h} className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-white/5">
 												{h}
 											</th>

@@ -182,15 +182,21 @@ exports.Prisma.BarangayScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.UploadLogScalarFieldEnum = {
+exports.Prisma.AuditLogScalarFieldEnum = {
   id: 'id',
+  action: 'action',
+  details: 'details',
+  user: 'user',
+  createdAt: 'createdAt',
+  ip: 'ip',
+  session: 'session',
+  resource: 'resource',
+  severity: 'severity',
+  outcome: 'outcome',
   fileName: 'fileName',
   fileSize: 'fileSize',
   recordsImported: 'recordsImported',
-  status: 'status',
-  errorMessage: 'errorMessage',
-  uploadedBy: 'uploadedBy',
-  uploadedAt: 'uploadedAt'
+  errorMessage: 'errorMessage'
 };
 
 exports.Prisma.NotificationScalarFieldEnum = {
@@ -298,7 +304,7 @@ exports.RuleConditionType = exports.$Enums.RuleConditionType = {
 exports.Prisma.ModelName = {
   CrimeIncident: 'CrimeIncident',
   Barangay: 'Barangay',
-  UploadLog: 'UploadLog',
+  AuditLog: 'AuditLog',
   Notification: 'Notification',
   NotificationRule: 'NotificationRule',
   User: 'User',

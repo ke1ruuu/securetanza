@@ -3,8 +3,8 @@
 import { config } from "dotenv";
 import { defineConfig } from "prisma/config";
 
-// Load .env.local file
-config({ path: ".env.local" });
+// Load .env file
+config({ path: ".env" });
 
 export default defineConfig({
   schema: "backend/prisma/schema.prisma",

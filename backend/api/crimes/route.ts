@@ -235,6 +235,19 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'Unknown IP'
+    await prisma.auditLog.create({
+      data: {
+        action: 'Import', // We'll use Import to represent data ingestion, or maybe 'Auth'? No, Import fits data creation best. Wait, the system considers it Import.
+        details: `Created single crime incident in ${validatedData.barangay}`,
+        user: 'System/API', // We don't have session auth imported here, so we fallback
+        resource: `CrimeData:${crime.id}`,
+        ip,
+        session: 'Unknown',
+        outcome: 'success'
+      }
+    })
+
     return NextResponse.json({
       success: true,
       data: crime,

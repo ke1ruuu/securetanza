@@ -9,39 +9,39 @@ import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Clock, Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface UploadLog {
+interface ImportLog {
   id: string;
-  fileName: string | null;
-  fileSize: number | null;
-  recordsImported: number | null;
-  outcome: string | null;
-  errorMessage?: string | null;
-  user?: string | null;
-  createdAt: string;
+  fileName: string;
+  fileSize: number;
+  recordsImported: number;
+  status: string;
+  errorMessage?: string;
+  importedBy?: string;
+  importedAt: string;
 }
 
-function UploadLogsContent() {
+function ImportLogsContent() {
   const searchParams = useSearchParams();
   const rawParamName = searchParams.get("name");
   const barangayName = rawParamName || "General Dashboard";
   const { theme } = useTheme();
   
-  const [logs, setLogs] = useState<UploadLog[]>([]);
+  const [logs, setLogs] = useState<ImportLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
   const loadLogs = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/audit-logs?action=Import&limit=100');
+      const response = await fetch('/api/import-logs?limit=100');
       const data = await response.json();
       
       if (data.success) {
-        setLogs(data.data);
-        setTotal(data.meta.total);
+        setLogs(data.logs);
+        setTotal(data.total);
       }
     } catch (error) {
-      console.error('Error loading upload logs:', error);
+      console.error('Error loading import logs:', error);
     } finally {
       setLoading(false);
     }
@@ -111,7 +111,7 @@ function UploadLogsContent() {
           <span className={`text-sm font-medium ${
             theme === "dark" ? "text-slate-500" : "text-slate-400"
           }`}>
-            Upload history and logs
+            Import history and logs
           </span>
         </div>
         <Button
@@ -164,7 +164,7 @@ function UploadLogsContent() {
                       {total}
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Total Uploads
+                      Total Imports
                     </div>
                   </div>
                 </div>
@@ -181,7 +181,7 @@ function UploadLogsContent() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {logs.filter(l => l.outcome === 'success').length}
+                      {logs.filter(l => l.status === 'success').length}
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">
                       Successful
@@ -201,7 +201,7 @@ function UploadLogsContent() {
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {logs.reduce((sum, log) => sum + (log.recordsImported || 0), 0).toLocaleString()}
+                      {logs.reduce((sum, log) => sum + log.recordsImported, 0).toLocaleString()}
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400">
                       Total Records
@@ -212,7 +212,7 @@ function UploadLogsContent() {
             </div>
           )}
 
-          {/* Upload Logs Table */}
+          {/* Import Logs Table */}
           <div className={`rounded-xl border overflow-hidden ${
             theme === "dark" 
               ? "bg-slate-900/50 border-slate-800" 
@@ -220,7 +220,7 @@ function UploadLogsContent() {
           }`}>
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Upload History
+                Import History
               </h2>
             </div>
 
@@ -244,7 +244,7 @@ function UploadLogsContent() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Uploaded At
+                        Imported At
                       </th>
                     </tr>
                   </thead>
@@ -283,10 +283,10 @@ function UploadLogsContent() {
                   <FileSpreadsheet className="h-10 w-10 text-slate-400 dark:text-slate-500" />
                 </div>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                  No Upload Logs
+                  No Import Logs
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-                  Upload history will appear here once you successfully import data files
+                  Import history will appear here once you successfully import data files
                 </p>
               </div>
             ) : (
@@ -309,7 +309,7 @@ function UploadLogsContent() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Uploaded At
+                        Imported At
                       </th>
                     </tr>
                   </thead>
@@ -318,7 +318,7 @@ function UploadLogsContent() {
                       <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            {getStatusIcon(log.outcome || 'success')}
+                            {getStatusIcon(log.status)}
                             <div>
                               <div className="font-medium text-slate-900 dark:text-white">
                                 {log.fileName}
@@ -340,20 +340,20 @@ function UploadLogsContent() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusColor(log.outcome || 'success')}`}>
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusColor(log.status)}`}>
                             <div className={`w-1.5 h-1.5 rounded-full ${
-                              log.outcome === 'success' ? 'bg-emerald-500' :
-                              log.outcome === 'failed' ? 'bg-red-500' :
-                              log.outcome === 'partial' ? 'bg-amber-500' :
+                              log.status === 'success' ? 'bg-emerald-500' :
+                              log.status === 'failed' ? 'bg-red-500' :
+                              log.status === 'partial' ? 'bg-amber-500' :
                               'bg-slate-500'
                             }`}></div>
-                            {(log.outcome || 'success').charAt(0).toUpperCase() + (log.outcome || 'success').slice(1)}
+                            {log.status.charAt(0).toUpperCase() + log.status.slice(1)}
                           </span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                             <Clock className="h-4 w-4" />
-                            {formatDate(log.createdAt)}
+                            {formatDate(log.importedAt)}
                           </div>
                         </td>
                       </tr>
@@ -369,12 +369,12 @@ function UploadLogsContent() {
   );
 }
 
-export default function UploadLogsPage() {
+export default function ImportLogsPage() {
   return (
     <ThemeProvider>
       <MapProvider>
         <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
-          <UploadLogsContent />
+          <ImportLogsContent />
         </Suspense>
       </MapProvider>
     </ThemeProvider>
