@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
           action: 'Auth',
           user: session.accountNumber,
           ip: request.headers.get('x-forwarded-for') || request.ip || 'unknown',
+          session: session.sessionId,
           details: 'User logged out',
           outcome: 'success',
         },

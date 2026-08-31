@@ -217,12 +217,13 @@ model NotificationRule {
 // Authentication and Authorization Models
 
 model User {
-  id            Int      @id @default(autoincrement())
-  accountNumber String   @unique @map("account_number") // Unique account number
-  fullName      String   @map("full_name")
-  passwordHash  String   @map("password_hash")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id                 Int      @id @default(autoincrement())
+  accountNumber      String   @unique @map("account_number") // Unique account number
+  fullName           String   @map("full_name")
+  passwordHash       String   @map("password_hash")
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   // Relations
   permissions UserPermission[]

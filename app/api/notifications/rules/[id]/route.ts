@@ -42,6 +42,8 @@ export async function PUT(
       data: {
         action: 'Settings',
         user: session.accountNumber,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
         resource: `NotificationRule:${id}`,
         details: `Updated notification rule settings for ${updatedRule.name || id}`,
         outcome: 'success',

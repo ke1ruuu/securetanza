@@ -131,8 +131,8 @@ interface AuditCardProps {
 }
 
 function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
-	const meta    = ACTION_META[log.action];
-	const outcome = OUTCOME_META[log.outcome];
+	const meta    = ACTION_META[log.action as ActionType] || { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300", icon: <Info className="h-3 w-3" />, label: log.action || "Unknown" };
+	const outcome = OUTCOME_META[log.outcome] || { color: "text-slate-600 dark:text-slate-400", icon: <Info className="h-3.5 w-3.5" /> };
 
 	return (
 		<div
@@ -167,7 +167,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 					<AuditField icon={<Info  className="h-3 w-3" />} label="IP Address" value={log.ip}      />
 					<AuditField icon={<Hash  className="h-3 w-3" />} label="Session"    value={log.session} mono />
 					<AuditField icon={<Shield className="h-3 w-3" />} label="Severity"
-						value={<span className={`font-semibold ${SEVERITY_COLOR[log.severity]}`}>{log.severity.toUpperCase()}</span>}
+						value={<span className={`font-semibold ${SEVERITY_COLOR[log.severity] || "text-slate-500"}`}>{log.severity ? log.severity.toUpperCase() : "UNKNOWN"}</span>}
 					/>
 					<AuditField icon={outcome.icon} label="Outcome"
 						value={<span className={`font-semibold ${outcome.color}`}>{log.outcome}</span>}
@@ -236,8 +236,8 @@ interface RowProps {
 }
 
 function LogRow({ log, onHover, onClick }: RowProps) {
-	const meta    = ACTION_META[log.action];
-	const outcome = OUTCOME_META[log.outcome];
+	const meta    = ACTION_META[log.action as ActionType] || { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300", icon: <Info className="h-3 w-3" />, label: log.action || "Unknown" };
+	const outcome = OUTCOME_META[log.outcome] || { color: "text-slate-600 dark:text-slate-400", icon: <Info className="h-3.5 w-3.5" /> };
 
 	return (
 		<tr
@@ -270,7 +270,7 @@ function LogRow({ log, onHover, onClick }: RowProps) {
 				</span>
 			</td>
 			<td className="px-5 py-3.5">
-				<span className={`text-xs font-bold uppercase ${SEVERITY_COLOR[log.severity]}`}>{log.severity}</span>
+				<span className={`text-xs font-bold uppercase ${SEVERITY_COLOR[log.severity] || "text-slate-500"}`}>{log.severity || "UNKNOWN"}</span>
 			</td>
 			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.time}</td>
 		</tr>

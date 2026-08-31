@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               fileName: true,
-              uploadedAt: true,
+              createdAt: true,
               recordsImported: true,
             },
           },

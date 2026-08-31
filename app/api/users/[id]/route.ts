@@ -83,8 +83,10 @@ export async function PUT(
       data: {
         action: 'Settings',
         user: session.accountNumber,
-        resource: `User:${userId}`,
-        details: `Updated account/permissions for user ${userId}`,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
+        resource: `User:${existingUser.accountNumber}`,
+        details: `Updated account/permissions for user ${existingUser.accountNumber}`,
         outcome: 'success',
       },
     });
@@ -161,9 +163,11 @@ export async function DELETE(
     await prisma.auditLog.create({
       data: {
         action: 'Settings',
-        user: session.userId.toString(),
-        resource: `User:${userId}`,
-        details: `Deleted user account ${userId}`,
+        user: session.accountNumber,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
+        resource: `User:${existingUser.accountNumber}`,
+        details: `Deleted user account ${existingUser.accountNumber}`,
         severity: 'high',
         outcome: 'success',
       },

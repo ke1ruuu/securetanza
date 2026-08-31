@@ -5,7 +5,7 @@ import { verifyPassword, createSession } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     const { accountNumber, password } = await request.json();
-    const ip = request.headers.get('x-forwarded-for') || request.ip || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
 
     // Validate input
     if (!accountNumber || !password) {
@@ -70,11 +70,12 @@ export async function POST(request: NextRequest) {
     const permissions = user.permissions.map(up => up.permission.permissionName);
 
     // Create session
-    await createSession({
+    const sessionId = await createSession({
       id: user.id,
       accountNumber: user.accountNumber,
       fullName: user.fullName,
       permissions,
+      mustChangePassword: user.mustChangePassword,
     });
 
     // Audit log
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
         action: 'Auth',
         user: user.accountNumber,
         ip,
+        session: sessionId,
         details: 'User logged in successfully',
         outcome: 'success',
       },
@@ -90,6 +92,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      mustChangePassword: user.mustChangePassword,
       user: {
         id: user.id,
         accountNumber: user.accountNumber,

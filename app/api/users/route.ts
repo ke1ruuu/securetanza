@@ -117,6 +117,7 @@ export async function POST(request: NextRequest) {
         accountNumber,
         fullName: validatedData.fullName,
         passwordHash,
+        mustChangePassword: true,
       },
     });
 
@@ -136,7 +137,9 @@ export async function POST(request: NextRequest) {
       data: {
         action: 'Settings',
         user: session.accountNumber,
-        resource: `User:${user.id}`,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
+        resource: `User:${user.accountNumber}`,
         details: `Created new user account for ${user.fullName}`,
         outcome: 'success',
       },

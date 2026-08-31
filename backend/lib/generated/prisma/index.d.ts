@@ -7865,6 +7865,7 @@ export namespace Prisma {
     accountNumber: string | null
     fullName: string | null
     passwordHash: string | null
+    mustChangePassword: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7874,6 +7875,7 @@ export namespace Prisma {
     accountNumber: string | null
     fullName: string | null
     passwordHash: string | null
+    mustChangePassword: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7883,6 +7885,7 @@ export namespace Prisma {
     accountNumber: number
     fullName: number
     passwordHash: number
+    mustChangePassword: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -7902,6 +7905,7 @@ export namespace Prisma {
     accountNumber?: true
     fullName?: true
     passwordHash?: true
+    mustChangePassword?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7911,6 +7915,7 @@ export namespace Prisma {
     accountNumber?: true
     fullName?: true
     passwordHash?: true
+    mustChangePassword?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7920,6 +7925,7 @@ export namespace Prisma {
     accountNumber?: true
     fullName?: true
     passwordHash?: true
+    mustChangePassword?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -8016,6 +8022,7 @@ export namespace Prisma {
     accountNumber: string
     fullName: string
     passwordHash: string
+    mustChangePassword: boolean
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -8044,6 +8051,7 @@ export namespace Prisma {
     accountNumber?: boolean
     fullName?: boolean
     passwordHash?: boolean
+    mustChangePassword?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     permissions?: boolean | User$permissionsArgs<ExtArgs>
@@ -8055,6 +8063,7 @@ export namespace Prisma {
     accountNumber?: boolean
     fullName?: boolean
     passwordHash?: boolean
+    mustChangePassword?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -8064,6 +8073,7 @@ export namespace Prisma {
     accountNumber?: boolean
     fullName?: boolean
     passwordHash?: boolean
+    mustChangePassword?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -8073,11 +8083,12 @@ export namespace Prisma {
     accountNumber?: boolean
     fullName?: boolean
     passwordHash?: boolean
+    mustChangePassword?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     permissions?: boolean | User$permissionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
@@ -8095,6 +8106,7 @@ export namespace Prisma {
       accountNumber: string
       fullName: string
       passwordHash: string
+      mustChangePassword: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -8525,6 +8537,7 @@ export namespace Prisma {
     readonly accountNumber: FieldRef<"User", 'String'>
     readonly fullName: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
+    readonly mustChangePassword: FieldRef<"User", 'Boolean'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -11288,6 +11301,7 @@ export namespace Prisma {
     accountNumber: 'accountNumber',
     fullName: 'fullName',
     passwordHash: 'passwordHash',
+    mustChangePassword: 'mustChangePassword',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -12116,6 +12130,7 @@ export namespace Prisma {
     accountNumber?: StringFilter<"User"> | string
     fullName?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
+    mustChangePassword?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     permissions?: UserPermissionListRelationFilter
@@ -12126,6 +12141,7 @@ export namespace Prisma {
     accountNumber?: SortOrder
     fullName?: SortOrder
     passwordHash?: SortOrder
+    mustChangePassword?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     permissions?: UserPermissionOrderByRelationAggregateInput
@@ -12139,6 +12155,7 @@ export namespace Prisma {
     NOT?: UserWhereInput | UserWhereInput[]
     fullName?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
+    mustChangePassword?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     permissions?: UserPermissionListRelationFilter
@@ -12149,6 +12166,7 @@ export namespace Prisma {
     accountNumber?: SortOrder
     fullName?: SortOrder
     passwordHash?: SortOrder
+    mustChangePassword?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -12166,6 +12184,7 @@ export namespace Prisma {
     accountNumber?: StringWithAggregatesFilter<"User"> | string
     fullName?: StringWithAggregatesFilter<"User"> | string
     passwordHash?: StringWithAggregatesFilter<"User"> | string
+    mustChangePassword?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -13043,6 +13062,7 @@ export namespace Prisma {
     accountNumber: string
     fullName: string
     passwordHash: string
+    mustChangePassword?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionCreateNestedManyWithoutUserInput
@@ -13053,6 +13073,7 @@ export namespace Prisma {
     accountNumber: string
     fullName: string
     passwordHash: string
+    mustChangePassword?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
@@ -13062,6 +13083,7 @@ export namespace Prisma {
     accountNumber?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUpdateManyWithoutUserNestedInput
@@ -13072,6 +13094,7 @@ export namespace Prisma {
     accountNumber?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
@@ -13082,6 +13105,7 @@ export namespace Prisma {
     accountNumber: string
     fullName: string
     passwordHash: string
+    mustChangePassword?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -13090,6 +13114,7 @@ export namespace Prisma {
     accountNumber?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13099,6 +13124,7 @@ export namespace Prisma {
     accountNumber?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13947,6 +13973,7 @@ export namespace Prisma {
     accountNumber?: SortOrder
     fullName?: SortOrder
     passwordHash?: SortOrder
+    mustChangePassword?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13960,6 +13987,7 @@ export namespace Prisma {
     accountNumber?: SortOrder
     fullName?: SortOrder
     passwordHash?: SortOrder
+    mustChangePassword?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13969,6 +13997,7 @@ export namespace Prisma {
     accountNumber?: SortOrder
     fullName?: SortOrder
     passwordHash?: SortOrder
+    mustChangePassword?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -14870,6 +14899,7 @@ export namespace Prisma {
     accountNumber: string
     fullName: string
     passwordHash: string
+    mustChangePassword?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14879,6 +14909,7 @@ export namespace Prisma {
     accountNumber: string
     fullName: string
     passwordHash: string
+    mustChangePassword?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14919,6 +14950,7 @@ export namespace Prisma {
     accountNumber?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14928,6 +14960,7 @@ export namespace Prisma {
     accountNumber?: StringFieldUpdateOperationsInput | string
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

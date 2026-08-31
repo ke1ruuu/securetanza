@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { UserPlus, AlertCircle, CheckCircle2, Edit, Trash2, RefreshCw, Copy, X, Eye, EyeOff } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface AvailablePermission {
 
 export default function AccessSecurityTab() {
 	const { theme } = useTheme();
+	const { user: currentUser } = useAuth();
 
 	// User management state
 	const [users, setUsers] = useState<User[]>([]);
@@ -45,6 +47,10 @@ export default function AccessSecurityTab() {
 	const [isCopied, setIsCopied] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
 	const [newAccount, setNewAccount] = useState<{fullName: string, accountNumber: string, tempPassword?: string} | null>(null);
+	
+	const [userToDelete, setUserToDelete] = useState<User | null>(null);
+	const [deleteConfirmation, setDeleteConfirmation] = useState("");
+	const [isDeleting, setIsDeleting] = useState(false);
 	
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 10;
@@ -155,8 +161,8 @@ export default function AccessSecurityTab() {
 		}
 	};
 
-	const handleDeleteUser = async (userId: number) => {
-		if (!confirm("Are you sure you want to revoke this user's privileged access? This action is permanent.")) return;
+	const executeDelete = async (userId: number) => {
+		setIsDeleting(true);
 		setMgmtError("");
 		setMgmtSuccess("");
 		try {
@@ -164,10 +170,14 @@ export default function AccessSecurityTab() {
 			const data = await response.json();
 			if (data.success) {
 				setMgmtSuccess("Access revoked successfully");
+				setUserToDelete(null);
+				setDeleteConfirmation("");
 				fetchUsers();
 			} else setMgmtError(data.error || "Failed to revoke access");
 		} catch {
 			setMgmtError("Failed to revoke access");
+		} finally {
+			setIsDeleting(false);
 		}
 	};
 
@@ -284,12 +294,16 @@ export default function AccessSecurityTab() {
 													<div className="flex justify-end gap-1 transition-opacity">
 														<button
 															onClick={() => openEditModal(user)}
-															className="p-2 hover:bg-[#0EA5E9]/10 rounded-lg text-slate-400 hover:text-[#0EA5E9] transition-all">
+															disabled={user.id === currentUser?.id}
+															title={user.id === currentUser?.id ? "Cannot modify your own access level" : "Edit access"}
+															className={`p-2 rounded-lg transition-all ${user.id === currentUser?.id ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-slate-400 hover:text-[#0EA5E9] hover:bg-[#0EA5E9]/10"}`}>
 															<Edit className="h-4 w-4" />
 														</button>
 														<button
-															onClick={() => handleDeleteUser(user.id)}
-															className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-500 transition-all">
+															onClick={() => setUserToDelete(user)}
+															disabled={user.id === currentUser?.id}
+															title={user.id === currentUser?.id ? "Cannot remove your own account" : "Remove access"}
+															className={`p-2 rounded-lg transition-all ${user.id === currentUser?.id ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" : "text-slate-400 hover:text-red-500 hover:bg-red-500/10"}`}>
 															<Trash2 className="h-4 w-4" />
 														</button>
 													</div>
@@ -498,6 +512,60 @@ export default function AccessSecurityTab() {
 							</form>
 						</div>
 					)}
+				</div>,
+				document.body
+			)}
+
+			{userToDelete && createPortal(
+				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+					<div className="bg-white dark:bg-slate-900 p-8 rounded-3xl max-w-md w-full border border-slate-200 dark:border-white/10 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
+						{/* Background Decorative Element */}
+						<div className="absolute -top-24 -right-24 w-48 h-48 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
+						
+						<div className="flex items-center gap-3 mb-6">
+							<div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+								<AlertCircle className="w-6 h-6 text-red-600 dark:text-red-500" />
+							</div>
+							<div>
+								<h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Revoke Access</h3>
+								<p className="text-sm font-medium text-red-600 dark:text-red-400">Critical Action</p>
+							</div>
+						</div>
+						
+						<p className="text-slate-600 dark:text-slate-400 mb-6 text-sm leading-relaxed">
+							This action is permanent and cannot be undone. All administrative privileges will be revoked immediately. 
+							To confirm, please type <span className="font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded-md mx-1 tracking-tight">{userToDelete.accountNumber}</span> below.
+						</p>
+						
+						<div className="space-y-4">
+							<Input
+								value={deleteConfirmation}
+								onChange={(e) => setDeleteConfirmation(e.target.value)}
+								placeholder={`Type ${userToDelete.accountNumber} to confirm`}
+								className="h-12 bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/10 focus:border-red-500 dark:focus:border-red-500 transition-all rounded-xl"
+							/>
+							
+							<div className="flex gap-3">
+								<Button 
+									variant="outline" 
+									onClick={() => { setUserToDelete(null); setDeleteConfirmation(""); }} 
+									className="flex-1 h-12 rounded-xl font-semibold border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800"
+								>
+									Cancel
+								</Button>
+								<Button 
+									variant="destructive" 
+									disabled={deleteConfirmation !== userToDelete.accountNumber || isDeleting}
+									onClick={() => executeDelete(userToDelete.id)}
+									className="flex-1 h-12 font-semibold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all disabled:opacity-50"
+								>
+									{isDeleting ? (
+										<div className="w-5 h-5 border-2 border-slate-400 border-t-white rounded-full animate-spin" />
+									) : "Revoke Access"}
+								</Button>
+							</div>
+						</div>
+					</div>
 				</div>,
 				document.body
 			)}
