@@ -63,9 +63,12 @@ function UploadLogsContent() {
     setError(null);
     try {
       const response = await fetch("/api/audit-logs?action=Import&limit=100");
+      if (!response.ok) {
+        throw new Error("The register did not respond.");
+      }
       const data = await response.json();
 
-      if (!response.ok || !data?.success) {
+      if (!data?.success) {
         throw new Error(data?.error || "The register did not respond.");
       }
 

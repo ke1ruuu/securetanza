@@ -43,11 +43,12 @@ function ImportLogsContent() {
     setLoading(true);
     try {
       const response = await fetch('/api/import-logs?limit=100');
+      if (!response.ok) return;
       const data = await response.json();
       
       if (data.success) {
-        setLogs(data.logs);
-        setTotal(data.total);
+        setLogs(data.logs || []);
+        setTotal(data.total || 0);
       }
     } catch (error) {
       console.error('Error loading import logs:', error);

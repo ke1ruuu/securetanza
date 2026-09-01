@@ -51,6 +51,10 @@ export default function UserManagementPage() {
   const fetchUsers = async () => {
     try {
       const response = await fetch('/api/users');
+      if (!response.ok) {
+        setError('Failed to fetch users (Unauthorized)');
+        return;
+      }
       const data = await response.json();
 
       if (data.success) {
@@ -68,6 +72,7 @@ export default function UserManagementPage() {
   const fetchPermissions = async () => {
     try {
       const response = await fetch('/api/permissions');
+      if (!response.ok) return;
       const data = await response.json();
 
       if (data.success) {
@@ -91,6 +96,17 @@ export default function UserManagementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          setError(errorJson.error || 'Failed to create user');
+        } catch {
+          setError('Failed to create user');
+        }
+        return;
+      }
 
       const data = await response.json();
 
@@ -129,6 +145,17 @@ export default function UserManagementPage() {
         body: JSON.stringify(formData),
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          setError(errorJson.error || 'Failed to update user');
+        } catch {
+          setError('Failed to update user');
+        }
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -165,6 +192,17 @@ export default function UserManagementPage() {
       const response = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        try {
+          const errorJson = JSON.parse(errorText);
+          setError(errorJson.error || 'Failed to delete user');
+        } catch {
+          setError('Failed to delete user');
+        }
+        return;
+      }
 
       const data = await response.json();
 

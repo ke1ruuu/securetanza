@@ -134,9 +134,16 @@ export function MapProvider({ children }: { children: ReactNode }) {
   // Fetch available years from database
   useEffect(() => {
     fetch("/api/crimes/years")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) return null;
+        try {
+          return await r.json();
+        } catch {
+          return null;
+        }
+      })
       .then((data) => {
-        if (data.years && data.years.length > 0) {
+        if (data?.years && data.years.length > 0) {
           setAvailableYears(data.years);
           
           // Try to restore timeRange from localStorage first
@@ -158,9 +165,6 @@ export function MapProvider({ children }: { children: ReactNode }) {
               
               // Validate that the restored selections are still valid
               const validSelections = restored.selections.filter(s => {
-                if (restored.mode === 'year') {
-                  return data.years.includes(s.year);
-                }
                 return data.years.includes(s.year);
               });
               
@@ -168,26 +172,14 @@ export function MapProvider({ children }: { children: ReactNode }) {
                 console.log('📅 Restored timeRange from localStorage:', restored);
                 setTimeRangeState({ ...restored, selections: validSelections });
                 
-                // Also restore selectedYear for backward compatibility
-                if (validSelections.length > 0) {
+                // If the restored mode is 'year', also set selectedYear
+                if (validSelections[0]?.year) {
                   setSelectedYear(validSelections[0].year);
                 }
                 return;
               }
             } catch (e) {
               console.error('Failed to restore timeRange from localStorage:', e);
-            }
-          }
-          
-          // Try to restore selectedYear from localStorage
-          const savedYear = localStorage.getItem('selectedYear');
-          if (savedYear) {
-            const yearNum = parseInt(savedYear);
-            if (data.years.includes(yearNum)) {
-              console.log('📅 Restored year from localStorage:', yearNum);
-              setSelectedYear(yearNum);
-              setTimeRangeState({ mode: 'year', selections: [{ year: yearNum }] });
-              return;
             }
           }
           
@@ -207,12 +199,21 @@ export function MapProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetch("/tanza_cavite.geojson")
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) return null;
+        try {
+          return await r.json();
+        } catch {
+          return null;
+        }
+      })
       .then((data) => {
-        setGeoJsonData(data);
-        setBarangayNames(
-          data.features.map((f: any) => f.properties.adm4_en).filter(Boolean).sort()
-        );
+        if (data && data.features) {
+          setGeoJsonData(data);
+          setBarangayNames(
+            data.features.map((f: any) => f.properties.adm4_en).filter(Boolean).sort()
+          );
+        }
       })
       .catch(console.error);
   }, []);

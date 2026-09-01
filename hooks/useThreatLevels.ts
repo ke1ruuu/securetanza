@@ -108,9 +108,11 @@ export function useThreatLevels() {
           const params = new URLSearchParams()
           params.set('year', selectedYear.toString())
           const response = await fetch(`/api/crimes/barangay-counts?${params}`)
-          const result = await response.json()
-          if (result.success && result.data?.barangayCounts) {
-            Object.assign(mergedCounts, result.data.barangayCounts)
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.data?.barangayCounts) {
+              Object.assign(mergedCounts, result.data.barangayCounts)
+            }
           }
         }
 
@@ -182,6 +184,7 @@ export function useThreatLevels() {
         }
         
         const response = await fetch(`/api/crimes/barangay-counts?${params}`)
+        if (!response.ok) return
         const result = await response.json()
         
         if (result.success) {
