@@ -9,6 +9,7 @@ interface User {
   fullName: string;
   permissions: string[];
   mustChangePassword?: boolean;
+  defaultLandingPage?: string;
 }
 
 interface AuthContextType {

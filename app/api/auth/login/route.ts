@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
       fullName: user.fullName,
       permissions,
       mustChangePassword: user.mustChangePassword,
+      defaultLandingPage: user.defaultLandingPage,
     });
 
     // Audit log
