@@ -2,20 +2,33 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Hash, LogOut, CheckCircle2, Key } from "lucide-react";
+import { Hash, LogOut, CheckCircle2, Key, Eye, EyeOff } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 export default function ProfileTab() {
 	const { user, logout } = useAuth();
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
-	const [passwordError, setPasswordError] = useState("");
-	const [saved, setSaved] = useState(false);
-	const [twoFA, setTwoFA] = useState(false);
+	const [showCurrent, setShowCurrent] = useState(false);
+	const [showNew, setShowNew] = useState(false);
+	const [showConfirm, setShowConfirm] = useState(false);
+	const [loading, setLoading] = useState(false);
+	// const [twoFA, setTwoFA] = useState(false); // Temporarily disabled
+
+	const requirements = [
+		{ label: "At least 8 characters", regex: /.{8,}/ },
+		{ label: "Uppercase & lowercase letters", regex: /(?=.*[a-z])(?=.*[A-Z])/ },
+		{ label: "At least one number", regex: /(?=.*[0-9])/ },
+		{ label: "At least one special character", regex: /(?=.*[^A-Za-z0-9])/ },
+	];
+
+	const score = requirements.filter((req) => req.regex.test(newPassword)).length;
+	const isStrong = score === requirements.length;
 
 	const initials = user?.fullName
 		? user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -25,25 +38,45 @@ export default function ProfileTab() {
 		?.replace(/_/g, " ")
 		.replace(/\b\w/g, (c) => c.toUpperCase()) ?? "Officer";
 
-	const handleChangePassword = (e: React.FormEvent) => {
+	const handleChangePassword = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setPasswordError("");
 
-		if (newPassword.length < 8) {
-			setPasswordError("New password must be at least 8 characters.");
+		if (newPassword === currentPassword) {
+			toast.error("New password cannot be the same as your current password.");
+			return;
+		}
+		if (!isStrong) {
+			toast.error("Please meet all password security requirements.");
 			return;
 		}
 		if (newPassword !== confirmPassword) {
-			setPasswordError("New passwords do not match.");
+			toast.error("New passwords do not match.");
 			return;
 		}
 
-		// TODO: wire up to API
-		setSaved(true);
-		setCurrentPassword("");
-		setNewPassword("");
-		setConfirmPassword("");
-		setTimeout(() => setSaved(false), 3000);
+		setLoading(true);
+		try {
+			const res = await fetch("/api/auth/update-password", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ currentPassword, newPassword }),
+			});
+
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data.error || "Failed to update password");
+			}
+
+			toast.success("Password updated successfully");
+			setCurrentPassword("");
+			setNewPassword("");
+			setConfirmPassword("");
+		} catch (error: any) {
+			toast.error(error.message);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -109,59 +142,116 @@ export default function ProfileTab() {
 								<div className="p-6 space-y-4">
 									<div className="space-y-2">
 										<Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Current Password</Label>
-										<Input
-											type="password"
-											placeholder="Enter current password"
-											value={currentPassword}
-											onChange={(e) => setCurrentPassword(e.target.value)}
-											required
-											className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-										/>
+										<div className="relative group">
+											<Input
+												type={showCurrent ? "text" : "password"}
+												placeholder="Enter current password"
+												value={currentPassword}
+												onChange={(e) => setCurrentPassword(e.target.value)}
+												required
+												className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 pr-10"
+											/>
+											<button
+												type="button"
+												onClick={() => setShowCurrent(!showCurrent)}
+												className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+											>
+												{showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+											</button>
+										</div>
 									</div>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 										<div className="space-y-2">
 											<Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">New Password</Label>
-											<Input
-												type="password"
-												placeholder="Minimum 8 characters"
-												value={newPassword}
-												onChange={(e) => setNewPassword(e.target.value)}
-												required
-												className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-											/>
+											<div className="relative group">
+												<Input
+													type={showNew ? "text" : "password"}
+													placeholder="Minimum 8 characters"
+													value={newPassword}
+													onChange={(e) => setNewPassword(e.target.value)}
+													required
+													className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 pr-10"
+												/>
+												<button
+													type="button"
+													onClick={() => setShowNew(!showNew)}
+													className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+												>
+													{showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+												</button>
+											</div>
+											{/* Password Strength Meter */}
+											{newPassword.length > 0 && (
+												<div className="pt-2 animate-in slide-in-from-top-1 opacity-100 duration-200">
+													<div className="flex gap-1.5 h-1.5 w-full rounded-full overflow-hidden mb-3">
+														{[1, 2, 3, 4].map((i) => (
+															<div
+																key={i}
+																className={`flex-1 transition-colors duration-300 ${
+																	score >= i
+																		? score <= 1
+																			? "bg-red-500"
+																			: score <= 2
+																			? "bg-amber-500"
+																			: score <= 3
+																			? "bg-emerald-400"
+																			: "bg-emerald-500"
+																		: "bg-slate-200 dark:bg-white/10"
+																}`}
+															/>
+														))}
+													</div>
+													<div className="space-y-1.5">
+														{requirements.map((req, i) => {
+															const passed = req.regex.test(newPassword);
+															return (
+																<div key={i} className={`flex items-center gap-2 text-xs transition-colors duration-300 ${passed ? "text-emerald-500 dark:text-emerald-400" : "text-slate-400 dark:text-slate-500"}`}>
+																	<CheckCircle2 className={`w-3.5 h-3.5 ${passed ? "opacity-100" : "opacity-30"}`} />
+																	<span>{req.label}</span>
+																</div>
+															);
+														})}
+													</div>
+												</div>
+											)}
 										</div>
 										<div className="space-y-2">
 											<Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Confirm New Password</Label>
-											<Input
-												type="password"
-												placeholder="Repeat new password"
-												value={confirmPassword}
-												onChange={(e) => setConfirmPassword(e.target.value)}
-												required
-												className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800"
-											/>
+											<div className="relative group">
+												<Input
+													type={showConfirm ? "text" : "password"}
+													placeholder="Repeat new password"
+													value={confirmPassword}
+													onChange={(e) => setConfirmPassword(e.target.value)}
+													required
+													className="h-11 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 pr-10"
+												/>
+												<button
+													type="button"
+													onClick={() => setShowConfirm(!showConfirm)}
+													className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors"
+												>
+													{showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+												</button>
+											</div>
 										</div>
 									</div>
-									{passwordError && (
-										<p className="text-sm font-medium text-red-500">{passwordError}</p>
-									)}
 								</div>
 								<div className="px-6 pb-6 flex justify-end">
-									{saved ? (
-										<div className="flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-lg text-sm font-medium">
-											<CheckCircle2 className="h-4 w-4" /> Password Updated
-										</div>
-									) : (
-										<Button type="submit" className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
-											Update Password
-										</Button>
-									)}
+									<Button type="submit" disabled={loading || !isStrong || confirmPassword.length === 0 || newPassword !== confirmPassword || newPassword === currentPassword} className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 min-w-[150px]">
+										{loading ? (
+											<div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+										) : (
+											"Update Password"
+										)}
+									</Button>
 								</div>
 							</div>
 						</form>
 					</div>
 
-					{/* 2FA */}
+					{/* 2FA - Temporarily Disabled */}
+					{/* 
 					<div className="space-y-4">
 						<div className="space-y-1">
 							<h3 className="text-lg font-bold text-slate-900 dark:text-white">Two-Factor Authentication</h3>
@@ -186,6 +276,7 @@ export default function ProfileTab() {
 							</div>
 						</div>
 					</div>
+					*/}
 
 					{/* Danger Zone */}
 					<div className="space-y-4">
