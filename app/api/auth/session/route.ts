@@ -20,6 +20,7 @@ export async function GET() {
         fullName: session.fullName,
         permissions: session.permissions,
         mustChangePassword: session.mustChangePassword,
+        defaultLandingPage: session.defaultLandingPage,
       },
     });
   } catch (error) {

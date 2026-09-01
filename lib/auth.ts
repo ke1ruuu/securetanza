@@ -15,6 +15,7 @@ export interface User {
   fullName: string;
   permissions: string[];
   mustChangePassword?: boolean;
+  defaultLandingPage?: string;
 }
 
 export interface SessionPayload {
@@ -24,6 +25,7 @@ export interface SessionPayload {
   fullName: string;
   permissions: string[];
   mustChangePassword: boolean;
+  defaultLandingPage: string;
   expiresAt: Date;
 }
 
@@ -78,6 +80,7 @@ export async function createSession(user: User): Promise<string> {
     fullName: user.fullName,
     permissions: user.permissions,
     mustChangePassword: user.mustChangePassword ?? false,
+    defaultLandingPage: user.defaultLandingPage ?? "dashboard",
   });
 
   const cookieStore = await cookies();

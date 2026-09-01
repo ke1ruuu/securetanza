@@ -23,7 +23,7 @@ export default function LoginPage() {
     if (user && user.mustChangePassword) {
       setShowForceChange(true);
     } else if (user && !user.mustChangePassword && !authLoading) {
-      const pref = typeof window !== "undefined" ? localStorage.getItem("landingPage") : null;
+      const pref = user.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
       let target = "/";
       if (pref === "dashboard") target = "/dashboard/overview";
       if (pref === "analytics") target = "/dashboard/analytics";
@@ -60,7 +60,7 @@ export default function LoginPage() {
         setShowForceChange(true);
         setLoading(false);
       } else {
-        const pref = typeof window !== "undefined" ? localStorage.getItem("landingPage") : null;
+        const pref = data.user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
         let target = "/";
         if (pref === "dashboard") target = "/dashboard/overview";
         if (pref === "analytics") target = "/dashboard/analytics";
@@ -211,7 +211,7 @@ export default function LoginPage() {
         <ForceChangePasswordModal 
           onSuccess={() => {
             setShowForceChange(false);
-            const pref = typeof window !== "undefined" ? localStorage.getItem("landingPage") : null;
+            const pref = user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
             let target = "/";
             if (pref === "dashboard") target = "/dashboard/overview";
             if (pref === "analytics") target = "/dashboard/analytics";

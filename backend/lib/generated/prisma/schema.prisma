@@ -222,6 +222,7 @@ model User {
   fullName           String   @map("full_name")
   passwordHash       String   @map("password_hash")
   mustChangePassword Boolean  @default(false) @map("must_change_password")
+  defaultLandingPage String   @default("dashboard") @map("default_landing_page")
   createdAt          DateTime @default(now()) @map("created_at")
   updatedAt          DateTime @updatedAt @map("updated_at")
 

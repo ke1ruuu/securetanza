@@ -7966,6 +7966,7 @@ export namespace Prisma {
     fullName: string | null
     passwordHash: string | null
     mustChangePassword: boolean | null
+    defaultLandingPage: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7976,6 +7977,7 @@ export namespace Prisma {
     fullName: string | null
     passwordHash: string | null
     mustChangePassword: boolean | null
+    defaultLandingPage: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7986,6 +7988,7 @@ export namespace Prisma {
     fullName: number
     passwordHash: number
     mustChangePassword: number
+    defaultLandingPage: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -8006,6 +8009,7 @@ export namespace Prisma {
     fullName?: true
     passwordHash?: true
     mustChangePassword?: true
+    defaultLandingPage?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -8016,6 +8020,7 @@ export namespace Prisma {
     fullName?: true
     passwordHash?: true
     mustChangePassword?: true
+    defaultLandingPage?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -8026,6 +8031,7 @@ export namespace Prisma {
     fullName?: true
     passwordHash?: true
     mustChangePassword?: true
+    defaultLandingPage?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -8123,6 +8129,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword: boolean
+    defaultLandingPage: string
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -8152,6 +8159,7 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     permissions?: boolean | User$permissionsArgs<ExtArgs>
@@ -8165,6 +8173,7 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -8175,6 +8184,7 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -8185,11 +8195,12 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "defaultLandingPage" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     permissions?: boolean | User$permissionsArgs<ExtArgs>
     exportSchedules?: boolean | User$exportSchedulesArgs<ExtArgs>
@@ -8210,6 +8221,7 @@ export namespace Prisma {
       fullName: string
       passwordHash: string
       mustChangePassword: boolean
+      defaultLandingPage: string
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -8642,6 +8654,7 @@ export namespace Prisma {
     readonly fullName: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly mustChangePassword: FieldRef<"User", 'Boolean'>
+    readonly defaultLandingPage: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -12605,6 +12618,7 @@ export namespace Prisma {
     fullName: 'fullName',
     passwordHash: 'passwordHash',
     mustChangePassword: 'mustChangePassword',
+    defaultLandingPage: 'defaultLandingPage',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -13451,6 +13465,7 @@ export namespace Prisma {
     fullName?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
+    defaultLandingPage?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     permissions?: UserPermissionListRelationFilter
@@ -13463,6 +13478,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     permissions?: UserPermissionOrderByRelationAggregateInput
@@ -13478,6 +13494,7 @@ export namespace Prisma {
     fullName?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
+    defaultLandingPage?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     permissions?: UserPermissionListRelationFilter
@@ -13490,6 +13507,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -13508,6 +13526,7 @@ export namespace Prisma {
     fullName?: StringWithAggregatesFilter<"User"> | string
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     mustChangePassword?: BoolWithAggregatesFilter<"User"> | boolean
+    defaultLandingPage?: StringWithAggregatesFilter<"User"> | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
@@ -14473,6 +14492,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionCreateNestedManyWithoutUserInput
@@ -14485,6 +14505,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
@@ -14496,6 +14517,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUpdateManyWithoutUserNestedInput
@@ -14508,6 +14530,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
@@ -14520,6 +14543,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -14529,6 +14553,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -14539,6 +14564,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -15495,6 +15521,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -15509,6 +15536,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -15519,6 +15547,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -16558,6 +16587,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionCreateNestedManyWithoutUserInput
@@ -16569,6 +16599,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
@@ -16595,6 +16626,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUpdateManyWithoutUserNestedInput
@@ -16606,6 +16638,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
@@ -16654,6 +16687,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     exportSchedules?: ExportScheduleCreateNestedManyWithoutUserInput
@@ -16665,6 +16699,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     exportSchedules?: ExportScheduleUncheckedCreateNestedManyWithoutUserInput
@@ -16707,6 +16742,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     exportSchedules?: ExportScheduleUpdateManyWithoutUserNestedInput
@@ -16718,6 +16754,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     exportSchedules?: ExportScheduleUncheckedUpdateManyWithoutUserNestedInput

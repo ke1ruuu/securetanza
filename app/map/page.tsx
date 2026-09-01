@@ -15,7 +15,7 @@ import { MapProvider, useMapContext } from "@/context/MapContext";
 import RightSidebarControls from "@/components/layout/right-sidebar-controls";
 import MapLegend from "@/components/map/map-legend";
 
-const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
+const TanzaMap = dynamic(() => import("@/components/map/tanza-map-root"), {
 	ssr: false,
 });
 
