@@ -3,6 +3,7 @@ import { prisma } from '@/backend/lib/prisma';
 import { getSession } from '@/lib/auth';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
+import { randomBytes } from 'crypto';
 
 // Validation schema for user creation/update
 const userSchema = z.object({
@@ -11,30 +12,28 @@ const userSchema = z.object({
   permissionIds: z.array(z.number().int().positive()).min(1, 'At least one permission is required'),
 });
 
-// Helper to generate next account number
+// Helper to generate a random unique account number
 async function generateNextAccountNumber() {
-  const lastUser = await prisma.user.findFirst({
-    where: {
-      accountNumber: {
-        startsWith: 'ACC-',
-      },
-    },
-    orderBy: {
-      accountNumber: 'desc',
-    },
-  });
-
-  if (!lastUser) {
-    return 'ACC-000001';
+  let isUnique = false;
+  let accountNum = '';
+  while (!isUnique) {
+    const randomHex = randomBytes(4).toString('hex').toUpperCase().substring(0, 6);
+    accountNum = `ACC-${randomHex}`;
+    const existing = await prisma.user.findFirst({ where: { accountNumber: accountNum } });
+    if (!existing) {
+      isUnique = true;
+    }
   }
+  return accountNum;
+}
 
-  const lastNumMatch = lastUser.accountNumber.match(/ACC-(\d+)/);
-  if (!lastNumMatch) {
-    return 'ACC-000001';
+function generateSecurePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < 10; i++) {
+    password += chars[Math.floor(Math.random() * chars.length)];
   }
-
-  const nextNum = parseInt(lastNumMatch[1]) + 1;
-  return `ACC-${nextNum.toString().padStart(6, '0')}`;
+  return password;
 }
 
 // GET /api/users - Fetch all users (admin only)
@@ -106,8 +105,11 @@ export async function POST(request: NextRequest) {
     // Automatically generate next account number
     const accountNumber = await generateNextAccountNumber();
 
+    // Auto-generate temporary password if none provided
+    const tempPassword = validatedData.password || generateSecurePassword();
+
     // Hash password
-    const passwordHash = await hash(validatedData.password || 'default123', 10);
+    const passwordHash = await hash(tempPassword, 10);
 
     // Create user
     const user = await prisma.user.create({
@@ -115,6 +117,7 @@ export async function POST(request: NextRequest) {
         accountNumber,
         fullName: validatedData.fullName,
         passwordHash,
+        mustChangePassword: true,
       },
     });
 
@@ -129,6 +132,19 @@ export async function POST(request: NextRequest) {
       })
     ));
 
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'Settings',
+        user: session.accountNumber,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
+        resource: `User:${user.accountNumber}`,
+        details: `Created new user account for ${user.fullName}`,
+        outcome: 'success',
+      },
+    });
+
     return NextResponse.json({
       success: true,
       message: 'User created successfully',
@@ -136,6 +152,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         accountNumber: user.accountNumber,
         fullName: user.fullName,
+        tempPassword, // return so frontend can show to user
       },
     }, { status: 201 });
   } catch (error) {

@@ -18,26 +18,48 @@ import {
 	Database,
 	ArrowUpFromLine,
 	Eye,
+	KeyRound,
+	ChevronLeft,
+	ChevronRight,
+	ChevronsLeft,
+	ChevronsRight,
+	Search,
 } from "lucide-react";
+import {
+	Pagination,
+	PaginationContent,
+	PaginationItem,
+	PaginationLink,
+	PaginationNext,
+	PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 /* ─────────────────────── Types ─────────────────────── */
 
-interface UploadLog {
+interface ImportLog {
 	id: string;
 	fileName: string;
 	fileSize: number;
 	recordsImported: number;
 	status: string;
 	errorMessage?: string;
-	uploadedBy?: string;
-	uploadedAt: string;
+	importedBy?: string;
+	importedAt: string;
 }
 
-type ActionType = "Upload" | "Import" | "Read" | "Export" | "Settings";
+type ActionType = "Auth" | "Import" | "Read" | "Export" | "Settings";
 type AuditFilter = "All" | ActionType;
 
 interface UnifiedLog {
-	id: number;
+	id: string | number;
 	action: ActionType;
 	details: string;
 	user: string;
@@ -55,14 +77,14 @@ interface UnifiedLog {
 
 /* ─────────────────────── Constants ─────────────────────── */
 
-const AUDIT_FILTERS: AuditFilter[] = ["All", "Upload", "Import", "Read", "Export", "Settings"];
+const AUDIT_FILTERS: AuditFilter[] = ["All", "Auth", "Import", "Read", "Export", "Settings"];
 
 const ACTION_META: Record<ActionType, { color: string; icon: React.ReactNode; label: string }> = {
-	Upload:   { color: "bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",       icon: <ArrowUpFromLine className="h-3 w-3" />, label: "Upload"   },
-	Import:   { color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",        icon: <Database        className="h-3 w-3" />, label: "Import"   },
-	Read:     { color: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300", icon: <Eye            className="h-3 w-3" />, label: "Read"     },
-	Export:   { color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",    icon: <Download        className="h-3 w-3" />, label: "Export"   },
-	Settings: { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300",        icon: <Shield          className="h-3 w-3" />, label: "Settings" },
+	Auth:     { color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",  icon: <KeyRound        className="h-3 w-3" />, label: "Auth"     },
+	Import:   { color: "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-300",              icon: <Database        className="h-3 w-3" />, label: "Import"   },
+	Read:     { color: "bg-purple-100 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300",      icon: <Eye             className="h-3 w-3" />, label: "Read"     },
+	Export:   { color: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",          icon: <Download        className="h-3 w-3" />, label: "Export"   },
+	Settings: { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300",              icon: <Shield          className="h-3 w-3" />, label: "Settings" },
 };
 
 const SEVERITY_COLOR: Record<string, string> = {
@@ -77,59 +99,19 @@ const OUTCOME_META: Record<string, { color: string; icon: React.ReactNode }> = {
 	warning: { color: "text-amber-600 dark:text-amber-400",     icon: <AlertCircle  className="h-3.5 w-3.5" /> },
 };
 
-const MOCK_UNIFIED_LOGS: UnifiedLog[] = [
-	{
-		id: 1, action: "Settings", details: "Changed default landing page to Dashboard",
-		user: "jdoe (Admin)", time: "10 mins ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/config/ui/landing",
-		severity: "medium", outcome: "success",
-	},
-	{
-		id: 2, action: "Export", details: "Exported 500 incident records (CSV)",
-		user: "psmith (Officer)", time: "1 hour ago",
-		ip: "10.0.0.8", session: "sess_4C1Zy2", resource: "/incidents/export",
-		severity: "medium", outcome: "success",
-	},
-	{
-		id: 3, action: "Import", details: "Imported incident_batch_0825.csv — 1,240 records",
-		user: "jdoe (Admin)", time: "3 hours ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/data/import",
-		severity: "high", outcome: "success",
-		fileName: "incident_batch_0825.csv", fileSize: 2048576, recordsImported: 1240,
-	},
-	{
-		id: 4, action: "Read", details: "Viewed restricted Heinous Crime Case #45021",
-		user: "ajackson (Investigator)", time: "5 hours ago",
-		ip: "10.0.0.22", session: "sess_8D5Wq1", resource: "/cases/45021",
-		severity: "high", outcome: "success",
-	},
-	{
-		id: 5, action: "Settings", details: "Updated 2FA security requirements",
-		user: "jdoe (Admin)", time: "1 day ago",
-		ip: "192.168.1.42", session: "sess_9A3Bx7", resource: "/config/security/2fa",
-		severity: "high", outcome: "success",
-	},
-	{
-		id: 6, action: "Upload", details: "Uploaded profile photo — user #1102",
-		user: "mlopez (Officer)", time: "1 day ago",
-		ip: "10.0.0.55", session: "sess_2F6Tm9", resource: "/users/1102/photo",
-		severity: "low", outcome: "success",
-	},
-	{
-		id: 7, action: "Import", details: "Import failed — malformed CSV headers",
-		user: "jdoe (Admin)", time: "2 days ago",
-		ip: "192.168.1.42", session: "sess_7K2Rp4", resource: "/data/import",
-		severity: "high", outcome: "failure",
-		fileName: "crime_stats_q2.csv", fileSize: 512000, recordsImported: 0,
-		errorMessage: "Column header mismatch on row 1: expected 'incident_id', got 'id'",
-	},
-	{
-		id: 8, action: "Read", details: "Bulk-viewed 82 cold-case summaries",
-		user: "treyes (Analyst)", time: "3 days ago",
-		ip: "10.0.0.77", session: "sess_5P9Nv6", resource: "/cases/cold-cases",
-		severity: "medium", outcome: "warning",
-	},
-];
+function formatTimeAgo(dateString: string) {
+	const date = new Date(dateString);
+	const now = new Date();
+	const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+	
+	if (diffInSeconds < 60) return 'Just now';
+	const diffInMinutes = Math.floor(diffInSeconds / 60);
+	if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
+	const diffInHours = Math.floor(diffInMinutes / 60);
+	if (diffInHours < 24) return `${diffInHours} ${diffInHours === 1 ? 'hour' : 'hours'} ago`;
+	const diffInDays = Math.floor(diffInHours / 24);
+	return `${diffInDays} ${diffInDays === 1 ? 'day' : 'days'} ago`;
+}
 
 /* ─────────────────────── Helpers ─────────────────────── */
 
@@ -149,8 +131,8 @@ interface AuditCardProps {
 }
 
 function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
-	const meta    = ACTION_META[log.action];
-	const outcome = OUTCOME_META[log.outcome];
+	const meta    = ACTION_META[log.action as ActionType] || { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300", icon: <Info className="h-3 w-3" />, label: log.action || "Unknown" };
+	const outcome = OUTCOME_META[log.outcome] || { color: "text-slate-600 dark:text-slate-400", icon: <Info className="h-3.5 w-3.5" /> };
 
 	return (
 		<div
@@ -158,24 +140,9 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 				z-[9999] w-80 rounded-2xl border shadow-2xl
 				bg-white/95 dark:bg-slate-900/95 backdrop-blur-md
 				border-slate-200 dark:border-white/10
-				text-slate-800 dark:text-white
-				${pinned ? "ring-2 ring-blue-500/40" : ""}
+				text-slate-800 dark:text-white pointer-events-none
 			`}
 			style={style}
-			{...pinned ? {
-				onWheel: (e: React.WheelEvent<HTMLDivElement>) => {
-					const el = e.currentTarget;
-					const body = el.querySelector(".card-body") as HTMLElement | null;
-					if (!body) return;
-					const atTop    = body.scrollTop === 0 && e.deltaY < 0;
-					const atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 1 && e.deltaY > 0;
-					if (atTop || atBottom) {
-						// No more content to scroll inside card — pass wheel to page
-						const page = document.querySelector("[data-scroll]") ?? document.documentElement;
-						page.scrollTop += e.deltaY;
-					}
-				},
-			} : {}}
 		>
 			{/* Header */}
 			<div className="flex items-start justify-between px-4 pt-4 pb-3 border-b border-slate-100 dark:border-white/5">
@@ -188,14 +155,6 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 						<div className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{log.action} Event</div>
 					</div>
 				</div>
-				{pinned && (
-					<button
-						onClick={onClose}
-						className="ml-2 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
-					>
-						<X className="h-3.5 w-3.5" />
-					</button>
-				)}
 			</div>
 
 			{/* Body — max height so it never clips the viewport; scrolls internally if needed */}
@@ -208,19 +167,21 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 					<AuditField icon={<Info  className="h-3 w-3" />} label="IP Address" value={log.ip}      />
 					<AuditField icon={<Hash  className="h-3 w-3" />} label="Session"    value={log.session} mono />
 					<AuditField icon={<Shield className="h-3 w-3" />} label="Severity"
-						value={<span className={`font-semibold ${SEVERITY_COLOR[log.severity]}`}>{log.severity.toUpperCase()}</span>}
+						value={<span className={`font-semibold ${SEVERITY_COLOR[log.severity] || "text-slate-500"}`}>{log.severity ? log.severity.toUpperCase() : "UNKNOWN"}</span>}
 					/>
 					<AuditField icon={outcome.icon} label="Outcome"
 						value={<span className={`font-semibold ${outcome.color}`}>{log.outcome}</span>}
 					/>
 				</div>
 
-				<div className="pt-1">
-					<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Resource</p>
-					<code className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded">
-						{log.resource}
-					</code>
-				</div>
+				{log.resource && (
+					<div className="pt-1">
+						<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Resource</p>
+						<code className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded">
+							{log.resource}
+						</code>
+					</div>
+				)}
 
 				{(log.fileName || log.errorMessage) && (
 					<div className="pt-1 border-t border-slate-100 dark:border-white/5 space-y-1.5">
@@ -246,11 +207,8 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 
 			{/* Footer */}
 			<div className="px-4 py-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-				<span className="text-[10px] text-slate-400 dark:text-slate-500">#{log.id.toString().padStart(6, "0")}</span>
-				{pinned
-					? <span className="text-[10px] text-blue-500 dark:text-blue-400 font-medium">Pinned · click × to close</span>
-					: <span className="text-[10px] text-slate-400 dark:text-slate-500">Click row to pin</span>
-				}
+				<span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{log.id.toString()}</span>
+				<span className="text-[10px] text-slate-400 dark:text-slate-500">Click row for details</span>
 			</div>
 		</div>
 	);
@@ -274,37 +232,37 @@ function AuditField({ icon, label, value, mono }: { icon: React.ReactNode; label
 interface RowProps {
 	log: UnifiedLog;
 	onHover: (log: UnifiedLog | null) => void;
-	onPin: (log: UnifiedLog, e: React.MouseEvent) => void;
-	pinnedId: number | null;
+	onClick: (log: UnifiedLog) => void;
 }
 
-function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
-	const meta    = ACTION_META[log.action];
-	const outcome = OUTCOME_META[log.outcome];
+function LogRow({ log, onHover, onClick }: RowProps) {
+	const meta    = ACTION_META[log.action as ActionType] || { color: "bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300", icon: <Info className="h-3 w-3" />, label: log.action || "Unknown" };
+	const outcome = OUTCOME_META[log.outcome] || { color: "text-slate-600 dark:text-slate-400", icon: <Info className="h-3.5 w-3.5" /> };
 
 	return (
 		<tr
 			className={`
 				group cursor-pointer transition-colors
-				${pinnedId === log.id
-					? "bg-blue-50/70 dark:bg-blue-500/[0.06]"
-					: "hover:bg-slate-50/60 dark:hover:bg-white/[0.02]"}
+				hover:bg-slate-50/60 dark:hover:bg-white/[0.02]
 			`}
 			onMouseEnter={() => onHover(log)}
 			onMouseLeave={() => onHover(null)}
-			onClick={(e) => onPin(log, e)}
+			onClick={() => onClick(log)}
 		>
+			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.user}</td>
 			<td className="px-5 py-3.5">
 				<span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.color}`}>
 					{React.cloneElement(meta.icon as React.ReactElement<{ className?: string }>, { className: "h-3 w-3" })}
 					{meta.label}
 				</span>
 			</td>
+			<td className="px-5 py-3.5 text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap font-mono">
+				#{log.id.toString().substring(0, 8)}...
+			</td>
 			<td className="px-5 py-3.5 text-sm font-medium text-slate-900 dark:text-white max-w-xs">
 				<div className="truncate">{log.details}</div>
 				{log.errorMessage && <div className="text-xs text-red-500 mt-0.5 truncate">{log.errorMessage}</div>}
 			</td>
-			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.user}</td>
 			<td className="px-5 py-3.5">
 				<span className={`inline-flex items-center gap-1 text-xs font-semibold ${outcome.color}`}>
 					{outcome.icon}
@@ -312,7 +270,7 @@ function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
 				</span>
 			</td>
 			<td className="px-5 py-3.5">
-				<span className={`text-xs font-bold uppercase ${SEVERITY_COLOR[log.severity]}`}>{log.severity}</span>
+				<span className={`text-xs font-bold uppercase ${SEVERITY_COLOR[log.severity] || "text-slate-500"}`}>{log.severity || "UNKNOWN"}</span>
 			</td>
 			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.time}</td>
 		</tr>
@@ -322,14 +280,17 @@ function LogRow({ log, onHover, onPin, pinnedId }: RowProps) {
 /* ─────────────────────── Main Tab ─────────────────────── */
 
 export default function AuditLogsTab() {
-	const [uploadLogs,  setUploadLogs]  = useState<UploadLog[]>([]);
+	const [unifiedLogs, setUnifiedLogs] = useState<UnifiedLog[]>([]);
 	const [logsLoading, setLogsLoading] = useState(false);
 	const [totalLogs,   setTotalLogs]   = useState(0);
 	const [activeFilter, setActiveFilter] = useState<AuditFilter>("All");
+	const [searchQuery, setSearchQuery] = useState("");
+
+	const [currentPage, setCurrentPage] = useState(1);
+	const [rowsPerPage, setRowsPerPage] = useState(10);
 
 	const [hoveredLog, setHoveredLog] = useState<UnifiedLog | null>(null);
-	const [pinnedLog,  setPinnedLog]  = useState<UnifiedLog | null>(null);
-	const [pinnedPos,  setPinnedPos]  = useState({ x: 0, y: 0 });
+	const [selectedLog, setSelectedLog] = useState<UnifiedLog | null>(null);
 
 	// Track real cursor position via native listener — bypasses React batching/stale-closure issues
 	const mousePosRef = useRef({ x: 0, y: 0 });
@@ -352,28 +313,52 @@ export default function AuditLogsTab() {
 	const loadLogs = async () => {
 		setLogsLoading(true);
 		try {
-			const res  = await fetch("/api/upload-logs?limit=100");
-			const data = await res.json();
-			if (data.success) { setUploadLogs(data.logs); setTotalLogs(data.total); }
-		} catch (e) { console.error("Error loading upload logs:", e); }
+			// Fetch audit logs
+			const auditRes = await fetch("/api/audit-logs?limit=500");
+			const auditData = await auditRes.json();
+			if (auditData.success) {
+				const formattedLogs = auditData.data.map((log: any) => ({
+					...log,
+					time: formatTimeAgo(log.createdAt || log.time)
+				}));
+				setUnifiedLogs(formattedLogs);
+				setTotalLogs(auditData.meta.total);
+			}
+		} catch (e) { console.error("Error loading logs:", e); }
 		finally { setLogsLoading(false); }
 	};
 
 	useEffect(() => { loadLogs(); }, []);
 
 	/* ── Derived stats ── */
-	const successCount = uploadLogs.filter((l) => l.status === "success").length;
-	const totalRecords = uploadLogs.reduce((sum, l) => sum + l.recordsImported, 0);
+	const importLogs = unifiedLogs.filter((l) => l.action === "Import");
+	const successCount = importLogs.filter((l) => l.outcome === "success").length;
+	const totalRecords = importLogs.reduce((sum, l) => sum + (l.recordsImported || 0), 0);
 
-	const importCount  = MOCK_UNIFIED_LOGS.filter((l) => l.action === "Import").length;
-	const failureCount = MOCK_UNIFIED_LOGS.filter((l) => l.outcome === "failure").length;
-	const highSevCount = MOCK_UNIFIED_LOGS.filter((l) => l.severity === "high").length;
+	const importCount  = unifiedLogs.filter((l) => l.action === "Import").length;
+	const failureCount = unifiedLogs.filter((l) => l.outcome === "failure").length;
+	const highSevCount = unifiedLogs.filter((l) => l.severity === "high").length;
 
 	/* ── Filtered logs ── */
-	const filteredLogs =
+	let filteredLogs =
 		activeFilter === "All"
-			? MOCK_UNIFIED_LOGS
-			: MOCK_UNIFIED_LOGS.filter((l) => l.action === activeFilter);
+			? unifiedLogs
+			: unifiedLogs.filter((l) => l.action === activeFilter);
+
+	if (searchQuery.trim()) {
+		const lowerQuery = searchQuery.toLowerCase();
+		filteredLogs = filteredLogs.filter(
+			(l) =>
+				(l.user && l.user.toLowerCase().includes(lowerQuery)) ||
+				(l.details && l.details.toLowerCase().includes(lowerQuery)) ||
+				(l.ip && l.ip.toLowerCase().includes(lowerQuery)) ||
+				(l.resource && l.resource.toLowerCase().includes(lowerQuery)) ||
+				(l.action && l.action.toLowerCase().includes(lowerQuery))
+		);
+	}
+
+	const totalPages = Math.ceil(filteredLogs.length / rowsPerPage);
+	const paginatedLogs = filteredLogs.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
 	/* ── Card positioning ── */
 	const CARD_W  = 320;
@@ -409,20 +394,27 @@ export default function AuditLogsTab() {
 		setHoveredLog(log);
 	}
 
-	function handlePin(log: UnifiedLog, e: React.MouseEvent) {
-		e.stopPropagation();
-		if (pinnedLog?.id === log.id) { setPinnedLog(null); }
-		else { setPinnedLog(log); setPinnedPos({ x: e.clientX, y: e.clientY }); setHoveredLog(null); }
+	function handleRowClick(log: UnifiedLog) {
+		setSelectedLog(log);
+		setHoveredLog(null);
 	}
 
-	/* Close pinned on outside click */
+	/* Prevent body scroll when modal open & handle Escape key */
 	useEffect(() => {
-		function onDocClick(e: MouseEvent) {
-			if (tableRef.current && !tableRef.current.contains(e.target as Node)) setPinnedLog(null);
+		if (selectedLog) {
+			document.body.style.overflow = "hidden";
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (e.key === "Escape") setSelectedLog(null);
+			};
+			document.addEventListener("keydown", handleKeyDown);
+			return () => { 
+				document.body.style.overflow = ""; 
+				document.removeEventListener("keydown", handleKeyDown);
+			};
+		} else {
+			document.body.style.overflow = "";
 		}
-		document.addEventListener("mousedown", onDocClick);
-		return () => document.removeEventListener("mousedown", onDocClick);
-	}, []);
+	}, [selectedLog]);
 
 	return (
 		<div className="flex flex-col items-center w-full h-full animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -439,7 +431,7 @@ export default function AuditLogsTab() {
 				{/* ── Summary Cards ── */}
 				<div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					{[
-						{ icon: <Shield      className="h-5 w-5 text-blue-500"   />, bg: "bg-blue-100 dark:bg-blue-500/10",   value: MOCK_UNIFIED_LOGS.length, label: "Total Events"  },
+						{ icon: <Shield      className="h-5 w-5 text-blue-500"   />, bg: "bg-blue-100 dark:bg-blue-500/10",   value: unifiedLogs.length, label: "Total Events"  },
 						{ icon: <Database    className="h-5 w-5 text-cyan-500"   />, bg: "bg-cyan-100 dark:bg-cyan-500/10",   value: importCount,              label: "Data Imports"  },
 						{ icon: <XCircle     className="h-5 w-5 text-red-500"    />, bg: "bg-red-100 dark:bg-red-500/10",     value: failureCount,             label: "Failures"      },
 						{ icon: <AlertCircle className="h-5 w-5 text-amber-500"  />, bg: "bg-amber-100 dark:bg-amber-500/10", value: highSevCount,             label: "High Severity" },
@@ -460,7 +452,7 @@ export default function AuditLogsTab() {
 						<div className="space-y-0.5">
 							<h3 className="text-lg font-bold text-slate-900 dark:text-white">Activity &amp; Import History</h3>
 							<p className="text-sm text-slate-500 dark:text-slate-400">
-								Hover a row to preview the audit trail — click to pin the card.
+								Hover a row for a quick preview — click to open detailed view.
 							</p>
 						</div>
 						<button
@@ -471,21 +463,41 @@ export default function AuditLogsTab() {
 						</button>
 					</div>
 
-					{/* Filter bar */}
-					<div className="flex gap-1.5 flex-wrap">
-						{AUDIT_FILTERS.map((filter) => (
-							<button
-								key={filter}
-								onClick={() => setActiveFilter(filter)}
-								className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-									activeFilter === filter
-										? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-										: "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-								}`}
-							>
-								{filter}
-							</button>
-						))}
+					{/* Filter bar & Search */}
+					<div className="flex flex-col sm:flex-row gap-3 justify-between">
+						<div className="flex gap-1.5 flex-wrap">
+							{AUDIT_FILTERS.map((filter) => (
+								<button
+									key={filter}
+									onClick={() => {
+										setActiveFilter(filter);
+										setCurrentPage(1);
+									}}
+									className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+										activeFilter === filter
+											? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+											: "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+									}`}
+								>
+									{filter}
+								</button>
+							))}
+						</div>
+						<div className="relative w-full sm:w-64 flex-shrink-0">
+							<div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+								<Search className="h-4 w-4 text-slate-400" />
+							</div>
+							<Input
+								type="text"
+								placeholder="Search logs..."
+								value={searchQuery}
+								onChange={(e) => {
+									setSearchQuery(e.target.value);
+									setCurrentPage(1);
+								}}
+								className="pl-9 h-9 text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10"
+							/>
+						</div>
 					</div>
 
 					{/* Table */}
@@ -494,7 +506,7 @@ export default function AuditLogsTab() {
 							<table className="w-full">
 								<thead className="bg-slate-50 dark:bg-slate-950/50">
 									<tr>
-										{["Action", "Details", "User", "Outcome", "Severity", "Time"].map((h) => (
+										{["User", "Action", "ID", "Details", "Outcome", "Severity", "Time"].map((h) => (
 											<th key={h} className="px-5 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-slate-200 dark:border-white/5">
 												{h}
 											</th>
@@ -502,23 +514,101 @@ export default function AuditLogsTab() {
 									</tr>
 								</thead>
 								<tbody className="divide-y divide-slate-100 dark:divide-white/5">
-									{filteredLogs.length === 0 ? (
+									{paginatedLogs.length === 0 ? (
 										<tr>
 											<td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
 												No {activeFilter} events found.
 											</td>
 										</tr>
-									) : filteredLogs.map((log) => (
+									) : paginatedLogs.map((log) => (
 										<LogRow
 											key={log.id}
 											log={log}
 											onHover={handleHover}
-											onPin={handlePin}
-											pinnedId={pinnedLog?.id ?? null}
+											onClick={handleRowClick}
 										/>
 									))}
 								</tbody>
 							</table>
+						</div>
+
+						{/* ── Pagination Footer ── */}
+						<div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-900/50">
+							<div className="text-sm text-slate-500 dark:text-slate-400">
+								{filteredLogs.length > 0 ? (
+									<>
+										{Math.min((currentPage - 1) * rowsPerPage + 1, filteredLogs.length)} to {Math.min(currentPage * rowsPerPage, filteredLogs.length)} of {filteredLogs.length} row(s) selected.
+									</>
+								) : (
+									"0 row(s) selected."
+								)}
+							</div>
+							<div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-300">
+								<div className="flex items-center gap-2">
+									<span className="text-slate-500 dark:text-slate-400">Rows per page</span>
+									<Select
+										value={rowsPerPage.toString()}
+										onValueChange={(val) => {
+											setRowsPerPage(Number(val));
+											setCurrentPage(1);
+										}}
+									>
+										<SelectTrigger className="w-[70px] h-8 text-xs bg-transparent border-slate-300 dark:border-white/20">
+											<SelectValue placeholder={rowsPerPage.toString()} />
+										</SelectTrigger>
+										<SelectContent>
+											{[5, 10, 20, 50].map((size) => (
+												<SelectItem key={size} value={size.toString()}>
+													{size}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								</div>
+								<div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+									Page {currentPage} of {Math.max(1, totalPages)}
+								</div>
+								<div className="flex items-center gap-1">
+									<Pagination className="mx-0 w-auto">
+										<PaginationContent>
+											<PaginationItem>
+												<PaginationLink
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(1); }}
+													className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+												>
+													<ChevronsLeft className="h-4 w-4" />
+												</PaginationLink>
+											</PaginationItem>
+											<PaginationItem>
+												<PaginationPrevious
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p - 1)); }}
+													className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+													text=""
+												/>
+											</PaginationItem>
+											<PaginationItem>
+												<PaginationNext
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p + 1)); }}
+													className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+													text=""
+												/>
+											</PaginationItem>
+											<PaginationItem>
+												<PaginationLink
+													href="#"
+													onClick={(e) => { e.preventDefault(); setCurrentPage(totalPages); }}
+													className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+												>
+													<ChevronsRight className="h-4 w-4" />
+												</PaginationLink>
+											</PaginationItem>
+										</PaginationContent>
+									</Pagination>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -528,21 +618,146 @@ export default function AuditLogsTab() {
 			</div>
 
 			{/* ── Hover tooltip — portaled to body to escape any CSS transform context ── */}
-			{hoveredLog && !pinnedLog && typeof document !== "undefined" && createPortal(
+			{hoveredLog && !selectedLog && typeof document !== "undefined" && createPortal(
 				<div style={getCardStyle()} className="pointer-events-none">
 					<AuditCard log={hoveredLog} />
 				</div>,
 				document.body
 			)}
 
-			{/* ── Pinned card — portaled to body, closes on × or outside-table click ── */}
-			{pinnedLog && typeof document !== "undefined" && createPortal(
-				<AuditCard
-					log={pinnedLog}
-					pinned
-					onClose={() => setPinnedLog(null)}
-					style={getCardStyle(pinnedPos)}
-				/>,
+			{/* ── Detailed Modal ── */}
+			{selectedLog && typeof document !== "undefined" && createPortal(
+				<div 
+					className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200" 
+					onClick={() => setSelectedLog(null)}
+				>
+					<div 
+						onClick={e => e.stopPropagation()} 
+						className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+					>
+						{/* Modal Header */}
+						<div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
+							<div className="flex items-center gap-3">
+								<div className={`p-2 rounded-xl ${ACTION_META[selectedLog.action].color}`}>
+									{React.cloneElement(ACTION_META[selectedLog.action].icon as React.ReactElement, { className: "h-5 w-5" })}
+								</div>
+								<div>
+									<h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+										{selectedLog.action} Event
+									</h2>
+									<p className="text-sm text-slate-500 dark:text-slate-400">Detailed audit log record</p>
+								</div>
+							</div>
+							<button 
+								onClick={() => setSelectedLog(null)} 
+								className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-xl hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+							>
+								<X className="w-5 h-5"/>
+							</button>
+						</div>
+
+						{/* Modal Body */}
+						<div className="p-6 overflow-y-auto space-y-8 flex-1 overscroll-contain">
+							<div>
+								<p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Action Details</p>
+								<div className="text-lg text-slate-800 dark:text-slate-200 leading-relaxed font-medium bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+									{selectedLog.details}
+								</div>
+							</div>
+
+							<div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+								<AuditField icon={<User className="h-4 w-4" />} label="User" value={<span className="text-sm font-medium">{selectedLog.user}</span>} />
+								<AuditField icon={<Clock className="h-4 w-4" />} label="Time" value={<span className="text-sm font-medium">{selectedLog.time}</span>} />
+								<AuditField icon={<Info className="h-4 w-4" />} label="IP Address" value={<span className="text-sm font-medium">{selectedLog.ip}</span>} />
+								<AuditField icon={<Hash className="h-4 w-4" />} label="Session" value={<span className="text-sm font-mono">{selectedLog.session}</span>} />
+								<AuditField 
+									icon={<Shield className="h-4 w-4" />} 
+									label="Severity" 
+									value={<span className={`text-sm font-bold uppercase ${SEVERITY_COLOR[selectedLog.severity]}`}>{selectedLog.severity}</span>} 
+								/>
+								<AuditField 
+									icon={React.cloneElement(OUTCOME_META[selectedLog.outcome].icon as React.ReactElement, { className: "h-4 w-4" })} 
+									label="Outcome" 
+									value={<span className={`text-sm font-bold capitalize ${OUTCOME_META[selectedLog.outcome].color}`}>{selectedLog.outcome}</span>} 
+								/>
+							</div>
+
+							{selectedLog.resource && (
+								<div>
+									<p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Target Resource</p>
+									<code className="text-sm font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-500/20">
+										{selectedLog.resource}
+									</code>
+								</div>
+							)}
+
+							{(selectedLog.fileName || selectedLog.errorMessage) && (
+								<div className="pt-6 border-t border-slate-100 dark:border-white/5 space-y-6">
+									{selectedLog.fileName && (
+										<div>
+											<p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">Import Statistics</p>
+											<div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+												<div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+													<div className="flex items-center gap-2 text-slate-500 mb-1">
+														<FileSpreadsheet className="h-4 w-4" />
+														<span className="text-xs font-semibold uppercase tracking-wider">File Name</span>
+													</div>
+													<div className="text-sm font-medium text-slate-900 dark:text-white truncate" title={selectedLog.fileName}>
+														{selectedLog.fileName}
+													</div>
+												</div>
+												{selectedLog.fileSize !== undefined && (
+													<div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+														<div className="flex items-center gap-2 text-slate-500 mb-1">
+															<Database className="h-4 w-4" />
+															<span className="text-xs font-semibold uppercase tracking-wider">File Size</span>
+														</div>
+														<div className="text-sm font-medium text-slate-900 dark:text-white">
+															{formatFileSize(selectedLog.fileSize)}
+														</div>
+													</div>
+												)}
+												{selectedLog.recordsImported !== undefined && (
+													<div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-100 dark:border-white/5">
+														<div className="flex items-center gap-2 text-slate-500 mb-1">
+															<CheckCircle2 className="h-4 w-4" />
+															<span className="text-xs font-semibold uppercase tracking-wider">Records</span>
+														</div>
+														<div className="text-sm font-medium text-slate-900 dark:text-white">
+															{selectedLog.recordsImported.toLocaleString()}
+														</div>
+													</div>
+												)}
+											</div>
+										</div>
+									)}
+									{selectedLog.errorMessage && (
+										<div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl p-5">
+											<p className="text-xs font-semibold uppercase tracking-wider text-red-500 mb-2 flex items-center gap-2">
+												<AlertCircle className="h-4 w-4" /> Error Details
+											</p>
+											<p className="text-sm text-red-700 dark:text-red-400 font-medium whitespace-pre-wrap">{selectedLog.errorMessage}</p>
+										</div>
+									)}
+								</div>
+							)}
+						</div>
+
+						{/* Modal Footer */}
+						<div className="px-6 py-4 border-t border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+							<div className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
+								<span className="text-xs font-medium">Log ID:</span>
+								<code className="text-xs font-mono">{selectedLog.id.toString()}</code>
+							</div>
+							<button 
+								onClick={() => setSelectedLog(null)}
+								className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:hover:bg-slate-200 dark:text-slate-900 text-sm font-semibold rounded-lg transition-colors"
+							>
+								Close
+							</button>
+						</div>
+					</div>
+				</div>,
 				document.body
 			)}
 		</div>

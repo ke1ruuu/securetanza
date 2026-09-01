@@ -19,6 +19,7 @@ export async function GET() {
         accountNumber: session.accountNumber,
         fullName: session.fullName,
         permissions: session.permissions,
+        mustChangePassword: session.mustChangePassword,
       },
     });
   } catch (error) {

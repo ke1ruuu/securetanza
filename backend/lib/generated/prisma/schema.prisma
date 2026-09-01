@@ -117,21 +117,33 @@ model Barangay {
   @@map("barangays")
 }
 
-model UploadLog {
-  id              String   @id @default(cuid())
-  fileName        String   @map("file_name")
-  fileSize        Int      @map("file_size") // File size in bytes
-  recordsImported Int      @map("records_imported") // Number of records imported
-  status          String   @default("success") // success, failed, partial
-  errorMessage    String?  @map("error_message") // Error details if failed
-  uploadedBy      String?  @map("uploaded_by") // User who uploaded (optional)
-  uploadedAt      DateTime @default(now()) @map("uploaded_at")
+model AuditLog {
+  id String @id @default(cuid())
+
+  // Generic audit fields
+  action    String?  @default("Import") // e.g., "Auth", "Import", "Read", "Export", "Settings"
+  details   String?
+  user      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ip       String?
+  session  String?
+  resource String?
+  severity String? @default("low") // "low", "medium", "high"
+  outcome  String? @default("success")
+
+  // Specific import fields
+  fileName        String? @map("file_name")
+  fileSize        Int?    @map("file_size") // File size in bytes
+  recordsImported Int?    @map("records_imported") // Number of records imported
+  errorMessage    String? @map("error_message") // Error details if failed
 
   notifications Notification[]
 
-  @@index([uploadedAt])
-  @@index([status])
-  @@map("upload_logs")
+  @@index([createdAt])
+  @@index([outcome])
+  @@index([action])
+  @@map("audit_logs")
 }
 
 // ==========================================
@@ -166,8 +178,8 @@ model Notification {
   category NotificationCategory
   severity NotificationSeverity @default(INFO)
 
-  uploadLogId String?    @map("upload_log_id")
-  uploadLog   UploadLog? @relation(fields: [uploadLogId], references: [id], onDelete: Cascade)
+  uploadLogId String?   @map("upload_log_id")
+  uploadLog   AuditLog? @relation(fields: [uploadLogId], references: [id], onDelete: Cascade)
 
   metadata   Json?
   isRead     Boolean   @default(false) @map("is_read")
@@ -205,12 +217,13 @@ model NotificationRule {
 // Authentication and Authorization Models
 
 model User {
-  id            Int      @id @default(autoincrement())
-  accountNumber String   @unique @map("account_number") // Unique account number
-  fullName      String   @map("full_name")
-  passwordHash  String   @map("password_hash")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id                 Int      @id @default(autoincrement())
+  accountNumber      String   @unique @map("account_number") // Unique account number
+  fullName           String   @map("full_name")
+  passwordHash       String   @map("password_hash")
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   // Relations
   permissions UserPermission[]

@@ -6,15 +6,26 @@ import Image from "next/image";
 import { Lock, User, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { ForceChangePasswordModal } from "@/components/modals/ForceChangePasswordModal";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { refreshSession } = useAuth();
+  const { refreshSession, user, loading: authLoading } = useAuth();
   const [accountNumber, setAccountNumber] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForceChange, setShowForceChange] = useState(false);
+
+  // If user is already logged in but needs to change password, show modal
+  React.useEffect(() => {
+    if (user && user.mustChangePassword) {
+      setShowForceChange(true);
+    } else if (user && !user.mustChangePassword && !authLoading) {
+      router.push("/");
+    }
+  }, [user, authLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,12 +49,15 @@ export default function LoginPage() {
         return;
       }
 
-      // Refresh the session to load user data
       await refreshSession();
-      
-      // Redirect to home page
-      router.push("/");
-      router.refresh();
+
+      if (data.mustChangePassword) {
+        setShowForceChange(true);
+        setLoading(false);
+      } else {
+        router.push("/");
+        router.refresh();
+      }
     } catch (error) {
       console.error("Login error:", error);
       setError("An error occurred. Please try again.");
@@ -182,6 +196,16 @@ export default function LoginPage() {
           SecureTanza v1.0.0 • © 2026
         </p>
       </div>
+      
+      {showForceChange && (
+        <ForceChangePasswordModal 
+          onSuccess={() => {
+            setShowForceChange(false);
+            router.push("/");
+            router.refresh();
+          }} 
+        />
+      )}
     </div>
   );
 }

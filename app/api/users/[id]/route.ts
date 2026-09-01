@@ -78,6 +78,19 @@ export async function PUT(
       ));
     }
 
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'Settings',
+        user: session.accountNumber,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
+        resource: `User:${existingUser.accountNumber}`,
+        details: `Updated account/permissions for user ${existingUser.accountNumber}`,
+        outcome: 'success',
+      },
+    });
+
     return NextResponse.json({
       success: true,
       message: 'User updated successfully',
@@ -144,6 +157,20 @@ export async function DELETE(
     // Delete user (permissions will be deleted automatically due to CASCADE)
     await prisma.user.delete({
       where: { id: userId },
+    });
+
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'Settings',
+        user: session.accountNumber,
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        session: session.sessionId,
+        resource: `User:${existingUser.accountNumber}`,
+        details: `Deleted user account ${existingUser.accountNumber}`,
+        severity: 'high',
+        outcome: 'success',
+      },
     });
 
     return NextResponse.json({

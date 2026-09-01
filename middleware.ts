@@ -49,7 +49,30 @@ export async function middleware(request: NextRequest) {
 
   try {
     // Verify the JWT token
-    await jwtVerify(sessionCookie.value, JWT_SECRET);
+    const { payload } = await jwtVerify(sessionCookie.value, JWT_SECRET);
+    
+    // Check if the user is forced to change their password
+    if (payload.mustChangePassword) {
+      // Allow access to the login page so the modal can be shown
+      if (pathname === '/login') {
+        return NextResponse.next();
+      }
+      
+      // Allow access to auth API routes (so they can change it or logout)
+      if (pathname.startsWith('/api/auth/')) {
+        return NextResponse.next();
+      }
+      
+      // Block everything else
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Must change password' }, { status: 403 });
+      }
+      
+      // Redirect to login page to show the modal
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
     return NextResponse.next();
   } catch (error) {
     // Invalid or expired token

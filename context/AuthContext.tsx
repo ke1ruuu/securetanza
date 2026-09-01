@@ -8,6 +8,7 @@ interface User {
   accountNumber: string;
   fullName: string;
   permissions: string[];
+  mustChangePassword?: boolean;
 }
 
 interface AuthContextType {

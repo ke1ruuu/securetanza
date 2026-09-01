@@ -14,13 +14,16 @@ export interface User {
   accountNumber: string;
   fullName: string;
   permissions: string[];
+  mustChangePassword?: boolean;
 }
 
 export interface SessionPayload {
+  sessionId: string;
   userId: number;
   accountNumber: string;
   fullName: string;
   permissions: string[];
+  mustChangePassword: boolean;
   expiresAt: Date;
 }
 
@@ -66,12 +69,15 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
 /**
  * Create a session cookie
  */
-export async function createSession(user: User): Promise<void> {
+export async function createSession(user: User): Promise<string> {
+  const sessionId = crypto.randomUUID();
   const token = await createToken({
+    sessionId,
     userId: user.id,
     accountNumber: user.accountNumber,
     fullName: user.fullName,
     permissions: user.permissions,
+    mustChangePassword: user.mustChangePassword ?? false,
   });
 
   const cookieStore = await cookies();
@@ -82,6 +88,8 @@ export async function createSession(user: User): Promise<void> {
     maxAge: 7 * 24 * 60 * 60, // 7 days
     path: '/',
   });
+
+  return sessionId;
 }
 
 /**

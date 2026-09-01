@@ -5,6 +5,7 @@ import { verifyPassword, createSession } from '@/lib/auth';
 export async function POST(request: NextRequest) {
   try {
     const { accountNumber, password } = await request.json();
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
 
     // Validate input
     if (!accountNumber || !password) {
@@ -27,6 +28,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
+      await prisma.auditLog.create({
+        data: {
+          action: 'Auth',
+          user: accountNumber,
+          ip,
+          details: 'Failed login attempt',
+          errorMessage: 'Invalid credentials (User not found)',
+          outcome: 'failed',
+          severity: 'medium',
+        },
+      });
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -37,6 +49,17 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await verifyPassword(password, user.passwordHash);
 
     if (!isValidPassword) {
+      await prisma.auditLog.create({
+        data: {
+          action: 'Auth',
+          user: accountNumber,
+          ip,
+          details: 'Failed login attempt',
+          errorMessage: 'Invalid credentials (Wrong password)',
+          outcome: 'failed',
+          severity: 'medium',
+        },
+      });
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -47,15 +70,29 @@ export async function POST(request: NextRequest) {
     const permissions = user.permissions.map(up => up.permission.permissionName);
 
     // Create session
-    await createSession({
+    const sessionId = await createSession({
       id: user.id,
       accountNumber: user.accountNumber,
       fullName: user.fullName,
       permissions,
+      mustChangePassword: user.mustChangePassword,
+    });
+
+    // Audit log
+    await prisma.auditLog.create({
+      data: {
+        action: 'Auth',
+        user: user.accountNumber,
+        ip,
+        session: sessionId,
+        details: 'User logged in successfully',
+        outcome: 'success',
+      },
     });
 
     return NextResponse.json({
       success: true,
+      mustChangePassword: user.mustChangePassword,
       user: {
         id: user.id,
         accountNumber: user.accountNumber,

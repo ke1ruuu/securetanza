@@ -180,15 +180,21 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped`)
 
-    // 1. Record UploadLog
-    const uploadLog = await prisma.uploadLog.create({
+    // 1. Record AuditLog
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'Unknown IP';
+    const uploadLog = await prisma.auditLog.create({
       data: {
+        action: 'Import',
+        details: `Imported ${results.inserted} records from ${file.name}`,
+        user: session?.fullName || session?.accountNumber || 'Operational Officer',
+        resource: 'CrimeData',
+        ip: ip,
+        session: session?.accountNumber || 'Unknown',
         fileName: file.name,
         fileSize: file.size,
         recordsImported: results.inserted,
-        status: results.inserted === 0 ? 'failed' : results.skipped > 0 ? 'partial' : 'success',
+        outcome: results.inserted === 0 ? 'failed' : results.skipped > 0 ? 'partial' : 'success',
         errorMessage: results.errors.length > 0 ? results.errors.slice(0, 5).join('; ') : null,
-        uploadedBy: session?.fullName || session?.accountNumber || 'Operational Officer',
       },
     })
 
