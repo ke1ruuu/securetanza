@@ -90,6 +90,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
         {/* ── Logo + Brand ── */}
         <Link
           href="/"
+          data-tour="brand"
           className="flex items-center gap-2 sm:gap-2.5 no-underline shrink-0 group"
         >
           <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center relative">
@@ -119,7 +120,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
         </Link>
 
         {/* Desktop Navigation - Hidden on mobile */}
-        <nav className="hidden lg:flex items-center gap-1 h-full absolute left-1/2 -translate-x-1/2">
+        <nav data-tour="main-nav" className="hidden lg:flex items-center gap-1 h-full absolute left-1/2 -translate-x-1/2">
           {filteredNavItems.map((item) => {
             const isActive = isNavItemActive(item);
             const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
@@ -155,6 +156,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           {/* Upload Button */}
           <button
             onClick={() => setShowUploadModal(true)}
+            data-tour="upload-data"
             className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
             title="Upload Data"
           >

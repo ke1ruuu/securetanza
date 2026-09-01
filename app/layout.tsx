@@ -3,6 +3,7 @@ import { Inter, Manrope } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { TourProvider } from "@/context/TourContext";
 
 const inter = Inter({
 	variable: "--font-inter",
@@ -45,7 +46,9 @@ export default function RootLayout({
 			</head>
 			<body className="min-h-full flex flex-col bg-white dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 transition-colors duration-700">
 				<ThemeProvider>
-					<AuthProvider>{children}</AuthProvider>
+					<AuthProvider>
+					<TourProvider>{children}</TourProvider>
+				</AuthProvider>
 				</ThemeProvider>
 			</body>
 		</html>
