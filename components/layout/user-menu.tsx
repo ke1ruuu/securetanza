@@ -148,20 +148,16 @@ export default function UserMenu() {
                 <BookOpen className="h-4 w-4" />
                 User Guide
               </Link>
-              {(user.permissions.includes("admin") ||
-                user.permissions.includes("admin_operational_officer") ||
-                user.permissions.includes("privileged_map_view")) && (
-                <button
-                  onClick={() => {
-                    setShowMenu(false);
-                    replayTour();
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
-                >
-                  <Compass className="h-4 w-4" />
-                  Replay Tour
-                </button>
-              )}
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  replayTour();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
+              >
+                <Compass className="h-4 w-4" />
+                Replay Tour
+              </button>
             </div>
 
             {/* Actions */}

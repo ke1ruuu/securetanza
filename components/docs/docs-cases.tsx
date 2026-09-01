@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { FolderOpen, FileSpreadsheet } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsCases() {
   return (
@@ -10,7 +12,7 @@ export function DocsCases() {
           Crime Cases & Blotter Dossier Management
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          Located at <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/dashboard/cases</code>, this module provides investigative officers with full blotter case records and geographic context.
+          The Cases module provides investigative officers with complete blotter incident dossiers, status tracking, and spatial context.
         </p>
       </div>
 
@@ -69,6 +71,26 @@ export function DocsCases() {
           </div>
         </div>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Blotter Investigation Pro Tip"
+        suggestion="Filter records by clearance status ('Under Investigation' or 'Cleared') and leverage the full-text search to quickly prepare case profiles for court submittals."
+        actions={[
+          {
+            label: "Open Case Directory",
+            href: "/dashboard/cases",
+            icon: FolderOpen,
+            variant: "primary",
+          },
+          {
+            label: "Review Upload History",
+            href: "/dashboard/upload-logs",
+            icon: FileSpreadsheet,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }

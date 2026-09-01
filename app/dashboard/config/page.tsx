@@ -60,13 +60,20 @@ function ConfigContent() {
         {/* Sidebar */}
         <aside className="w-80 border-r border-slate-200 dark:border-white/[0.06] bg-white/50 dark:bg-slate-900/20 overflow-y-auto">
           <div className="p-6">
-            <nav className="space-y-1.5">
+            <nav className="space-y-1.5" data-tour="settings-nav">
               {sidebarNavItems.map((item) => {
                 const isActive = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
+                    data-tour={
+                      item.id === "access-security"
+                        ? "settings-access-security"
+                        : item.id === "notifications"
+                        ? "settings-notifications"
+                        : undefined
+                    }
                     className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-left cursor-pointer ${
                       isActive
                         ? "bg-[#0EA5E9]/10 text-[#0EA5E9] shadow-sm border border-[#0EA5E9]/20"
@@ -90,7 +97,7 @@ function ConfigContent() {
         </aside>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar scroll-smooth">
+        <div data-tour="settings-workspace" className="flex-1 overflow-y-auto p-8 custom-scrollbar scroll-smooth">
           {activeTab === "profile" && <ProfileTab />}
           {activeTab === "access-security" && <AccessSecurityTab />}
           {activeTab === "notifications" && <NotificationSettingsTab />}

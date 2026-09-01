@@ -639,7 +639,7 @@ export default function AuditLogsTab() {
 						<div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-slate-900/50">
 							<div className="flex items-center gap-3">
 								<div className={`p-2 rounded-xl ${ACTION_META[selectedLog.action].color}`}>
-									{React.cloneElement(ACTION_META[selectedLog.action].icon as React.ReactElement, { className: "h-5 w-5" })}
+									{React.cloneElement(ACTION_META[selectedLog.action].icon as React.ReactElement<any>, { className: "h-5 w-5" })}
 								</div>
 								<div>
 									<h2 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
@@ -676,7 +676,7 @@ export default function AuditLogsTab() {
 									value={<span className={`text-sm font-bold uppercase ${SEVERITY_COLOR[selectedLog.severity]}`}>{selectedLog.severity}</span>} 
 								/>
 								<AuditField 
-									icon={React.cloneElement(OUTCOME_META[selectedLog.outcome].icon as React.ReactElement, { className: "h-4 w-4" })} 
+									icon={React.cloneElement(OUTCOME_META[selectedLog.outcome].icon as React.ReactElement<any>, { className: "h-4 w-4" })} 
 									label="Outcome" 
 									value={<span className={`text-sm font-bold capitalize ${OUTCOME_META[selectedLog.outcome].color}`}>{selectedLog.outcome}</span>} 
 								/>

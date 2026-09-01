@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { FileSpreadsheet, CheckCircle2, Upload as UploadIcon, FolderOpen } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsUpload() {
   return (
@@ -96,10 +97,30 @@ export function DocsUpload() {
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-            <span><strong>Instant Notification & Audit:</strong> On upload completion, an audit record is stored in <code className="font-mono text-xs">/dashboard/upload-logs</code> and a notification alert is triggered.</span>
+            <span><strong>Instant Notification & Audit:</strong> On upload completion, an audit record is logged to the system audit trail and a notification alert is triggered.</span>
           </li>
         </ul>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Data Ingestion Pro Tip"
+        suggestion="Verify that column headers exactly match mandatory fields (incident_type, barangay, date_committed, time_committed). Missing coordinates will automatically receive barangay centroid fallbacks."
+        actions={[
+          {
+            label: "View Ingestion Logs",
+            href: "/dashboard/upload-logs",
+            icon: UploadIcon,
+            variant: "primary",
+          },
+          {
+            label: "Explore Case Directory",
+            href: "/dashboard/cases",
+            icon: FolderOpen,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }

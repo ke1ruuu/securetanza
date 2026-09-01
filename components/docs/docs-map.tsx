@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Layers, Crosshair, Clock, ChevronRight } from "lucide-react";
+import { Layers, Crosshair, Clock, ChevronRight, Map as MapIcon, BarChart3 } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsMap() {
   return (
@@ -11,7 +12,7 @@ export function DocsMap() {
           Interactive GIS Crime Map
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          The home route (<code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/</code>) is the primary spatial intelligence hub, visualizing geographic crime distribution across Tanza, Cavite.
+          The Interactive Crime Map is the primary spatial intelligence hub, visualizing geographic crime distribution across Tanza, Cavite.
         </p>
       </div>
 
@@ -115,6 +116,26 @@ export function DocsMap() {
           </p>
         </div>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Spatial Intelligence Pro Tip"
+        suggestion="Use the bottom Time Slider to scrub through historical month-by-month incident progression, or click on any barangay boundary to view its localized threat profile."
+        actions={[
+          {
+            label: "Open Interactive Map",
+            href: "/",
+            icon: MapIcon,
+            variant: "primary",
+          },
+          {
+            label: "Overview Dashboard",
+            href: "/dashboard/overview",
+            icon: BarChart3,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }

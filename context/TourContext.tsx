@@ -1,16 +1,26 @@
 "use client";
 
-import React, { createContext, useContext, useCallback, useEffect, useRef } from "react";
+import React, { createContext, useContext, useCallback, useEffect, useRef, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { driver, type Driver, type DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 import "@/components/tour/tour.css";
 import { useAuth } from "@/context/AuthContext";
-import { TOUR_STAGES, TOUR_COMPLETED_KEY, TOUR_STAGE_KEY, TOUR_PENDING_KEY } from "@/lib/tour/steps";
+import {
+	TOUR_COMPLETED_KEY,
+	TOUR_STAGE_KEY,
+	TOUR_PENDING_KEY,
+	TOUR_ROLE_KEY,
+	type UserRoleType,
+	type TourStage,
+	getTourStagesForRole,
+} from "@/lib/tour/steps";
 
 interface TourContextType {
-	/** Manually (re)start the full tour from the beginning, navigating to its first page if needed. */
-	replayTour: () => void;
+	/** Manually (re)start a guided tour, optionally specifying a role walkthrough. */
+	replayTour: (roleOverride?: UserRoleType) => void;
+	/** Current effective user role for tours */
+	activeRole: UserRoleType;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -21,26 +31,16 @@ export function useTour() {
 	return ctx;
 }
 
-// Permissions for each stage: stage 0 (system-map on "/") is public,
-// while dashboard stages require respective module permissions.
-const STAGE_PERMISSIONS: Record<string, string> = {
-	"system-map": "privileged_map_view",
-	overview: "privileged_map_view",
-	cases: "privileged_cases_view",
-	analytics: "privileged_analytics_view",
-	reports: "privileged_analytics_view",
-};
-
-function hasModulePermission(permissions: string[] | undefined, permission: string | undefined): boolean {
-	if (!permission) return true;
-	if (!permissions) return false;
-	return (
-		permissions.includes("admin") ||
-		permissions.includes("admin_operational_officer") ||
-		permissions.includes("operational_officer") ||
-		permissions.includes("privileged_user") ||
-		permissions.includes(permission)
-	);
+function getUserRole(user: any): UserRoleType {
+	if (!user) return "public";
+	const perms: string[] = user.permissions || [];
+	if (perms.includes("admin") || perms.includes("admin_operational_officer")) {
+		return "admin";
+	}
+	if (perms.includes("operational_officer")) {
+		return "operational_officer";
+	}
+	return "privileged_user";
 }
 
 function readLocal(key: string): string | null {
@@ -67,12 +67,7 @@ function removeLocal(key: string) {
 	}
 }
 
-// Resolves once `selector` exists in the DOM, or after `timeoutMs` elapses,
-// whichever comes first. Pages like Overview and Cases fetch their data
-// client-side and render a loading skeleton (with none of the tour's
-// `data-tour` targets present) until that finishes — driving the tour
-// before then leaves it pointed at elements that don't exist yet. A
-// selector-less stage resolves immediately, preserving old behavior.
+// Resolves once `selector` exists in the DOM, or after `timeoutMs` elapses.
 function waitForElement(selector: string | undefined, timeoutMs = 10000, intervalMs = 150): Promise<void> {
 	if (!selector) return Promise.resolve();
 	return new Promise((resolve) => {
@@ -93,48 +88,39 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname();
 	const router = useRouter();
 	const driverRef = useRef<Driver | null>(null);
-	// Tracks the pathname we've already made an auto-start/resume decision
-	// for. TourProvider lives in the root layout and never remounts between
-	// client-side navigations, so this resets when navigating away from stage paths.
+
 	const decidedForPath = useRef<string | null>(null);
-	// Set right before we manually destroy() a driver instance to chain
-	// into the next stage, so the shared onDestroyed handler below knows
-	// not to mark the *whole* tour as completed.
 	const advancingToNextStage = useRef(false);
-	// Kept in sync with `pathname` so the async readiness wait below (which
-	// closes over the pathname from whenever runStage was called) can tell
-	// if the user has since navigated away before it finishes waiting.
 	const currentPathnameRef = useRef(pathname);
+
 	useEffect(() => {
 		currentPathnameRef.current = pathname;
 	}, [pathname]);
 
+	const currentRole = useMemo<UserRoleType>(() => {
+		return getUserRole(user);
+	}, [user]);
+
+	const getActiveStages = useCallback((): { stages: TourStage[]; role: UserRoleType } => {
+		const storedRole = readLocal(TOUR_ROLE_KEY) as UserRoleType | null;
+		const role: UserRoleType = storedRole || currentRole;
+		return {
+			stages: getTourStagesForRole(role, user?.permissions || []),
+			role,
+		};
+	}, [currentRole, user?.permissions]);
+
 	const runStage = useCallback(
 		(stageIndex: number) => {
-			const stage = TOUR_STAGES[stageIndex];
+			const { stages, role } = getActiveStages();
+			const stage = stages[stageIndex];
 			if (!stage) return;
 
-			// Don't run a protected dashboard stage if the user lacks module access
-			if (stageIndex > 0 && !hasModulePermission(user?.permissions, STAGE_PERMISSIONS[stage.id])) {
-				writeLocal(TOUR_COMPLETED_KEY, "1");
-				removeLocal(TOUR_STAGE_KEY);
-				return;
-			}
+			const isFinalStage = stageIndex >= stages.length - 1;
+			const nextStage = !isFinalStage ? stages[stageIndex + 1] : undefined;
 
-			const isFinalStage = stageIndex === TOUR_STAGES.length - 1;
-			const nextStage = TOUR_STAGES[stageIndex + 1];
-			const nextStageAllowed =
-				!!nextStage && hasModulePermission(user?.permissions, STAGE_PERMISSIONS[nextStage.id]);
-
-			// Give the page a beat to finish rendering its data-tour targets
-			// (async stats, chart data, etc. load in after first paint), then
-			// wait for the stage's readySelector (if any) so we don't start
-			// driving while the page is still showing a loading skeleton.
 			window.setTimeout(() => {
 				waitForElement(stage.readySelector).then(() => {
-					// The user may have navigated away from this stage's page
-					// while we were waiting for its data to load — don't start
-					// (or restart) a tour on whatever page they're on now.
 					if (currentPathnameRef.current !== stage.path) return;
 
 					driverRef.current?.destroy();
@@ -162,20 +148,19 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 
 					let steps: DriveStep[] = visibleSteps;
 
-					if (!isFinalStage && nextStage && nextStageAllowed) {
-						// Attach a completion hook to the last step only, so
-						// finishing this stage's steps hands off to the next
-						// page instead of just closing the tour.
+					if (!isFinalStage && nextStage) {
 						steps = visibleSteps.map((step, i) => {
 							if (i !== visibleSteps.length - 1) return step;
 							return {
 								...step,
 								popover: {
 									...step.popover,
+									doneBtnText: "Next Module →",
 									onDoneClick: (_element, _step, opts) => {
 										advancingToNextStage.current = true;
 										writeLocal(TOUR_STAGE_KEY, String(stageIndex + 1));
 										writeLocal(TOUR_PENDING_KEY, "1");
+										writeLocal(TOUR_ROLE_KEY, role);
 										opts.driver.destroy();
 										router.push(nextStage.path);
 									},
@@ -196,10 +181,9 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 								advancingToNextStage.current = false;
 								return;
 							}
-							// Finished the final stage naturally, or closed early
-							// on any stage — either way, stop auto-starting.
 							writeLocal(TOUR_COMPLETED_KEY, "1");
 							removeLocal(TOUR_STAGE_KEY);
+							removeLocal(TOUR_ROLE_KEY);
 						},
 					});
 
@@ -208,14 +192,15 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 				});
 			}, 350);
 		},
-		[router, user],
+		[getActiveStages, router],
 	);
 
 	// Auto-start / auto-resume.
 	useEffect(() => {
 		if (loading) return;
 
-		const stageIndex = TOUR_STAGES.findIndex((s) => s.path === pathname);
+		const { stages } = getActiveStages();
+		const stageIndex = stages.findIndex((s) => s.path === pathname);
 		if (stageIndex === -1) {
 			decidedForPath.current = null;
 			return;
@@ -225,8 +210,6 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 		const storedStageIndex = Number(readLocal(TOUR_STAGE_KEY) ?? "0");
 		const completed = readLocal(TOUR_COMPLETED_KEY) === "1";
 
-		// A stage is waiting to resume on this exact page (either chained
-		// forward from the previous stage, or a manual replay landed here).
 		if (pending && storedStageIndex === stageIndex) {
 			removeLocal(TOUR_PENDING_KEY);
 			decidedForPath.current = pathname;
@@ -237,39 +220,52 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 		if (decidedForPath.current === pathname) return;
 		decidedForPath.current = pathname;
 
-		// Fresh, first-ever visit: only auto-start from the very first
-		// stage/page, never mid-way if someone lands deep-linked.
+		// Fresh, first-ever visit: auto-start from first stage
 		if (!completed && stageIndex === 0) {
 			runStage(0);
 		}
-	}, [loading, pathname, runStage]);
+	}, [loading, pathname, getActiveStages, runStage]);
 
-	// Clean up the driver instance whenever we navigate away from a stage
-	// page — driver.js appends its overlay straight to document.body, so it
-	// won't be cleared just because React unmounted the page underneath it
-	// (e.g. the user clicks a nav link mid-tour instead of finishing it).
+	// Clean up driver instance on unmount or navigation
 	useEffect(() => {
 		return () => {
 			driverRef.current?.destroy();
 		};
 	}, [pathname]);
 
-	const replayTour = useCallback(() => {
-		const firstStage = TOUR_STAGES[0];
-		removeLocal(TOUR_COMPLETED_KEY);
-		writeLocal(TOUR_STAGE_KEY, "0");
-		decidedForPath.current = null;
+	const replayTour = useCallback(
+		(roleOverride?: UserRoleType) => {
+			if (roleOverride) {
+				writeLocal(TOUR_ROLE_KEY, roleOverride);
+			} else {
+				removeLocal(TOUR_ROLE_KEY);
+			}
 
-		if (pathname === firstStage.path) {
-			removeLocal(TOUR_PENDING_KEY);
-			decidedForPath.current = pathname;
-			runStage(0);
-			return;
-		}
+			const effectiveRole = roleOverride || currentRole;
+			const stages = getTourStagesForRole(effectiveRole, user?.permissions || []);
+			if (stages.length === 0) return;
 
-		writeLocal(TOUR_PENDING_KEY, "1");
-		router.push(firstStage.path);
-	}, [pathname, router, runStage]);
+			const firstStage = stages[0];
+			removeLocal(TOUR_COMPLETED_KEY);
+			writeLocal(TOUR_STAGE_KEY, "0");
+			decidedForPath.current = null;
 
-	return <TourContext.Provider value={{ replayTour }}>{children}</TourContext.Provider>;
+			if (pathname === firstStage.path) {
+				removeLocal(TOUR_PENDING_KEY);
+				decidedForPath.current = pathname;
+				runStage(0);
+				return;
+			}
+
+			writeLocal(TOUR_PENDING_KEY, "1");
+			router.push(firstStage.path);
+		},
+		[currentRole, user?.permissions, pathname, router, runStage],
+	);
+
+	return (
+		<TourContext.Provider value={{ replayTour, activeRole: currentRole }}>
+			{children}
+		</TourContext.Provider>
+	);
 }

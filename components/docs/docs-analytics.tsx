@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { Clock, Sliders, Layers, Table } from "lucide-react";
+import { Clock, Sliders, Layers, Table, TrendingUp, FileText } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsAnalytics() {
   return (
@@ -11,7 +12,7 @@ export function DocsAnalytics() {
           Historical Crime Analytics & Intelligence
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          Located at <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/dashboard/analytics</code>, this module provides tactical intelligence tools for patrol optimization and investigative analysis.
+          This module provides tactical intelligence tools and mathematical indicators for patrol optimization and investigative analysis.
         </p>
       </div>
 
@@ -95,6 +96,26 @@ export function DocsAnalytics() {
           </div>
         </div>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Tactical Planning Pro Tip"
+        suggestion="Cross-reference the 24-Hour Polar Radar with high-frequency Modus Operandi to deploy roving PNP patrols precisely during peak incident time windows."
+        actions={[
+          {
+            label: "Open Crime Analytics",
+            href: "/dashboard/analytics",
+            icon: TrendingUp,
+            variant: "primary",
+          },
+          {
+            label: "Generate PDF Report",
+            href: "/dashboard/reports",
+            icon: FileText,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -20,9 +20,9 @@ export function DocsSidebar({
   onSearchChange,
 }: DocsSidebarProps) {
   return (
-    <aside className="w-80 border-r border-slate-200/80 dark:border-white/[0.08] bg-white/70 dark:bg-slate-900/40 flex flex-col overflow-hidden">
+    <aside data-tour="docs-sidebar" className="w-80 border-r border-slate-200/80 dark:border-white/[0.08] bg-white/70 dark:bg-slate-900/40 flex flex-col overflow-hidden">
       {/* Search Box */}
-      <div className="p-4 border-b border-slate-200/80 dark:border-white/[0.08]">
+      <div data-tour="docs-search" className="p-4 border-b border-slate-200/80 dark:border-white/[0.08]">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
@@ -90,16 +90,6 @@ export function DocsSidebar({
             );
           })
         )}
-      </div>
-
-      {/* Quick Offline PDF / User Guide Link */}
-      <div className="p-4 border-t border-slate-200/80 dark:border-white/[0.08] bg-slate-50/50 dark:bg-slate-900/20">
-        <div className="text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 font-medium">
-          Offline Markdown Reference
-        </div>
-        <div className="text-[11px] font-mono text-sky-600 dark:text-sky-400 truncate">
-          docs/USER_GUIDE.md
-        </div>
       </div>
     </aside>
   );

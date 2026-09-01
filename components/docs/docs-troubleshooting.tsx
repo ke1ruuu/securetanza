@@ -1,9 +1,14 @@
 "use client";
 
 import React from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Map, Sparkles } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
-export function DocsTroubleshooting() {
+interface DocsTroubleshootingProps {
+  onReplayTour?: () => void;
+}
+
+export function DocsTroubleshooting({ onReplayTour }: DocsTroubleshootingProps) {
   const issues = [
     {
       problem: "Interactive Crime Map appears blank or tiles do not load",
@@ -16,12 +21,12 @@ export function DocsTroubleshooting() {
       ]
     },
     {
-      problem: "Predictive Analytics displays 'Forecast Unavailable'",
-      cause: "The Python ARIMA backend service (FastAPI on port 8000) is unreachable or historical dataset is insufficient.",
+      problem: "Cannot access Crime Cases Blotter or Settings page",
+      cause: "User session token expired or user role lacks required administrative or operational clearance.",
       solutions: [
-        "Verify that the backend analytics microservice is active on port 8000.",
-        "Ensure at least 24 to 36 months of continuous historical data have been imported.",
-        "Check NEXT_PUBLIC_FORECAST_API_URL in .env.local configuration."
+        "Log in again with valid credentials via the User Menu.",
+        "Verify your account number and password.",
+        "Contact a System Administrator to assign 'admin' or 'operational_officer' role in Access & Security settings."
       ]
     },
     {
@@ -77,6 +82,30 @@ export function DocsTroubleshooting() {
           </div>
         ))}
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Operational Assistance & Diagnostics"
+        suggestion="If you encounter persistent permission restrictions or display anomalies, verify your role clearance in System Settings or restart the interactive guided tour."
+        actions={[
+          {
+            label: "Return to Home Map",
+            href: "/",
+            icon: Map,
+            variant: "primary",
+          },
+          ...(onReplayTour
+            ? [
+                {
+                  label: "Restart Guided Tour",
+                  onClick: onReplayTour,
+                  icon: Sparkles,
+                  variant: "secondary" as const,
+                },
+              ]
+            : []),
+        ]}
+      />
     </div>
   );
 }

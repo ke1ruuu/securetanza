@@ -42,9 +42,9 @@ export default function DocsPage() {
         />
 
         {/* Right Content Area */}
-        <main className="flex-1 overflow-y-auto bg-white/40 dark:bg-slate-950/40 custom-scrollbar p-6 lg:p-10">
+        <main data-tour="docs-content" className="flex-1 overflow-y-auto bg-white/40 dark:bg-slate-950/40 custom-scrollbar p-6 lg:p-10">
           <div className="max-w-4xl mx-auto pb-16">
-            <ActiveComponent onReplayTour={() => replayTour()} />
+            <ActiveComponent onReplayTour={replayTour} />
           </div>
         </main>
       </div>

@@ -48,11 +48,8 @@ export function DocsHeader({ onReplayTour, onBack, onHome }: DocsHeaderProps) {
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              <h1 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                 Documentation & User Manual
-                <span className="px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-xs font-semibold border border-sky-500/20">
-                  v1.2.0
-                </span>
               </h1>
               <p className="text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
                 Complete operational manual for SecureTanza
@@ -65,6 +62,7 @@ export function DocsHeader({ onReplayTour, onBack, onHome }: DocsHeaderProps) {
           {onReplayTour && (
             <button
               onClick={onReplayTour}
+              data-tour="docs-tour-btn"
               className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 font-medium text-xs border border-sky-500/20 transition-colors cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5" />

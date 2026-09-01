@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Upload, Menu, X, BookOpen, Settings } from "lucide-react";
+import { Upload, Menu, X, BookOpen, Settings, Sparkles } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTour } from "@/context/TourContext";
 import UploadModal from "./upload-modal";
 import UserMenu from "./user-menu";
 import NotificationBell from "@/components/notifications/notification-bell";
@@ -25,11 +26,18 @@ const navItems = [
 
 export default function MapHeader({ isVisible }: MapHeaderProps) {
   const { user } = useAuth();
+  const { replayTour } = useTour();
   const { selectedBarangay, setSelectedBarangay } = useMapContext();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const canUpload = user && (
+    user.permissions.includes("admin_operational_officer") ||
+    user.permissions.includes("admin") ||
+    user.permissions.includes("operational_officer")
+  );
 
   // Sync selectedBarangay from URL ?name= param on dashboard pages
   useEffect(() => {
@@ -147,21 +155,52 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
         {/* Right Side Actions */}
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          {/* Upload Button */}
-          <button
-            onClick={() => setShowUploadModal(true)}
-            data-tour="upload-data"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
-            title="Upload Data"
-          >
-            <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </button>
+          {/* Upload Button - Authorized personnel only */}
+          {canUpload && (
+            <button
+              onClick={() => setShowUploadModal(true)}
+              data-tour="upload-data"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
+              title="Upload Data"
+            >
+              <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+          )}
 
           {/* Notification Bell */}
-          <NotificationBell />
+          {user && <NotificationBell />}
 
-          {/* User Menu */}
-          <UserMenu />
+          {/* User Menu or Public Actions */}
+          {user ? (
+            <UserMenu />
+          ) : (
+            <div data-tour="public-actions" className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                onClick={() => replayTour("public")}
+                data-tour="public-tour-btn"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20"
+                title="Start Guided Tour"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Take Tour</span>
+              </button>
+              <Link
+                href="/docs"
+                data-tour="docs-link"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06] transition-all no-underline"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                <span>Guide</span>
+              </Link>
+              <Link
+                href="/login"
+                data-tour="auth-login"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#4e86fd] text-white hover:bg-[#3d74e8] dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd] shadow-sm transition-all no-underline cursor-pointer"
+              >
+                <span>Sign In</span>
+              </Link>
+            </div>
+          )}
 
           {/* Mobile Menu Button - Only on mobile */}
           <button

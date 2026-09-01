@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped`)
 
     // 1. Record AuditLog
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'Unknown IP';
+    const ip = request.headers.get('x-forwarded-for') || 'Unknown IP';
     const uploadLog = await prisma.auditLog.create({
       data: {
         action: 'Import',

@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { FileText, TrendingUp } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsReports() {
   const reportSections = [
@@ -21,7 +23,7 @@ export function DocsReports() {
           Institutional PDF Report Generator
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          Accessible at <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/dashboard/reports</code>, this module generates formatted PDF documentation for command briefings, LGU peace and order councils, and court submissions.
+          The Report Generator compiles structured, publication-grade PDF documentation for command briefings, LGU peace and order councils, and official submissions.
         </p>
       </div>
 
@@ -57,6 +59,26 @@ export function DocsReports() {
           <li>Click <strong>"Export Report"</strong> to generate the PDF with embedded vector charts and automatic download.</li>
         </ol>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Document Publication Pro Tip"
+        suggestion="Tailor PDF outputs for specific council briefings by toggling off optional modules — e.g. export an Executive Summary + 24-Hour Time Radar brief for shift commanders."
+        actions={[
+          {
+            label: "Open Report Generator",
+            href: "/dashboard/reports",
+            icon: FileText,
+            variant: "primary",
+          },
+          {
+            label: "Explore Analytics Visuals",
+            href: "/dashboard/analytics",
+            icon: TrendingUp,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }
