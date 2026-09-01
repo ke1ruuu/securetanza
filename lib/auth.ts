@@ -151,6 +151,7 @@ export async function getSession(validateWithDb: boolean = true): Promise<Sessio
         fullName: user.fullName,
         permissions: activePermissions,
         mustChangePassword: user.mustChangePassword,
+        defaultLandingPage: user.defaultLandingPage,
       };
     } catch (error) {
       console.error('Error validating session with database:', error);

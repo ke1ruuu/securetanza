@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
         accountNumber: user.accountNumber,
         fullName: user.fullName,
         permissions,
+        defaultLandingPage: user.defaultLandingPage,
       },
     });
   } catch (error) {

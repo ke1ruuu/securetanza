@@ -25,8 +25,9 @@ export default function LoginPage() {
     } else if (user && !user.mustChangePassword && !authLoading) {
       const pref = user.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
       let target = "/";
-      if (pref === "dashboard") target = "/dashboard/overview";
+      if (pref === "overview" || pref === "dashboard") target = "/dashboard/overview";
       if (pref === "analytics") target = "/dashboard/analytics";
+      if (pref === "map") target = "/";
       
       router.push(target);
     }
@@ -62,8 +63,9 @@ export default function LoginPage() {
       } else {
         const pref = data.user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
         let target = "/";
-        if (pref === "dashboard") target = "/dashboard/overview";
+        if (pref === "overview" || pref === "dashboard") target = "/dashboard/overview";
         if (pref === "analytics") target = "/dashboard/analytics";
+        if (pref === "map") target = "/";
         
         router.push(target);
         router.refresh();

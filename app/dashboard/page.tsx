@@ -20,15 +20,26 @@ function DashboardRedirect() {
 
     const params = searchParams.toString();
     const qs = params ? `?${params}` : "";
+    const landing = user.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
+    const isAdmin = user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin");
 
-    // Admin goes to overview by default
-    if (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) {
+    if (landing === "map" && (isAdmin || user.permissions.includes("privileged_map_view"))) {
+      router.replace(`/${qs}`);
+      return;
+    }
+
+    if (landing === "analytics" && (isAdmin || user.permissions.includes("privileged_analytics_view"))) {
+      router.replace(`/dashboard/analytics${qs}`);
+      return;
+    }
+
+    if ((landing === "overview" || landing === "dashboard") && (isAdmin || user.permissions.includes("privileged_map_view"))) {
       router.replace(`/dashboard/overview${qs}`);
       return;
     }
 
-    // Privileged users redirect based on their first available permission
-    if (user.permissions.includes("privileged_map_view")) {
+    // Default fallback based on permissions:
+    if (isAdmin || user.permissions.includes("privileged_map_view")) {
       router.replace(`/dashboard/overview${qs}`);
     } else if (user.permissions.includes("privileged_cases_view")) {
       router.replace(`/dashboard/cases${qs}`);

@@ -181,7 +181,7 @@ const LandingPreviewAnalytics = () => (
 
 const landingOptions = [
 	{ id: "map", label: "Map", description: "Geographic crime map", icon: Map, Preview: LandingPreviewMap },
-	{ id: "dashboard", label: "Overview", description: "General dashboard & stats", icon: LayoutDashboard, Preview: LandingPreviewDashboard },
+	{ id: "overview", label: "Overview", description: "General dashboard & stats", icon: LayoutDashboard, Preview: LandingPreviewDashboard },
 	{ id: "analytics", label: "Analytics", description: "Crime trends & insights", icon: Table2, Preview: LandingPreviewAnalytics },
 ];
 
@@ -190,20 +190,18 @@ export default function AccountSettingsTab() {
 	const { user, refreshSession } = useAuth();
 	const [syncWithSystem, setSyncWithSystem] = useState(false);
 	const [isUpdatingLanding, setIsUpdatingLanding] = useState(false);
+	const [saveSuccess, setSaveSuccess] = useState(false);
 	const [landingPage, setLandingPage] = useState<string>(() => {
-		if (user && user.defaultLandingPage) {
-			return user.defaultLandingPage;
-		}
-		if (typeof window !== "undefined") {
-			return localStorage.getItem("landingPage") ?? "dashboard";
-		}
-		return "dashboard";
+		const raw = user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
+		if (raw === "dashboard") return "overview";
+		return raw || "overview";
 	});
 
 	// Keep state in sync if user changes
 	React.useEffect(() => {
 		if (user && user.defaultLandingPage) {
-			setLandingPage(user.defaultLandingPage);
+			const norm = user.defaultLandingPage === "dashboard" ? "overview" : user.defaultLandingPage;
+			setLandingPage(norm);
 		}
 	}, [user]);
 
@@ -243,6 +241,8 @@ export default function AccountSettingsTab() {
 			});
 			if (res.ok) {
 				await refreshSession();
+				setSaveSuccess(true);
+				setTimeout(() => setSaveSuccess(false), 2500);
 			}
 		} catch (error) {
 			console.error("Failed to update landing page", error);
@@ -321,7 +321,17 @@ export default function AccountSettingsTab() {
 					{/* Landing Page */}
 					<div className="space-y-4">
 						<div className="space-y-1">
-							<h3 className="text-lg font-bold text-slate-900 dark:text-white">Default Landing Page</h3>
+							<div className="flex items-center justify-between">
+								<h3 className="text-lg font-bold text-slate-900 dark:text-white">Default Landing Page</h3>
+								{saveSuccess && (
+									<span className="text-xs font-semibold text-emerald-500 flex items-center gap-1 animate-in fade-in duration-200">
+										✓ Preference saved
+									</span>
+								)}
+								{isUpdatingLanding && (
+									<span className="text-xs font-semibold text-slate-400">Saving...</span>
+								)}
+							</div>
 							<p className="text-sm text-slate-500 dark:text-slate-400">
 								Choose which view opens automatically when you log in.
 							</p>
