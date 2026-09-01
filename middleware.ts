@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 // Routes that don't require authentication
-const publicRoutes = ['/', '/login', '/docs'];
+const publicRoutes = ['/login', '/docs'];
 
 // API routes that don't require authentication
 const publicApiRoutes = [
@@ -21,6 +21,21 @@ const publicApiRoutes = [
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Allow static files, assets, and extensions in public
+  if (
+    pathname.endsWith('.geojson') ||
+    pathname.endsWith('.json') ||
+    pathname.endsWith('.ico') ||
+    pathname.endsWith('.png') ||
+    pathname.endsWith('.svg') ||
+    pathname.endsWith('.jpg') ||
+    pathname.endsWith('.jpeg') ||
+    pathname.endsWith('.webp') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next();
+  }
 
   // Allow public routes
   if (publicRoutes.includes(pathname)) {
@@ -94,12 +109,8 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
+     * Match all request paths except for static files and assets:
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|geojson|json|ico|woff|woff2|ttf|eot)$).*)',
   ],
 };

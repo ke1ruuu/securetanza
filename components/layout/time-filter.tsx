@@ -66,6 +66,7 @@ export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggl
 				}
 
 				const response = await fetch(`/api/crimes?${params.toString()}`);
+				if (!response.ok) return;
 				const result = await response.json();
 
 				if (result.success && result.data.length > 0) {
@@ -124,6 +125,9 @@ export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggl
 					}
 
 					const response = await fetch(`/api/crimes/barangay-counts?${params.toString()}`);
+					if (!response.ok) {
+						return { hour, crimeCount: 0 };
+					}
 					const result = await response.json();
 
 					return {

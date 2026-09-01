@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { getSession, deleteSession } from '@/lib/auth';
 
 export async function GET() {
   try {
-    const session = await getSession();
+    const session = await getSession(true);
 
     if (!session) {
+      await deleteSession();
       return NextResponse.json(
-        { error: 'Not authenticated' },
+        { error: 'Not authenticated or access revoked', user: null },
         { status: 401 }
       );
     }
@@ -20,6 +21,7 @@ export async function GET() {
         fullName: session.fullName,
         permissions: session.permissions,
         mustChangePassword: session.mustChangePassword,
+        defaultLandingPage: session.defaultLandingPage,
       },
     });
   } catch (error) {

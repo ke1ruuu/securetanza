@@ -1,7 +1,7 @@
 "use client";
 
-import React, { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import OverviewTab from "@/components/dashboard/overview-tab";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
@@ -12,18 +12,33 @@ import { useAuth } from "@/context/AuthContext";
 import { Lock } from "lucide-react";
 
 function OverviewContent() {
-	const { user } = useAuth();
+	const { user, loading: authLoading } = useAuth();
+	const router = useRouter();
 	const searchParams = useSearchParams();
 	const rawParamName = searchParams.get("name");
 	const barangayName = rawParamName || "General Dashboard";
 	const { loading, error } = useDashboardData(barangayName);
 	const { theme } = useTheme();
 
+	React.useEffect(() => {
+		if (!authLoading && !user) {
+			router.replace("/login");
+		}
+	}, [authLoading, user, router]);
+
+	if (authLoading) {
+		return (
+			<div className="flex h-screen items-center justify-center bg-[#0f172a]">
+				<div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0EA5E9] border-t-transparent" />
+			</div>
+		);
+	}
+
 	if (
-		user &&
-		!user.permissions.includes("admin_operational_officer") &&
+		!user ||
+		(!user.permissions.includes("admin_operational_officer") &&
 		!user.permissions.includes("admin") &&
-		!user.permissions.includes("privileged_map_view")
+		!user.permissions.includes("privileged_map_view"))
 	) {
 		return (
 			<div className={`flex flex-col h-screen ${theme === "dark" ? "bg-[#0f172a] text-white" : "bg-[#f1f5f9] text-slate-900"}`}>

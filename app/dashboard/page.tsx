@@ -8,10 +8,15 @@ function DashboardRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   useEffect(() => {
-    if (!user) return;
+    if (authLoading) return;
+
+    if (!user || !user.permissions || user.permissions.length === 0) {
+      router.replace("/login");
+      return;
+    }
 
     const params = searchParams.toString();
     const qs = params ? `?${params}` : "";
@@ -30,10 +35,9 @@ function DashboardRedirect() {
     } else if (user.permissions.includes("privileged_analytics_view")) {
       router.replace(`/dashboard/analytics${qs}`);
     } else {
-      // If no module permissions, maybe they only have config?
       router.replace(`/dashboard/overview${qs}`);
     }
-  }, [router, searchParams, user]);
+  }, [router, searchParams, user, authLoading]);
 
   return (
     <div className="flex h-screen items-center justify-center bg-[#0f172a]">

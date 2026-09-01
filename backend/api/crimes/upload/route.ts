@@ -9,6 +9,14 @@ import { getSession } from '@/lib/auth'
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
+    
+    if (!session || (!session.permissions.includes('admin_operational_officer') && !session.permissions.includes('admin'))) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Administrative access required' },
+        { status: 403 }
+      )
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File
 
@@ -181,7 +189,7 @@ export async function POST(request: NextRequest) {
     console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped`)
 
     // 1. Record AuditLog
-    const ip = request.headers.get('x-forwarded-for') || 'Unknown IP';
+    const ip = request.headers.get('x-forwarded-for') || (request as any).ip || 'Unknown IP';
     const uploadLog = await prisma.auditLog.create({
       data: {
         action: 'Import',

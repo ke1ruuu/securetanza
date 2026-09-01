@@ -315,6 +315,7 @@ export default function AuditLogsTab() {
 		try {
 			// Fetch audit logs
 			const auditRes = await fetch("/api/audit-logs?limit=500");
+			if (!auditRes.ok) return;
 			const auditData = await auditRes.json();
 			if (auditData.success) {
 				const formattedLogs = auditData.data.map((log: any) => ({
@@ -322,7 +323,7 @@ export default function AuditLogsTab() {
 					time: formatTimeAgo(log.createdAt || log.time)
 				}));
 				setUnifiedLogs(formattedLogs);
-				setTotalLogs(auditData.meta.total);
+				setTotalLogs(auditData.meta?.total || formattedLogs.length);
 			}
 		} catch (e) { console.error("Error loading logs:", e); }
 		finally { setLogsLoading(false); }

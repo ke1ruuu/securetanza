@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { Monitor, Sun, Moon, LayoutDashboard, Map, Table2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -186,13 +187,25 @@ const landingOptions = [
 
 export default function AccountSettingsTab() {
 	const { theme, setTheme } = useTheme();
+	const { user, refreshSession } = useAuth();
 	const [syncWithSystem, setSyncWithSystem] = useState(false);
+	const [isUpdatingLanding, setIsUpdatingLanding] = useState(false);
 	const [landingPage, setLandingPage] = useState<string>(() => {
+		if (user && user.defaultLandingPage) {
+			return user.defaultLandingPage;
+		}
 		if (typeof window !== "undefined") {
 			return localStorage.getItem("landingPage") ?? "dashboard";
 		}
 		return "dashboard";
 	});
+
+	// Keep state in sync if user changes
+	React.useEffect(() => {
+		if (user && user.defaultLandingPage) {
+			setLandingPage(user.defaultLandingPage);
+		}
+	}, [user]);
 
 	const handleSyncToggle = (val: boolean) => {
 		setSyncWithSystem(val);
@@ -215,9 +228,27 @@ export default function AccountSettingsTab() {
 		}
 	};
 
-	const handleLandingSelect = (id: string) => {
-		setLandingPage(id);
-		localStorage.setItem("landingPage", id);
+	const handleLandingSelect = async (id: string) => {
+		setLandingPage(id); // optimistic update
+		if (typeof window !== "undefined") {
+			localStorage.setItem("landingPage", id);
+		}
+		
+		setIsUpdatingLanding(true);
+		try {
+			const res = await fetch("/api/users/settings/landing-page", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ landingPage: id }),
+			});
+			if (res.ok) {
+				await refreshSession();
+			}
+		} catch (error) {
+			console.error("Failed to update landing page", error);
+		} finally {
+			setIsUpdatingLanding(false);
+		}
 	};
 
 	return (

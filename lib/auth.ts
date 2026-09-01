@@ -15,6 +15,7 @@ export interface User {
   fullName: string;
   permissions: string[];
   mustChangePassword?: boolean;
+  defaultLandingPage?: string;
 }
 
 export interface SessionPayload {
@@ -24,6 +25,7 @@ export interface SessionPayload {
   fullName: string;
   permissions: string[];
   mustChangePassword: boolean;
+  defaultLandingPage: string;
   expiresAt: Date;
 }
 
@@ -78,6 +80,7 @@ export async function createSession(user: User): Promise<string> {
     fullName: user.fullName,
     permissions: user.permissions,
     mustChangePassword: user.mustChangePassword ?? false,
+    defaultLandingPage: user.defaultLandingPage ?? "dashboard",
   });
 
   const cookieStore = await cookies();
@@ -92,10 +95,12 @@ export async function createSession(user: User): Promise<string> {
   return sessionId;
 }
 
+import { prisma } from '@/backend/lib/prisma';
+
 /**
- * Get the current session
+ * Get the current session with real-time database validation
  */
-export async function getSession(): Promise<SessionPayload | null> {
+export async function getSession(validateWithDb: boolean = true): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get('session')?.value;
 
@@ -103,7 +108,57 @@ export async function getSession(): Promise<SessionPayload | null> {
     return null;
   }
 
-  return verifyToken(token);
+  const payload = await verifyToken(token);
+  if (!payload) {
+    return null;
+  }
+
+  if (validateWithDb) {
+    try {
+      // Check database to ensure user still exists and access has not been revoked
+      const user = await prisma.user.findUnique({
+        where: { id: payload.userId },
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      });
+
+      // If user was removed or account number doesn't match, revoke immediately
+      if (!user || user.accountNumber !== payload.accountNumber) {
+        try {
+          cookieStore.delete('session');
+        } catch {}
+        return null;
+      }
+
+      // Sync active permissions directly from database in real-time
+      const activePermissions = user.permissions.map(p => p.permission.permissionName);
+
+      // If user has all permissions revoked (0 permissions), revoke session
+      if (activePermissions.length === 0) {
+        try {
+          cookieStore.delete('session');
+        } catch {}
+        return null;
+      }
+
+      return {
+        ...payload,
+        fullName: user.fullName,
+        permissions: activePermissions,
+        mustChangePassword: user.mustChangePassword,
+      };
+    } catch (error) {
+      console.error('Error validating session with database:', error);
+      return null;
+    }
+  }
+
+  return payload;
 }
 
 /**

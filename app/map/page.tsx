@@ -4,17 +4,18 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, Suspense } from "react";
 
 import MapHeader from "@/components/layout/map-header";
-import UnifiedFilterBar from "@/components/layout/unified-filter-bar";
+import BarangayFilter from "@/components/layout/barangay-filter";
+import CrimeTypeFilter from "@/components/layout/crime-type-filter";
+import TimeSelector from "@/components/layout/time-selector";
 import RealTimeClock from "@/components/layout/real-time-clock";
 import TimeFilter from "@/components/layout/time-filter";
-import LatestDataIndicator from "@/components/layout/latest-data-indicator";
 
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
 import RightSidebarControls from "@/components/layout/right-sidebar-controls";
 import MapLegend from "@/components/map/map-legend";
 
-const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
+const TanzaMap = dynamic(() => import("@/components/map/tanza-map-root"), {
 	ssr: false,
 });
 
@@ -73,12 +74,15 @@ function HomeContent() {
 			</div>
 
 			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
-				{/* Top Left Unified Filter Bar (Barangay, Crime Type, Time Selector) */}
+				{/* Top Left Filters */}
 				<div
-					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
+					data-tour="map-filters"
+					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>
-					<UnifiedFilterBar />
+					<BarangayFilter />
+					<CrimeTypeFilter />
+					<TimeSelector />
 				</div>
 
 				{/* Top Right Legend */}
@@ -90,12 +94,9 @@ function HomeContent() {
 					<MapLegend />
 				</div>
 
-				{/* Bottom Right: Latest Data Indicator beside Zoom Controls */}
-				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6 flex items-end gap-2.5 sm:gap-3">
-					<LatestDataIndicator />
-					<div data-tour="map-zoom-controls">
-						<RightSidebarControls />
-					</div>
+				{/* Bottom Right Controls */}
+				<div data-tour="map-zoom-controls" className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6">
+					<RightSidebarControls />
 				</div>
 
 				{/* Time Filter - appears at bottom when filter is active */}

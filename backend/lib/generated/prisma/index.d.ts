@@ -44,6 +44,11 @@ export type NotificationRule = $Result.DefaultSelection<Prisma.$NotificationRule
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model ExportSchedule
+ * 
+ */
+export type ExportSchedule = $Result.DefaultSelection<Prisma.$ExportSchedulePayload>
+/**
  * Model Permission
  * 
  */
@@ -281,6 +286,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.exportSchedule`: Exposes CRUD operations for the **ExportSchedule** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ExportSchedules
+    * const exportSchedules = await prisma.exportSchedule.findMany()
+    * ```
+    */
+  get exportSchedule(): Prisma.ExportScheduleDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.permission`: Exposes CRUD operations for the **Permission** model.
@@ -741,6 +756,7 @@ export namespace Prisma {
     Notification: 'Notification',
     NotificationRule: 'NotificationRule',
     User: 'User',
+    ExportSchedule: 'ExportSchedule',
     Permission: 'Permission',
     UserPermission: 'UserPermission'
   };
@@ -758,7 +774,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "crimeIncident" | "barangay" | "auditLog" | "notification" | "notificationRule" | "user" | "permission" | "userPermission"
+      modelProps: "crimeIncident" | "barangay" | "auditLog" | "notification" | "notificationRule" | "user" | "exportSchedule" | "permission" | "userPermission"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1206,6 +1222,80 @@ export namespace Prisma {
           }
         }
       }
+      ExportSchedule: {
+        payload: Prisma.$ExportSchedulePayload<ExtArgs>
+        fields: Prisma.ExportScheduleFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ExportScheduleFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ExportScheduleFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>
+          }
+          findFirst: {
+            args: Prisma.ExportScheduleFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ExportScheduleFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>
+          }
+          findMany: {
+            args: Prisma.ExportScheduleFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>[]
+          }
+          create: {
+            args: Prisma.ExportScheduleCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>
+          }
+          createMany: {
+            args: Prisma.ExportScheduleCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ExportScheduleCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>[]
+          }
+          delete: {
+            args: Prisma.ExportScheduleDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>
+          }
+          update: {
+            args: Prisma.ExportScheduleUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>
+          }
+          deleteMany: {
+            args: Prisma.ExportScheduleDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ExportScheduleUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ExportScheduleUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>[]
+          }
+          upsert: {
+            args: Prisma.ExportScheduleUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ExportSchedulePayload>
+          }
+          aggregate: {
+            args: Prisma.ExportScheduleAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateExportSchedule>
+          }
+          groupBy: {
+            args: Prisma.ExportScheduleGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ExportScheduleGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ExportScheduleCountArgs<ExtArgs>
+            result: $Utils.Optional<ExportScheduleCountAggregateOutputType> | number
+          }
+        }
+      }
       Permission: {
         payload: Prisma.$PermissionPayload<ExtArgs>
         fields: Prisma.PermissionFieldRefs
@@ -1468,6 +1558,7 @@ export namespace Prisma {
     notification?: NotificationOmit
     notificationRule?: NotificationRuleOmit
     user?: UserOmit
+    exportSchedule?: ExportScheduleOmit
     permission?: PermissionOmit
     userPermission?: UserPermissionOmit
   }
@@ -1582,10 +1673,12 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     permissions: number
+    exportSchedules: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     permissions?: boolean | UserCountOutputTypeCountPermissionsArgs
+    exportSchedules?: boolean | UserCountOutputTypeCountExportSchedulesArgs
   }
 
   // Custom InputTypes
@@ -1604,6 +1697,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountPermissionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: UserPermissionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountExportSchedulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ExportScheduleWhereInput
   }
 
 
@@ -7866,6 +7966,7 @@ export namespace Prisma {
     fullName: string | null
     passwordHash: string | null
     mustChangePassword: boolean | null
+    defaultLandingPage: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7876,6 +7977,7 @@ export namespace Prisma {
     fullName: string | null
     passwordHash: string | null
     mustChangePassword: boolean | null
+    defaultLandingPage: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -7886,6 +7988,7 @@ export namespace Prisma {
     fullName: number
     passwordHash: number
     mustChangePassword: number
+    defaultLandingPage: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -7906,6 +8009,7 @@ export namespace Prisma {
     fullName?: true
     passwordHash?: true
     mustChangePassword?: true
+    defaultLandingPage?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7916,6 +8020,7 @@ export namespace Prisma {
     fullName?: true
     passwordHash?: true
     mustChangePassword?: true
+    defaultLandingPage?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -7926,6 +8031,7 @@ export namespace Prisma {
     fullName?: true
     passwordHash?: true
     mustChangePassword?: true
+    defaultLandingPage?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -8023,6 +8129,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword: boolean
+    defaultLandingPage: string
     createdAt: Date
     updatedAt: Date
     _count: UserCountAggregateOutputType | null
@@ -8052,9 +8159,11 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     permissions?: boolean | User$permissionsArgs<ExtArgs>
+    exportSchedules?: boolean | User$exportSchedulesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -8064,6 +8173,7 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -8074,6 +8184,7 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["user"]>
@@ -8084,13 +8195,15 @@ export namespace Prisma {
     fullName?: boolean
     passwordHash?: boolean
     mustChangePassword?: boolean
+    defaultLandingPage?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "defaultLandingPage" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     permissions?: boolean | User$permissionsArgs<ExtArgs>
+    exportSchedules?: boolean | User$exportSchedulesArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -8100,6 +8213,7 @@ export namespace Prisma {
     name: "User"
     objects: {
       permissions: Prisma.$UserPermissionPayload<ExtArgs>[]
+      exportSchedules: Prisma.$ExportSchedulePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -8107,6 +8221,7 @@ export namespace Prisma {
       fullName: string
       passwordHash: string
       mustChangePassword: boolean
+      defaultLandingPage: string
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["user"]>
@@ -8504,6 +8619,7 @@ export namespace Prisma {
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     permissions<T extends User$permissionsArgs<ExtArgs> = {}>(args?: Subset<T, User$permissionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPermissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    exportSchedules<T extends User$exportSchedulesArgs<ExtArgs> = {}>(args?: Subset<T, User$exportSchedulesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -8538,6 +8654,7 @@ export namespace Prisma {
     readonly fullName: FieldRef<"User", 'String'>
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly mustChangePassword: FieldRef<"User", 'Boolean'>
+    readonly defaultLandingPage: FieldRef<"User", 'String'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
   }
@@ -8957,6 +9074,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.exportSchedules
+   */
+  export type User$exportSchedulesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    where?: ExportScheduleWhereInput
+    orderBy?: ExportScheduleOrderByWithRelationInput | ExportScheduleOrderByWithRelationInput[]
+    cursor?: ExportScheduleWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ExportScheduleScalarFieldEnum | ExportScheduleScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8972,6 +9113,1181 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ExportSchedule
+   */
+
+  export type AggregateExportSchedule = {
+    _count: ExportScheduleCountAggregateOutputType | null
+    _avg: ExportScheduleAvgAggregateOutputType | null
+    _sum: ExportScheduleSumAggregateOutputType | null
+    _min: ExportScheduleMinAggregateOutputType | null
+    _max: ExportScheduleMaxAggregateOutputType | null
+  }
+
+  export type ExportScheduleAvgAggregateOutputType = {
+    userId: number | null
+  }
+
+  export type ExportScheduleSumAggregateOutputType = {
+    userId: number | null
+  }
+
+  export type ExportScheduleMinAggregateOutputType = {
+    id: string | null
+    userId: number | null
+    enabled: boolean | null
+    frequency: string | null
+    dayOfWeek: string | null
+    dayOfMonth: string | null
+    monthlyOn: string | null
+    timeOfDay: string | null
+    deliveryMode: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ExportScheduleMaxAggregateOutputType = {
+    id: string | null
+    userId: number | null
+    enabled: boolean | null
+    frequency: string | null
+    dayOfWeek: string | null
+    dayOfMonth: string | null
+    monthlyOn: string | null
+    timeOfDay: string | null
+    deliveryMode: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ExportScheduleCountAggregateOutputType = {
+    id: number
+    userId: number
+    enabled: number
+    frequency: number
+    dayOfWeek: number
+    dayOfMonth: number
+    monthlyOn: number
+    timeOfDay: number
+    deliveryMode: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ExportScheduleAvgAggregateInputType = {
+    userId?: true
+  }
+
+  export type ExportScheduleSumAggregateInputType = {
+    userId?: true
+  }
+
+  export type ExportScheduleMinAggregateInputType = {
+    id?: true
+    userId?: true
+    enabled?: true
+    frequency?: true
+    dayOfWeek?: true
+    dayOfMonth?: true
+    monthlyOn?: true
+    timeOfDay?: true
+    deliveryMode?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ExportScheduleMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    enabled?: true
+    frequency?: true
+    dayOfWeek?: true
+    dayOfMonth?: true
+    monthlyOn?: true
+    timeOfDay?: true
+    deliveryMode?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ExportScheduleCountAggregateInputType = {
+    id?: true
+    userId?: true
+    enabled?: true
+    frequency?: true
+    dayOfWeek?: true
+    dayOfMonth?: true
+    monthlyOn?: true
+    timeOfDay?: true
+    deliveryMode?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ExportScheduleAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ExportSchedule to aggregate.
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExportSchedules to fetch.
+     */
+    orderBy?: ExportScheduleOrderByWithRelationInput | ExportScheduleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ExportScheduleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExportSchedules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExportSchedules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ExportSchedules
+    **/
+    _count?: true | ExportScheduleCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ExportScheduleAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ExportScheduleSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ExportScheduleMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ExportScheduleMaxAggregateInputType
+  }
+
+  export type GetExportScheduleAggregateType<T extends ExportScheduleAggregateArgs> = {
+        [P in keyof T & keyof AggregateExportSchedule]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateExportSchedule[P]>
+      : GetScalarType<T[P], AggregateExportSchedule[P]>
+  }
+
+
+
+
+  export type ExportScheduleGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ExportScheduleWhereInput
+    orderBy?: ExportScheduleOrderByWithAggregationInput | ExportScheduleOrderByWithAggregationInput[]
+    by: ExportScheduleScalarFieldEnum[] | ExportScheduleScalarFieldEnum
+    having?: ExportScheduleScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ExportScheduleCountAggregateInputType | true
+    _avg?: ExportScheduleAvgAggregateInputType
+    _sum?: ExportScheduleSumAggregateInputType
+    _min?: ExportScheduleMinAggregateInputType
+    _max?: ExportScheduleMaxAggregateInputType
+  }
+
+  export type ExportScheduleGroupByOutputType = {
+    id: string
+    userId: number
+    enabled: boolean
+    frequency: string
+    dayOfWeek: string | null
+    dayOfMonth: string | null
+    monthlyOn: string | null
+    timeOfDay: string | null
+    deliveryMode: string
+    createdAt: Date
+    updatedAt: Date
+    _count: ExportScheduleCountAggregateOutputType | null
+    _avg: ExportScheduleAvgAggregateOutputType | null
+    _sum: ExportScheduleSumAggregateOutputType | null
+    _min: ExportScheduleMinAggregateOutputType | null
+    _max: ExportScheduleMaxAggregateOutputType | null
+  }
+
+  type GetExportScheduleGroupByPayload<T extends ExportScheduleGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ExportScheduleGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ExportScheduleGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ExportScheduleGroupByOutputType[P]>
+            : GetScalarType<T[P], ExportScheduleGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ExportScheduleSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    enabled?: boolean
+    frequency?: boolean
+    dayOfWeek?: boolean
+    dayOfMonth?: boolean
+    monthlyOn?: boolean
+    timeOfDay?: boolean
+    deliveryMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["exportSchedule"]>
+
+  export type ExportScheduleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    enabled?: boolean
+    frequency?: boolean
+    dayOfWeek?: boolean
+    dayOfMonth?: boolean
+    monthlyOn?: boolean
+    timeOfDay?: boolean
+    deliveryMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["exportSchedule"]>
+
+  export type ExportScheduleSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    enabled?: boolean
+    frequency?: boolean
+    dayOfWeek?: boolean
+    dayOfMonth?: boolean
+    monthlyOn?: boolean
+    timeOfDay?: boolean
+    deliveryMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["exportSchedule"]>
+
+  export type ExportScheduleSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    enabled?: boolean
+    frequency?: boolean
+    dayOfWeek?: boolean
+    dayOfMonth?: boolean
+    monthlyOn?: boolean
+    timeOfDay?: boolean
+    deliveryMode?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ExportScheduleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "enabled" | "frequency" | "dayOfWeek" | "dayOfMonth" | "monthlyOn" | "timeOfDay" | "deliveryMode" | "createdAt" | "updatedAt", ExtArgs["result"]["exportSchedule"]>
+  export type ExportScheduleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ExportScheduleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ExportScheduleIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ExportSchedulePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ExportSchedule"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: number
+      enabled: boolean
+      frequency: string
+      dayOfWeek: string | null
+      dayOfMonth: string | null
+      monthlyOn: string | null
+      timeOfDay: string | null
+      deliveryMode: string
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["exportSchedule"]>
+    composites: {}
+  }
+
+  type ExportScheduleGetPayload<S extends boolean | null | undefined | ExportScheduleDefaultArgs> = $Result.GetResult<Prisma.$ExportSchedulePayload, S>
+
+  type ExportScheduleCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ExportScheduleFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ExportScheduleCountAggregateInputType | true
+    }
+
+  export interface ExportScheduleDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ExportSchedule'], meta: { name: 'ExportSchedule' } }
+    /**
+     * Find zero or one ExportSchedule that matches the filter.
+     * @param {ExportScheduleFindUniqueArgs} args - Arguments to find a ExportSchedule
+     * @example
+     * // Get one ExportSchedule
+     * const exportSchedule = await prisma.exportSchedule.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ExportScheduleFindUniqueArgs>(args: SelectSubset<T, ExportScheduleFindUniqueArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ExportSchedule that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ExportScheduleFindUniqueOrThrowArgs} args - Arguments to find a ExportSchedule
+     * @example
+     * // Get one ExportSchedule
+     * const exportSchedule = await prisma.exportSchedule.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ExportScheduleFindUniqueOrThrowArgs>(args: SelectSubset<T, ExportScheduleFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ExportSchedule that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleFindFirstArgs} args - Arguments to find a ExportSchedule
+     * @example
+     * // Get one ExportSchedule
+     * const exportSchedule = await prisma.exportSchedule.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ExportScheduleFindFirstArgs>(args?: SelectSubset<T, ExportScheduleFindFirstArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ExportSchedule that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleFindFirstOrThrowArgs} args - Arguments to find a ExportSchedule
+     * @example
+     * // Get one ExportSchedule
+     * const exportSchedule = await prisma.exportSchedule.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ExportScheduleFindFirstOrThrowArgs>(args?: SelectSubset<T, ExportScheduleFindFirstOrThrowArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ExportSchedules that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ExportSchedules
+     * const exportSchedules = await prisma.exportSchedule.findMany()
+     * 
+     * // Get first 10 ExportSchedules
+     * const exportSchedules = await prisma.exportSchedule.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const exportScheduleWithIdOnly = await prisma.exportSchedule.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ExportScheduleFindManyArgs>(args?: SelectSubset<T, ExportScheduleFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ExportSchedule.
+     * @param {ExportScheduleCreateArgs} args - Arguments to create a ExportSchedule.
+     * @example
+     * // Create one ExportSchedule
+     * const ExportSchedule = await prisma.exportSchedule.create({
+     *   data: {
+     *     // ... data to create a ExportSchedule
+     *   }
+     * })
+     * 
+     */
+    create<T extends ExportScheduleCreateArgs>(args: SelectSubset<T, ExportScheduleCreateArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ExportSchedules.
+     * @param {ExportScheduleCreateManyArgs} args - Arguments to create many ExportSchedules.
+     * @example
+     * // Create many ExportSchedules
+     * const exportSchedule = await prisma.exportSchedule.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ExportScheduleCreateManyArgs>(args?: SelectSubset<T, ExportScheduleCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ExportSchedules and returns the data saved in the database.
+     * @param {ExportScheduleCreateManyAndReturnArgs} args - Arguments to create many ExportSchedules.
+     * @example
+     * // Create many ExportSchedules
+     * const exportSchedule = await prisma.exportSchedule.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ExportSchedules and only return the `id`
+     * const exportScheduleWithIdOnly = await prisma.exportSchedule.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ExportScheduleCreateManyAndReturnArgs>(args?: SelectSubset<T, ExportScheduleCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ExportSchedule.
+     * @param {ExportScheduleDeleteArgs} args - Arguments to delete one ExportSchedule.
+     * @example
+     * // Delete one ExportSchedule
+     * const ExportSchedule = await prisma.exportSchedule.delete({
+     *   where: {
+     *     // ... filter to delete one ExportSchedule
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ExportScheduleDeleteArgs>(args: SelectSubset<T, ExportScheduleDeleteArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ExportSchedule.
+     * @param {ExportScheduleUpdateArgs} args - Arguments to update one ExportSchedule.
+     * @example
+     * // Update one ExportSchedule
+     * const exportSchedule = await prisma.exportSchedule.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ExportScheduleUpdateArgs>(args: SelectSubset<T, ExportScheduleUpdateArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ExportSchedules.
+     * @param {ExportScheduleDeleteManyArgs} args - Arguments to filter ExportSchedules to delete.
+     * @example
+     * // Delete a few ExportSchedules
+     * const { count } = await prisma.exportSchedule.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ExportScheduleDeleteManyArgs>(args?: SelectSubset<T, ExportScheduleDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ExportSchedules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ExportSchedules
+     * const exportSchedule = await prisma.exportSchedule.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ExportScheduleUpdateManyArgs>(args: SelectSubset<T, ExportScheduleUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ExportSchedules and returns the data updated in the database.
+     * @param {ExportScheduleUpdateManyAndReturnArgs} args - Arguments to update many ExportSchedules.
+     * @example
+     * // Update many ExportSchedules
+     * const exportSchedule = await prisma.exportSchedule.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ExportSchedules and only return the `id`
+     * const exportScheduleWithIdOnly = await prisma.exportSchedule.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ExportScheduleUpdateManyAndReturnArgs>(args: SelectSubset<T, ExportScheduleUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ExportSchedule.
+     * @param {ExportScheduleUpsertArgs} args - Arguments to update or create a ExportSchedule.
+     * @example
+     * // Update or create a ExportSchedule
+     * const exportSchedule = await prisma.exportSchedule.upsert({
+     *   create: {
+     *     // ... data to create a ExportSchedule
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ExportSchedule we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ExportScheduleUpsertArgs>(args: SelectSubset<T, ExportScheduleUpsertArgs<ExtArgs>>): Prisma__ExportScheduleClient<$Result.GetResult<Prisma.$ExportSchedulePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ExportSchedules.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleCountArgs} args - Arguments to filter ExportSchedules to count.
+     * @example
+     * // Count the number of ExportSchedules
+     * const count = await prisma.exportSchedule.count({
+     *   where: {
+     *     // ... the filter for the ExportSchedules we want to count
+     *   }
+     * })
+    **/
+    count<T extends ExportScheduleCountArgs>(
+      args?: Subset<T, ExportScheduleCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ExportScheduleCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ExportSchedule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ExportScheduleAggregateArgs>(args: Subset<T, ExportScheduleAggregateArgs>): Prisma.PrismaPromise<GetExportScheduleAggregateType<T>>
+
+    /**
+     * Group by ExportSchedule.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ExportScheduleGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ExportScheduleGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ExportScheduleGroupByArgs['orderBy'] }
+        : { orderBy?: ExportScheduleGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ExportScheduleGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetExportScheduleGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ExportSchedule model
+   */
+  readonly fields: ExportScheduleFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ExportSchedule.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ExportScheduleClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ExportSchedule model
+   */
+  interface ExportScheduleFieldRefs {
+    readonly id: FieldRef<"ExportSchedule", 'String'>
+    readonly userId: FieldRef<"ExportSchedule", 'Int'>
+    readonly enabled: FieldRef<"ExportSchedule", 'Boolean'>
+    readonly frequency: FieldRef<"ExportSchedule", 'String'>
+    readonly dayOfWeek: FieldRef<"ExportSchedule", 'String'>
+    readonly dayOfMonth: FieldRef<"ExportSchedule", 'String'>
+    readonly monthlyOn: FieldRef<"ExportSchedule", 'String'>
+    readonly timeOfDay: FieldRef<"ExportSchedule", 'String'>
+    readonly deliveryMode: FieldRef<"ExportSchedule", 'String'>
+    readonly createdAt: FieldRef<"ExportSchedule", 'DateTime'>
+    readonly updatedAt: FieldRef<"ExportSchedule", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ExportSchedule findUnique
+   */
+  export type ExportScheduleFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * Filter, which ExportSchedule to fetch.
+     */
+    where: ExportScheduleWhereUniqueInput
+  }
+
+  /**
+   * ExportSchedule findUniqueOrThrow
+   */
+  export type ExportScheduleFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * Filter, which ExportSchedule to fetch.
+     */
+    where: ExportScheduleWhereUniqueInput
+  }
+
+  /**
+   * ExportSchedule findFirst
+   */
+  export type ExportScheduleFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * Filter, which ExportSchedule to fetch.
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExportSchedules to fetch.
+     */
+    orderBy?: ExportScheduleOrderByWithRelationInput | ExportScheduleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ExportSchedules.
+     */
+    cursor?: ExportScheduleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExportSchedules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExportSchedules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ExportSchedules.
+     */
+    distinct?: ExportScheduleScalarFieldEnum | ExportScheduleScalarFieldEnum[]
+  }
+
+  /**
+   * ExportSchedule findFirstOrThrow
+   */
+  export type ExportScheduleFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * Filter, which ExportSchedule to fetch.
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExportSchedules to fetch.
+     */
+    orderBy?: ExportScheduleOrderByWithRelationInput | ExportScheduleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ExportSchedules.
+     */
+    cursor?: ExportScheduleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExportSchedules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExportSchedules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ExportSchedules.
+     */
+    distinct?: ExportScheduleScalarFieldEnum | ExportScheduleScalarFieldEnum[]
+  }
+
+  /**
+   * ExportSchedule findMany
+   */
+  export type ExportScheduleFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * Filter, which ExportSchedules to fetch.
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ExportSchedules to fetch.
+     */
+    orderBy?: ExportScheduleOrderByWithRelationInput | ExportScheduleOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ExportSchedules.
+     */
+    cursor?: ExportScheduleWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ExportSchedules from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ExportSchedules.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ExportSchedules.
+     */
+    distinct?: ExportScheduleScalarFieldEnum | ExportScheduleScalarFieldEnum[]
+  }
+
+  /**
+   * ExportSchedule create
+   */
+  export type ExportScheduleCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ExportSchedule.
+     */
+    data: XOR<ExportScheduleCreateInput, ExportScheduleUncheckedCreateInput>
+  }
+
+  /**
+   * ExportSchedule createMany
+   */
+  export type ExportScheduleCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ExportSchedules.
+     */
+    data: ExportScheduleCreateManyInput | ExportScheduleCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ExportSchedule createManyAndReturn
+   */
+  export type ExportScheduleCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * The data used to create many ExportSchedules.
+     */
+    data: ExportScheduleCreateManyInput | ExportScheduleCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ExportSchedule update
+   */
+  export type ExportScheduleUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ExportSchedule.
+     */
+    data: XOR<ExportScheduleUpdateInput, ExportScheduleUncheckedUpdateInput>
+    /**
+     * Choose, which ExportSchedule to update.
+     */
+    where: ExportScheduleWhereUniqueInput
+  }
+
+  /**
+   * ExportSchedule updateMany
+   */
+  export type ExportScheduleUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ExportSchedules.
+     */
+    data: XOR<ExportScheduleUpdateManyMutationInput, ExportScheduleUncheckedUpdateManyInput>
+    /**
+     * Filter which ExportSchedules to update
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * Limit how many ExportSchedules to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ExportSchedule updateManyAndReturn
+   */
+  export type ExportScheduleUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * The data used to update ExportSchedules.
+     */
+    data: XOR<ExportScheduleUpdateManyMutationInput, ExportScheduleUncheckedUpdateManyInput>
+    /**
+     * Filter which ExportSchedules to update
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * Limit how many ExportSchedules to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ExportSchedule upsert
+   */
+  export type ExportScheduleUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ExportSchedule to update in case it exists.
+     */
+    where: ExportScheduleWhereUniqueInput
+    /**
+     * In case the ExportSchedule found by the `where` argument doesn't exist, create a new ExportSchedule with this data.
+     */
+    create: XOR<ExportScheduleCreateInput, ExportScheduleUncheckedCreateInput>
+    /**
+     * In case the ExportSchedule was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ExportScheduleUpdateInput, ExportScheduleUncheckedUpdateInput>
+  }
+
+  /**
+   * ExportSchedule delete
+   */
+  export type ExportScheduleDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
+    /**
+     * Filter which ExportSchedule to delete.
+     */
+    where: ExportScheduleWhereUniqueInput
+  }
+
+  /**
+   * ExportSchedule deleteMany
+   */
+  export type ExportScheduleDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ExportSchedules to delete
+     */
+    where?: ExportScheduleWhereInput
+    /**
+     * Limit how many ExportSchedules to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ExportSchedule without action
+   */
+  export type ExportScheduleDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ExportSchedule
+     */
+    select?: ExportScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ExportSchedule
+     */
+    omit?: ExportScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ExportScheduleInclude<ExtArgs> | null
   }
 
 
@@ -11302,11 +12618,29 @@ export namespace Prisma {
     fullName: 'fullName',
     passwordHash: 'passwordHash',
     mustChangePassword: 'mustChangePassword',
+    defaultLandingPage: 'defaultLandingPage',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const ExportScheduleScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    enabled: 'enabled',
+    frequency: 'frequency',
+    dayOfWeek: 'dayOfWeek',
+    dayOfMonth: 'dayOfMonth',
+    monthlyOn: 'monthlyOn',
+    timeOfDay: 'timeOfDay',
+    deliveryMode: 'deliveryMode',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ExportScheduleScalarFieldEnum = (typeof ExportScheduleScalarFieldEnum)[keyof typeof ExportScheduleScalarFieldEnum]
 
 
   export const PermissionScalarFieldEnum: {
@@ -12131,9 +13465,11 @@ export namespace Prisma {
     fullName?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
+    defaultLandingPage?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     permissions?: UserPermissionListRelationFilter
+    exportSchedules?: ExportScheduleListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -12142,9 +13478,11 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     permissions?: UserPermissionOrderByRelationAggregateInput
+    exportSchedules?: ExportScheduleOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -12156,9 +13494,11 @@ export namespace Prisma {
     fullName?: StringFilter<"User"> | string
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
+    defaultLandingPage?: StringFilter<"User"> | string
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     permissions?: UserPermissionListRelationFilter
+    exportSchedules?: ExportScheduleListRelationFilter
   }, "id" | "accountNumber">
 
   export type UserOrderByWithAggregationInput = {
@@ -12167,6 +13507,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -12185,8 +13526,96 @@ export namespace Prisma {
     fullName?: StringWithAggregatesFilter<"User"> | string
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     mustChangePassword?: BoolWithAggregatesFilter<"User"> | boolean
+    defaultLandingPage?: StringWithAggregatesFilter<"User"> | string
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+  }
+
+  export type ExportScheduleWhereInput = {
+    AND?: ExportScheduleWhereInput | ExportScheduleWhereInput[]
+    OR?: ExportScheduleWhereInput[]
+    NOT?: ExportScheduleWhereInput | ExportScheduleWhereInput[]
+    id?: StringFilter<"ExportSchedule"> | string
+    userId?: IntFilter<"ExportSchedule"> | number
+    enabled?: BoolFilter<"ExportSchedule"> | boolean
+    frequency?: StringFilter<"ExportSchedule"> | string
+    dayOfWeek?: StringNullableFilter<"ExportSchedule"> | string | null
+    dayOfMonth?: StringNullableFilter<"ExportSchedule"> | string | null
+    monthlyOn?: StringNullableFilter<"ExportSchedule"> | string | null
+    timeOfDay?: StringNullableFilter<"ExportSchedule"> | string | null
+    deliveryMode?: StringFilter<"ExportSchedule"> | string
+    createdAt?: DateTimeFilter<"ExportSchedule"> | Date | string
+    updatedAt?: DateTimeFilter<"ExportSchedule"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ExportScheduleOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    enabled?: SortOrder
+    frequency?: SortOrder
+    dayOfWeek?: SortOrderInput | SortOrder
+    dayOfMonth?: SortOrderInput | SortOrder
+    monthlyOn?: SortOrderInput | SortOrder
+    timeOfDay?: SortOrderInput | SortOrder
+    deliveryMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type ExportScheduleWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ExportScheduleWhereInput | ExportScheduleWhereInput[]
+    OR?: ExportScheduleWhereInput[]
+    NOT?: ExportScheduleWhereInput | ExportScheduleWhereInput[]
+    userId?: IntFilter<"ExportSchedule"> | number
+    enabled?: BoolFilter<"ExportSchedule"> | boolean
+    frequency?: StringFilter<"ExportSchedule"> | string
+    dayOfWeek?: StringNullableFilter<"ExportSchedule"> | string | null
+    dayOfMonth?: StringNullableFilter<"ExportSchedule"> | string | null
+    monthlyOn?: StringNullableFilter<"ExportSchedule"> | string | null
+    timeOfDay?: StringNullableFilter<"ExportSchedule"> | string | null
+    deliveryMode?: StringFilter<"ExportSchedule"> | string
+    createdAt?: DateTimeFilter<"ExportSchedule"> | Date | string
+    updatedAt?: DateTimeFilter<"ExportSchedule"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type ExportScheduleOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    enabled?: SortOrder
+    frequency?: SortOrder
+    dayOfWeek?: SortOrderInput | SortOrder
+    dayOfMonth?: SortOrderInput | SortOrder
+    monthlyOn?: SortOrderInput | SortOrder
+    timeOfDay?: SortOrderInput | SortOrder
+    deliveryMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ExportScheduleCountOrderByAggregateInput
+    _avg?: ExportScheduleAvgOrderByAggregateInput
+    _max?: ExportScheduleMaxOrderByAggregateInput
+    _min?: ExportScheduleMinOrderByAggregateInput
+    _sum?: ExportScheduleSumOrderByAggregateInput
+  }
+
+  export type ExportScheduleScalarWhereWithAggregatesInput = {
+    AND?: ExportScheduleScalarWhereWithAggregatesInput | ExportScheduleScalarWhereWithAggregatesInput[]
+    OR?: ExportScheduleScalarWhereWithAggregatesInput[]
+    NOT?: ExportScheduleScalarWhereWithAggregatesInput | ExportScheduleScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ExportSchedule"> | string
+    userId?: IntWithAggregatesFilter<"ExportSchedule"> | number
+    enabled?: BoolWithAggregatesFilter<"ExportSchedule"> | boolean
+    frequency?: StringWithAggregatesFilter<"ExportSchedule"> | string
+    dayOfWeek?: StringNullableWithAggregatesFilter<"ExportSchedule"> | string | null
+    dayOfMonth?: StringNullableWithAggregatesFilter<"ExportSchedule"> | string | null
+    monthlyOn?: StringNullableWithAggregatesFilter<"ExportSchedule"> | string | null
+    timeOfDay?: StringNullableWithAggregatesFilter<"ExportSchedule"> | string | null
+    deliveryMode?: StringWithAggregatesFilter<"ExportSchedule"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ExportSchedule"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ExportSchedule"> | Date | string
   }
 
   export type PermissionWhereInput = {
@@ -13063,9 +14492,11 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionCreateNestedManyWithoutUserInput
+    exportSchedules?: ExportScheduleCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -13074,9 +14505,11 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
     permissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+    exportSchedules?: ExportScheduleUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -13084,9 +14517,11 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUpdateManyWithoutUserNestedInput
+    exportSchedules?: ExportScheduleUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -13095,9 +14530,11 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     permissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
+    exportSchedules?: ExportScheduleUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -13106,6 +14543,7 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -13115,6 +14553,7 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13125,6 +14564,104 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExportScheduleCreateInput = {
+    id?: string
+    enabled?: boolean
+    frequency?: string
+    dayOfWeek?: string | null
+    dayOfMonth?: string | null
+    monthlyOn?: string | null
+    timeOfDay?: string | null
+    deliveryMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutExportSchedulesInput
+  }
+
+  export type ExportScheduleUncheckedCreateInput = {
+    id?: string
+    userId: number
+    enabled?: boolean
+    frequency?: string
+    dayOfWeek?: string | null
+    dayOfMonth?: string | null
+    monthlyOn?: string | null
+    timeOfDay?: string | null
+    deliveryMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ExportScheduleUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutExportSchedulesNestedInput
+  }
+
+  export type ExportScheduleUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: IntFieldUpdateOperationsInput | number
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExportScheduleCreateManyInput = {
+    id?: string
+    userId: number
+    enabled?: boolean
+    frequency?: string
+    dayOfWeek?: string | null
+    dayOfMonth?: string | null
+    monthlyOn?: string | null
+    timeOfDay?: string | null
+    deliveryMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ExportScheduleUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExportScheduleUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: IntFieldUpdateOperationsInput | number
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -13964,7 +15501,17 @@ export namespace Prisma {
     none?: UserPermissionWhereInput
   }
 
+  export type ExportScheduleListRelationFilter = {
+    every?: ExportScheduleWhereInput
+    some?: ExportScheduleWhereInput
+    none?: ExportScheduleWhereInput
+  }
+
   export type UserPermissionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ExportScheduleOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -13974,6 +15521,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13988,6 +15536,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13998,6 +15547,7 @@ export namespace Prisma {
     fullName?: SortOrder
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
+    defaultLandingPage?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -14020,6 +15570,61 @@ export namespace Prisma {
     _sum?: NestedIntFilter<$PrismaModel>
     _min?: NestedIntFilter<$PrismaModel>
     _max?: NestedIntFilter<$PrismaModel>
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type ExportScheduleCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    enabled?: SortOrder
+    frequency?: SortOrder
+    dayOfWeek?: SortOrder
+    dayOfMonth?: SortOrder
+    monthlyOn?: SortOrder
+    timeOfDay?: SortOrder
+    deliveryMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ExportScheduleAvgOrderByAggregateInput = {
+    userId?: SortOrder
+  }
+
+  export type ExportScheduleMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    enabled?: SortOrder
+    frequency?: SortOrder
+    dayOfWeek?: SortOrder
+    dayOfMonth?: SortOrder
+    monthlyOn?: SortOrder
+    timeOfDay?: SortOrder
+    deliveryMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ExportScheduleMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    enabled?: SortOrder
+    frequency?: SortOrder
+    dayOfWeek?: SortOrder
+    dayOfMonth?: SortOrder
+    monthlyOn?: SortOrder
+    timeOfDay?: SortOrder
+    deliveryMode?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ExportScheduleSumOrderByAggregateInput = {
+    userId?: SortOrder
   }
 
   export type PermissionCountOrderByAggregateInput = {
@@ -14046,11 +15651,6 @@ export namespace Prisma {
 
   export type PermissionSumOrderByAggregateInput = {
     id?: SortOrder
-  }
-
-  export type UserScalarRelationFilter = {
-    is?: UserWhereInput
-    isNot?: UserWhereInput
   }
 
   export type PermissionScalarRelationFilter = {
@@ -14213,11 +15813,25 @@ export namespace Prisma {
     connect?: UserPermissionWhereUniqueInput | UserPermissionWhereUniqueInput[]
   }
 
+  export type ExportScheduleCreateNestedManyWithoutUserInput = {
+    create?: XOR<ExportScheduleCreateWithoutUserInput, ExportScheduleUncheckedCreateWithoutUserInput> | ExportScheduleCreateWithoutUserInput[] | ExportScheduleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ExportScheduleCreateOrConnectWithoutUserInput | ExportScheduleCreateOrConnectWithoutUserInput[]
+    createMany?: ExportScheduleCreateManyUserInputEnvelope
+    connect?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+  }
+
   export type UserPermissionUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<UserPermissionCreateWithoutUserInput, UserPermissionUncheckedCreateWithoutUserInput> | UserPermissionCreateWithoutUserInput[] | UserPermissionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: UserPermissionCreateOrConnectWithoutUserInput | UserPermissionCreateOrConnectWithoutUserInput[]
     createMany?: UserPermissionCreateManyUserInputEnvelope
     connect?: UserPermissionWhereUniqueInput | UserPermissionWhereUniqueInput[]
+  }
+
+  export type ExportScheduleUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ExportScheduleCreateWithoutUserInput, ExportScheduleUncheckedCreateWithoutUserInput> | ExportScheduleCreateWithoutUserInput[] | ExportScheduleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ExportScheduleCreateOrConnectWithoutUserInput | ExportScheduleCreateOrConnectWithoutUserInput[]
+    createMany?: ExportScheduleCreateManyUserInputEnvelope
+    connect?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
   }
 
   export type UserPermissionUpdateManyWithoutUserNestedInput = {
@@ -14232,6 +15846,20 @@ export namespace Prisma {
     update?: UserPermissionUpdateWithWhereUniqueWithoutUserInput | UserPermissionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserPermissionUpdateManyWithWhereWithoutUserInput | UserPermissionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserPermissionScalarWhereInput | UserPermissionScalarWhereInput[]
+  }
+
+  export type ExportScheduleUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ExportScheduleCreateWithoutUserInput, ExportScheduleUncheckedCreateWithoutUserInput> | ExportScheduleCreateWithoutUserInput[] | ExportScheduleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ExportScheduleCreateOrConnectWithoutUserInput | ExportScheduleCreateOrConnectWithoutUserInput[]
+    upsert?: ExportScheduleUpsertWithWhereUniqueWithoutUserInput | ExportScheduleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ExportScheduleCreateManyUserInputEnvelope
+    set?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    disconnect?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    delete?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    connect?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    update?: ExportScheduleUpdateWithWhereUniqueWithoutUserInput | ExportScheduleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ExportScheduleUpdateManyWithWhereWithoutUserInput | ExportScheduleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ExportScheduleScalarWhereInput | ExportScheduleScalarWhereInput[]
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -14254,6 +15882,34 @@ export namespace Prisma {
     update?: UserPermissionUpdateWithWhereUniqueWithoutUserInput | UserPermissionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: UserPermissionUpdateManyWithWhereWithoutUserInput | UserPermissionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: UserPermissionScalarWhereInput | UserPermissionScalarWhereInput[]
+  }
+
+  export type ExportScheduleUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ExportScheduleCreateWithoutUserInput, ExportScheduleUncheckedCreateWithoutUserInput> | ExportScheduleCreateWithoutUserInput[] | ExportScheduleUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ExportScheduleCreateOrConnectWithoutUserInput | ExportScheduleCreateOrConnectWithoutUserInput[]
+    upsert?: ExportScheduleUpsertWithWhereUniqueWithoutUserInput | ExportScheduleUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ExportScheduleCreateManyUserInputEnvelope
+    set?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    disconnect?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    delete?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    connect?: ExportScheduleWhereUniqueInput | ExportScheduleWhereUniqueInput[]
+    update?: ExportScheduleUpdateWithWhereUniqueWithoutUserInput | ExportScheduleUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ExportScheduleUpdateManyWithWhereWithoutUserInput | ExportScheduleUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ExportScheduleScalarWhereInput | ExportScheduleScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutExportSchedulesInput = {
+    create?: XOR<UserCreateWithoutExportSchedulesInput, UserUncheckedCreateWithoutExportSchedulesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutExportSchedulesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutExportSchedulesNestedInput = {
+    create?: XOR<UserCreateWithoutExportSchedulesInput, UserUncheckedCreateWithoutExportSchedulesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutExportSchedulesInput
+    upsert?: UserUpsertWithoutExportSchedulesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutExportSchedulesInput, UserUpdateWithoutExportSchedulesInput>, UserUncheckedUpdateWithoutExportSchedulesInput>
   }
 
   export type UserPermissionCreateNestedManyWithoutPermissionInput = {
@@ -14831,6 +16487,42 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type ExportScheduleCreateWithoutUserInput = {
+    id?: string
+    enabled?: boolean
+    frequency?: string
+    dayOfWeek?: string | null
+    dayOfMonth?: string | null
+    monthlyOn?: string | null
+    timeOfDay?: string | null
+    deliveryMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ExportScheduleUncheckedCreateWithoutUserInput = {
+    id?: string
+    enabled?: boolean
+    frequency?: string
+    dayOfWeek?: string | null
+    dayOfMonth?: string | null
+    monthlyOn?: string | null
+    timeOfDay?: string | null
+    deliveryMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ExportScheduleCreateOrConnectWithoutUserInput = {
+    where: ExportScheduleWhereUniqueInput
+    create: XOR<ExportScheduleCreateWithoutUserInput, ExportScheduleUncheckedCreateWithoutUserInput>
+  }
+
+  export type ExportScheduleCreateManyUserInputEnvelope = {
+    data: ExportScheduleCreateManyUserInput | ExportScheduleCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type UserPermissionUpsertWithWhereUniqueWithoutUserInput = {
     where: UserPermissionWhereUniqueInput
     update: XOR<UserPermissionUpdateWithoutUserInput, UserPermissionUncheckedUpdateWithoutUserInput>
@@ -14855,6 +16547,101 @@ export namespace Prisma {
     permissionId?: IntFilter<"UserPermission"> | number
     assignedBy?: IntNullableFilter<"UserPermission"> | number | null
     assignedAt?: DateTimeFilter<"UserPermission"> | Date | string
+  }
+
+  export type ExportScheduleUpsertWithWhereUniqueWithoutUserInput = {
+    where: ExportScheduleWhereUniqueInput
+    update: XOR<ExportScheduleUpdateWithoutUserInput, ExportScheduleUncheckedUpdateWithoutUserInput>
+    create: XOR<ExportScheduleCreateWithoutUserInput, ExportScheduleUncheckedCreateWithoutUserInput>
+  }
+
+  export type ExportScheduleUpdateWithWhereUniqueWithoutUserInput = {
+    where: ExportScheduleWhereUniqueInput
+    data: XOR<ExportScheduleUpdateWithoutUserInput, ExportScheduleUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ExportScheduleUpdateManyWithWhereWithoutUserInput = {
+    where: ExportScheduleScalarWhereInput
+    data: XOR<ExportScheduleUpdateManyMutationInput, ExportScheduleUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type ExportScheduleScalarWhereInput = {
+    AND?: ExportScheduleScalarWhereInput | ExportScheduleScalarWhereInput[]
+    OR?: ExportScheduleScalarWhereInput[]
+    NOT?: ExportScheduleScalarWhereInput | ExportScheduleScalarWhereInput[]
+    id?: StringFilter<"ExportSchedule"> | string
+    userId?: IntFilter<"ExportSchedule"> | number
+    enabled?: BoolFilter<"ExportSchedule"> | boolean
+    frequency?: StringFilter<"ExportSchedule"> | string
+    dayOfWeek?: StringNullableFilter<"ExportSchedule"> | string | null
+    dayOfMonth?: StringNullableFilter<"ExportSchedule"> | string | null
+    monthlyOn?: StringNullableFilter<"ExportSchedule"> | string | null
+    timeOfDay?: StringNullableFilter<"ExportSchedule"> | string | null
+    deliveryMode?: StringFilter<"ExportSchedule"> | string
+    createdAt?: DateTimeFilter<"ExportSchedule"> | Date | string
+    updatedAt?: DateTimeFilter<"ExportSchedule"> | Date | string
+  }
+
+  export type UserCreateWithoutExportSchedulesInput = {
+    accountNumber: string
+    fullName: string
+    passwordHash: string
+    mustChangePassword?: boolean
+    defaultLandingPage?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    permissions?: UserPermissionCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutExportSchedulesInput = {
+    id?: number
+    accountNumber: string
+    fullName: string
+    passwordHash: string
+    mustChangePassword?: boolean
+    defaultLandingPage?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    permissions?: UserPermissionUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutExportSchedulesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutExportSchedulesInput, UserUncheckedCreateWithoutExportSchedulesInput>
+  }
+
+  export type UserUpsertWithoutExportSchedulesInput = {
+    update: XOR<UserUpdateWithoutExportSchedulesInput, UserUncheckedUpdateWithoutExportSchedulesInput>
+    create: XOR<UserCreateWithoutExportSchedulesInput, UserUncheckedCreateWithoutExportSchedulesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutExportSchedulesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutExportSchedulesInput, UserUncheckedUpdateWithoutExportSchedulesInput>
+  }
+
+  export type UserUpdateWithoutExportSchedulesInput = {
+    accountNumber?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    permissions?: UserPermissionUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutExportSchedulesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    accountNumber?: StringFieldUpdateOperationsInput | string
+    fullName?: StringFieldUpdateOperationsInput | string
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    permissions?: UserPermissionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserPermissionCreateWithoutPermissionInput = {
@@ -14900,8 +16687,10 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    exportSchedules?: ExportScheduleCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPermissionsInput = {
@@ -14910,8 +16699,10 @@ export namespace Prisma {
     fullName: string
     passwordHash: string
     mustChangePassword?: boolean
+    defaultLandingPage?: string
     createdAt?: Date | string
     updatedAt?: Date | string
+    exportSchedules?: ExportScheduleUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPermissionsInput = {
@@ -14951,8 +16742,10 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    exportSchedules?: ExportScheduleUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPermissionsInput = {
@@ -14961,8 +16754,10 @@ export namespace Prisma {
     fullName?: StringFieldUpdateOperationsInput | string
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
+    defaultLandingPage?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    exportSchedules?: ExportScheduleUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type PermissionUpsertWithoutUsersInput = {
@@ -15049,6 +16844,19 @@ export namespace Prisma {
     assignedAt?: Date | string
   }
 
+  export type ExportScheduleCreateManyUserInput = {
+    id?: string
+    enabled?: boolean
+    frequency?: string
+    dayOfWeek?: string | null
+    dayOfMonth?: string | null
+    monthlyOn?: string | null
+    timeOfDay?: string | null
+    deliveryMode?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type UserPermissionUpdateWithoutUserInput = {
     assignedBy?: NullableIntFieldUpdateOperationsInput | number | null
     assignedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15065,6 +16873,45 @@ export namespace Prisma {
     permissionId?: IntFieldUpdateOperationsInput | number
     assignedBy?: NullableIntFieldUpdateOperationsInput | number | null
     assignedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExportScheduleUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExportScheduleUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ExportScheduleUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    enabled?: BoolFieldUpdateOperationsInput | boolean
+    frequency?: StringFieldUpdateOperationsInput | string
+    dayOfWeek?: NullableStringFieldUpdateOperationsInput | string | null
+    dayOfMonth?: NullableStringFieldUpdateOperationsInput | string | null
+    monthlyOn?: NullableStringFieldUpdateOperationsInput | string | null
+    timeOfDay?: NullableStringFieldUpdateOperationsInput | string | null
+    deliveryMode?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserPermissionCreateManyPermissionInput = {

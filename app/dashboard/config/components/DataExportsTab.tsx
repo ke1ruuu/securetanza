@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAYS_OF_MONTH = Array.from({ length: 28 }, (_, i) => i + 1);
@@ -18,10 +19,50 @@ export default function DataExportsTab() {
 	const [monthlyOn, setMonthlyOn] = useState("1"); // day of year for annually
 	const [deliveryMode, setDeliveryMode] = useState<"prompt" | "auto">("prompt");
 	const [saved, setSaved] = useState(false);
+	const [loading, setLoading] = useState(false);
 
-	const handleSave = () => {
-		setSaved(true);
-		setTimeout(() => setSaved(false), 3000);
+	React.useEffect(() => {
+		fetch("/api/exports/schedule")
+			.then((res) => res.json())
+			.then((data) => {
+				if (data.schedule) {
+					setEnabled(data.schedule.enabled);
+					setFrequency(data.schedule.frequency);
+					setDayOfWeek(data.schedule.dayOfWeek || "Monday");
+					setDayOfMonth(data.schedule.dayOfMonth || "1");
+					setMonthlyOn(data.schedule.monthlyOn || "1");
+					setDeliveryMode(data.schedule.deliveryMode || "prompt");
+				}
+			})
+			.catch((err) => console.error("Failed to load schedule:", err));
+	}, []);
+
+	const handleSave = async () => {
+		setLoading(true);
+		try {
+			const res = await fetch("/api/exports/schedule", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					enabled,
+					frequency,
+					dayOfWeek,
+					dayOfMonth,
+					monthlyOn,
+					deliveryMode,
+				}),
+			});
+			if (res.ok) {
+				setSaved(true);
+				setTimeout(() => setSaved(false), 3000);
+			} else {
+				console.error("Failed to save schedule");
+			}
+		} catch (error) {
+			console.error("Error saving schedule:", error);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	return (
@@ -34,15 +75,6 @@ export default function DataExportsTab() {
 							Data Exports
 						</h2>
 					</div>
-					{saved ? (
-						<div className="flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-3 py-1.5 rounded-lg text-sm font-medium">
-							<CheckCircle2 className="h-4 w-4" /> Saved
-						</div>
-					) : (
-						<Button onClick={handleSave} className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
-							Save Configuration
-						</Button>
-					)}
 				</div>
 
 				<div className="space-y-12">
@@ -180,6 +212,19 @@ export default function DataExportsTab() {
 											</div>
 										</button>
 									</div>
+								</div>
+								
+								{/* Save Button inside card */}
+								<div className="p-6 border-t border-slate-200 dark:border-white/5 flex justify-end">
+									{saved ? (
+										<div className="flex items-center gap-2 text-emerald-500 bg-emerald-500/10 px-4 py-2 rounded-lg text-sm font-medium">
+											<CheckCircle2 className="h-4 w-4" /> Configuration Saved
+										</div>
+									) : (
+										<Button onClick={handleSave} disabled={loading} className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 min-w-[150px]">
+											{loading ? "Saving..." : "Save Configuration"}
+										</Button>
+									)}
 								</div>
 							</div>
 						</div>
