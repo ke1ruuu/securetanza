@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { BarChart3, FolderOpen } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsDashboard() {
   return (
@@ -10,7 +12,7 @@ export function DocsDashboard() {
           Executive Dashboard & Overview
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          Accessible via <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/dashboard/overview</code>, this view serves as the high-level operational command center.
+          The Executive Dashboard serves as the high-level operational command center for monitoring crime trends and municipal statistics.
         </p>
       </div>
 
@@ -85,6 +87,26 @@ export function DocsDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Executive Monitoring Pro Tip"
+        suggestion="Switch the Barangay Scope selector at the top from 'General Dashboard' to an individual barangay to isolate localized trends, KPI snapshots, and recent blotter activity."
+        actions={[
+          {
+            label: "Open Executive Dashboard",
+            href: "/dashboard/overview",
+            icon: BarChart3,
+            variant: "primary",
+          },
+          {
+            label: "Investigate Case Blotters",
+            href: "/dashboard/cases",
+            icon: FolderOpen,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }

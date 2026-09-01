@@ -1,7 +1,7 @@
 # SecureTanza User Guide & Operational Manual
 
-**Enterprise Documentation for GIS Crime Mapping, Statistical Analytics, and AI Predictive Forecasting**  
-*Municipality of Tanza, Cavite, Philippines* • **Version 1.2.0**
+**Enterprise Documentation for GIS Crime Mapping and Statistical Analytics**  
+*Municipality of Tanza, Cavite, Philippines*
 
 ---
 
@@ -13,16 +13,15 @@
 4. [Interactive GIS Crime Map](#4-interactive-gis-crime-map)
 5. [Executive Dashboard & Overview](#5-executive-dashboard--overview)
 6. [Historical Crime Analytics & Intelligence](#6-historical-crime-analytics--intelligence)
-7. [Predictive Analytics & ARIMA Time-Series Forecasting](#7-predictive-analytics--arima-time-series-forecasting)
-8. [Crime Cases & Blotter Dossier Management](#8-crime-cases--blotter-dossier-management)
-9. [Institutional PDF Report Generator](#9-institutional-pdf-report-generator)
-10. [Analytical Alert & Notification Rules Engine](#10-analytical-alert--notification-rules-engine)
-11. [System Settings, Security & Configuration](#11-system-settings-security--configuration)
-12. [Batch Data Ingestion & Excel Schema](#12-batch-data-ingestion--excel-schema)
-13. [Interactive Guided Onboarding Tour](#13-interactive-guided-onboarding-tour)
-14. [Role-Based Operational Playbooks](#14-role-based-operational-playbooks)
-15. [Diagnostics & Troubleshooting Matrix](#15-diagnostics--troubleshooting-matrix)
-16. [Glossary of Terms](#16-glossary-of-terms)
+7. [Crime Cases & Blotter Dossier Management](#7-crime-cases--blotter-dossier-management)
+8. [Institutional PDF Report Generator](#8-institutional-pdf-report-generator)
+9. [Analytical Alert & Notification Rules Engine](#9-analytical-alert--notification-rules-engine)
+10. [System Settings, Security & Configuration](#10-system-settings-security--configuration)
+11. [Batch Data Ingestion & Excel Schema](#11-batch-data-ingestion--excel-schema)
+12. [Interactive Guided Onboarding Tour](#12-interactive-guided-onboarding-tour)
+13. [Role-Based Operational Playbooks](#13-role-based-operational-playbooks)
+14. [Diagnostics & Troubleshooting Matrix](#14-diagnostics--troubleshooting-matrix)
+15. [Glossary of Terms](#15-glossary-of-terms)
 
 ---
 
@@ -37,7 +36,6 @@
 - **Interactive GIS Crime Mapping:** Polygon boundary rendering of all 41 barangays, dynamic threat level coloration, coordinate pinpointing, and chronological animation scrubber.
 - **Executive KPI Monitoring:** Instant calculation of municipal crime volume, top offense categories, critical hotspot identification, and 12-month activity curves.
 - **Tactical Spatial-Temporal Analytics:** 24-hour polar radar time patterns, modus operandi breakdown, location type categorizations, and full-spectrum monthly heatmap matrix.
-- **Predictive AI Forecasting:** Automated AutoRegressive Integrated Moving Average (ARIMA) time-series forecasting with 95% confidence intervals and multi-metric validation (MAPE, MAE, RMSE).
 - **Comprehensive Blotter Dossiers:** Incident tracking with Heinous/Sensational flags, Elected/Government Official (EGO) victim/suspect tags, investigator assignments, and legal status tracking.
 - **Publication-Ready PDF Reports:** Institutional black-and-white reports with embedded vector chart captures and strategic recommendations for Peace and Order Councils.
 - **Automated Intelligence Alerts:** Threshold-based rule engine detecting hourly volume spikes, barangay surges, and heinous crime events.
@@ -50,7 +48,6 @@
 |  Presentation: Next.js 14 App Router, Tailwind CSS, Leaflet/Mapbox, Driver.js |
 |  API Layer: Next.js API Routes (REST), Jose JWT Auth Middleware               |
 |  Database: PostgreSQL via Prisma ORM (CrimeIncidents, Users, Notifications)  |
-|  AI Microservice: FastAPI / Python ARIMA Time-Series Engine (Port 8000)       |
 +-------------------------------------------------------------------------------+
 ```
 
@@ -78,20 +75,40 @@
 
 SecureTanza enforces role-based clearance levels to protect sensitive blotter information and maintain data governance.
 
-| Module / Action | Administrator (`admin`) | Operational Officer (`operational_officer`) | Privileged User / Viewer (`privileged_user`) | Public Visitor |
-| :--- | :---: | :---: | :---: | :---: |
-| **Interactive Crime Map** | Full Access | Full Access | Full Access | View Only |
-| **Time Scrubber & Animation** | Full Access | Full Access | Full Access | Full Access |
-| **Executive Dashboard & KPIs** | Full Access | Full Access | Read-Only | Restricted |
-| **Historical Crime Analytics** | Full Access | Full Access | Read-Only | Restricted |
-| **Predictive ARIMA Forecasting** | Full Access | Full Access | Read-Only | Restricted |
-| **Case Blotter Search & List** | Full Access | Full Access | Restricted | Restricted |
-| **Full Case Dossier & EGO Flags**| Full Access | Full Access | Restricted | Restricted |
-| **PDF Report Compilation** | Full Custom Export | Full Custom Export | Basic Summary | Restricted |
-| **Batch Excel Ingestion** | Authorized | Authorized | Restricted | Restricted |
-| **User Administration & RBAC** | Exclusive Access | Restricted | Restricted | Restricted |
-| **Notification Rules Engine** | Exclusive Access | Restricted | Restricted | Restricted |
-| **Audit Logs Inspection** | Exclusive Access | Read-Only | Restricted | Restricted |
+| Module / Action | Administrator (`admin`) | Operational Officer (`operational_officer`) | Privileged User / Viewer (`privileged_user`) |
+| :--- | :---: | :---: | :---: |
+| **Interactive Crime Map** | Full Access | Full Access | Full Access |
+| **Time Scrubber & Animation** | Full Access | Full Access | Full Access |
+| **Executive Dashboard & KPIs** | Full Access | Full Access | Read-Only |
+| **Historical Crime Analytics** | Full Access | Full Access | Read-Only |
+| **Case Blotter Search & List** | Full Access | Full Access | Restricted |
+| **Full Case Dossier & EGO Flags**| Full Access | Full Access | Restricted |
+| **PDF Report Compilation** | Full Custom Export | Full Custom Export | Basic Summary |
+| **Batch Excel Ingestion** | Authorized | Authorized | Restricted |
+| **User Administration & RBAC** | Exclusive Access | Restricted | Restricted |
+| **Notification Rules Engine** | Exclusive Access | Restricted | Restricted |
+| **Audit Logs Inspection** | Exclusive Access | Read-Only | Restricted |
+| **Role-Based Guided Walkthrough** | 7-Stage Tour | 6-Stage Tour | 4-Stage Tour |
+
+### 3.1 Role-Based Guided Walkthroughs
+
+SecureTanza provides tailored, multi-stage interactive tours (powered by Driver.js) dynamically adapted to the user's clearance level:
+
+1. **Operational Officer Walkthrough (6 Stages):**
+   - *Stage 1 (Map):* Tactical GIS layers, Excel blotter ingestion (`.xlsx`), peak-hour automated alerts, and officer account management.
+   - *Stage 2 (Overview):* Municipality KPI snapshots, monthly volume trends, and recent blotter activity.
+   - *Stage 3 (Cases):* Case blotter search filters, incident dossiers, and modus operandi analysis.
+   - *Stage 4 (Analytics):* 24-hour patrol radar, vulnerable premise profiling, and crime category heatmap matrix.
+   - *Stage 5 (Reports):* Analytical section selection and publication-ready PDF report compilation.
+   - *Stage 6 (Docs):* Operational SOPs and batch ingestion playbooks.
+
+2. **Privileged User / Analyst Walkthrough (4 Stages):**
+   - *Stages:* Tailored according to granted permissions (`privileged_map_view`, `privileged_cases_view`, `privileged_analytics_view`) with executive KPI cards, spatial-temporal trends, and case dossiers.
+
+3. **System Administrator Walkthrough (7 Stages):**
+   - *Full Platform:* Includes all operational modules plus System Settings (RBAC user provisioning, role assignments, automated alert rule engine, and dataset audit logging).
+
+Users can relaunch their role walkthrough at any time from the **User Menu** or the **Documentation Hub** (`/docs`).
 
 ---
 
@@ -166,7 +183,7 @@ The Executive Dashboard consolidates critical municipal metrics into a high-leve
 
 ## 6. Historical Crime Analytics & Intelligence
 
-**Route:** `/dashboard/analytics` *(Historical Mode)*
+**Route:** `/dashboard/analytics`
 
 Designed for crime intelligence analysts and patrol commanders to detect systemic patterns.
 
@@ -198,47 +215,13 @@ $$\text{Safety Index} = 100 - \left( w_1 \cdot \text{Critical Rate} + w_2 \cdot 
 
 ---
 
-## 7. Predictive Analytics & ARIMA Time-Series Forecasting
-
-**Route:** `/dashboard/analytics` *(Predictive Mode)*
-
-SecureTanza utilizes AutoRegressive Integrated Moving Average (**ARIMA**) algorithms to forecast monthly crime counts up to 12 months ahead.
-
-### 7.1 Model Theory & Equation
-
-An $\text{ARIMA}(p, d, q)$ model combines autoregression, differencing, and moving averages:
-$$Y'_t = c + \phi_1 Y'_{t-1} + \dots + \phi_p Y'_{t-p} + \theta_1 \epsilon_{t-1} + \dots + \theta_q \epsilon_{t-q} + \epsilon_t$$
-- $p$: Order of autoregressive terms (historical lags).
-- $d$: Degree of differencing required for stationarity.
-- $q$: Order of moving average terms (lagged forecast errors).
-
-### 7.2 Performance Evaluation Metrics
-
-- **MAPE (Mean Absolute Percentage Error):**
-  $$\text{MAPE} = \frac{1}{n} \sum_{t=1}^n \left| \frac{Actual_t - Forecast_t}{Actual_t} \right| \times 100\%$$
-  - **🟢 < 15%:** Highly accurate forecast.
-  - **🔵 15% - 25%:** Good accuracy for tactical planning.
-  - **🟡 25% - 40%:** Moderate accuracy; recommend broad resource reserve.
-  - **🔴 > 40%:** Low accuracy; dataset may require additional historical batches.
-- **MAE (Mean Absolute Error):** Average deviation in raw incident count.
-- **RMSE (Root Mean Square Error):** Penalizes large outlier deviations heavily.
-- **95% Confidence Bounds:** Upper and lower confidence envelopes reflecting statistical variance.
-
-### 7.3 Operational Application
-
-- **Patrol Resource Forecasting:** Pre-position checkpoint personnel prior to predicted high-volume months.
-- **Peace & Order Budget Justification:** Present empirical forecast data to municipal budget councils.
-- **Validation Table Review:** Monitor month-by-month historical validation to assess model accuracy against actual ground truth.
-
----
-
-## 8. Crime Cases & Blotter Dossier Management
+## 7. Crime Cases & Blotter Dossier Management
 
 **Route:** `/dashboard/cases`
 
 The Case Management suite provides investigative officers with full blotter case records, search filters, and geographic context.
 
-### 8.1 Case Clearance Classifications
+### 7.1 Case Clearance Classifications
 
 - 🟢 **Cleared:** Suspect has been identified, sufficient evidence collected, and case referred to the prosecutor.
 - 🔵 **Under Investigation:** Active inquiry ongoing by the assigned investigator.
@@ -246,7 +229,7 @@ The Case Management suite provides investigative officers with full blotter case
 - ⚪ **Archived / Closed:** Inactive or closed post-judicial proceedings.
 - 🟡 **Pending:** Initial blotter entry awaiting investigator assignment.
 
-### 8.2 Investigation Dossier Fields
+### 7.2 Investigation Dossier Fields
 
 - **Blotter Number:** Standard Philippine National Police (PNP) blotter entry format.
 - **Organizational Hierarchy:** Police Regional Office (PRO), Provincial Police Office (PPO), Police Station, and Community Precinct (PCP).
@@ -263,13 +246,13 @@ The Case Management suite provides investigative officers with full blotter case
 
 ---
 
-## 9. Institutional PDF Report Generator
+## 8. Institutional PDF Report Generator
 
 **Route:** `/dashboard/reports`
 
 Generates publication-ready PDF reports formatted to institutional standards for police briefings and municipal peace-and-order council meetings.
 
-### 9.1 Configurable Report Sections
+### 8.1 Configurable Report Sections
 
 Users can toggle individual analytical sections on or off:
 1. 📋 **Executive Summary:** High-level narrative of key findings and trends.
@@ -281,7 +264,7 @@ Users can toggle individual analytical sections on or off:
 7. 🔥 **Heatmap Matrix:** Cross-tabulated monthly crime type grid.
 8. 💡 **Tactical Recommendations:** Structured security recommendations.
 
-### 9.2 Generation Workflow
+### 8.2 Generation Workflow
 
 1. Navigate to **Dashboard → Reports**.
 2. Choose geographic scope (General Municipal or specific Barangay).
@@ -291,19 +274,19 @@ Users can toggle individual analytical sections on or off:
 
 ---
 
-## 10. Analytical Alert & Notification Rules Engine
+## 9. Analytical Alert & Notification Rules Engine
 
 **Route:** Header Bell Icon & `/dashboard/config` *(Notification Rules Tab)*
 
 SecureTanza monitors incident streams and notifies personnel of statistical anomalies and high-priority crimes.
 
-### 10.1 Alert Severity Tiers
+### 9.1 Alert Severity Tiers
 
 - 🔴 **CRITICAL:** Heinous crimes detected, sudden surge in violent crimes, or severe data pipeline validation errors.
 - 🟡 **WARNING:** Hourly peak threshold exceedances (>25% of daily volume in one hour) or rapid barangay percentage increases.
 - 🔵 **INFO:** Batch upload completion summaries, scheduled exports, and system login audit logs.
 
-### 10.2 Notification Categories
+### 9.2 Notification Categories
 
 - `PEAK_HOUR`: Extreme volume concentration during specific hours.
 - `CRIME_ACTIVITY`: Significant shifts in crime categories or hotspot emergence.
@@ -312,11 +295,11 @@ SecureTanza monitors incident streams and notifies personnel of statistical anom
 
 ---
 
-## 11. System Settings, Security & Configuration
+## 10. System Settings, Security & Configuration
 
 **Route:** `/dashboard/config`
 
-### 11.1 Sub-Modules & Tabs
+### 10.1 Sub-Modules & Tabs
 
 1. **My Profile:** Update full name, account password, and inspect security clearance tags.
 2. **Access & Security (RBAC):**
@@ -330,13 +313,13 @@ SecureTanza monitors incident streams and notifies personnel of statistical anom
 
 ---
 
-## 12. Batch Data Ingestion & Excel Schema
+## 11. Batch Data Ingestion & Excel Schema
 
 **Route:** Main Navigation → Upload Button (`/api/crimes/upload`)
 
 SecureTanza accepts Excel spreadsheets (`.xlsx` or `.xls`) for bulk blotter data ingestion.
 
-### 12.1 Column Header Specification
+### 11.1 Column Header Specification
 
 | Column Header | Type | Requirement | Description & Valid Examples |
 | :--- | :---: | :---: | :--- |
@@ -358,16 +341,16 @@ SecureTanza accepts Excel spreadsheets (`.xlsx` or `.xls`) for bulk blotter data
 
 ---
 
-## 13. Interactive Guided Onboarding Tour
+## 12. Interactive Guided Onboarding Tour
 
 SecureTanza includes an automated, multi-stage interactive tour powered by **Driver.js**:
 - **Automatic First-Time Launch:** Automatically greets new authenticated users on their first visit.
-- **Multi-Module Walkthrough:** Chains seamlessly across `/` (Map), `/dashboard/overview`, `/dashboard/cases`, `/dashboard/analytics`, and `/dashboard/reports`.
+- **Multi-Module Walkthrough:** Chains seamlessly across `/` (Map), `/dashboard/overview`, `/dashboard/cases`, `/dashboard/analytics`, `/dashboard/reports`, `/dashboard/config` (System Settings), and `/docs` (User Guide).
 - **Replay Anytime:** Click the **User Menu → Replay Tour** or the **Start Tour** button in `/docs` to relaunch the guide at any time.
 
 ---
 
-## 14. Role-Based Operational Playbooks
+## 13. Role-Based Operational Playbooks
 
 ### Playbook A: Chief of Police / Station Commander (Daily Briefing)
 1. **08:00 Hours — Review Municipal Snapshot:** Open `/dashboard/overview`. Inspect 24-hour total incident volume and critical hotspot barangays.
@@ -377,7 +360,7 @@ SecureTanza includes an automated, multi-stage interactive tour powered by **Dri
 
 ### Playbook B: Crime Intelligence Analyst (Strategic Planning)
 1. **Monthly Dataset Verification:** Verify that all station blotter sheets have been uploaded via `/api/crimes/upload` and check `/dashboard/upload-logs`.
-2. **Execute ARIMA AI Forecast:** Switch to Predictive Mode on `/dashboard/analytics`. Evaluate the 12-month curve, review MAPE accuracy metrics, and identify upcoming seasonal peaks.
+2. **Review Temporal Trends & Trajectory:** Examine the 12-month trend line on `/dashboard/analytics`, evaluate monthly variations, and identify seasonal crime patterns.
 3. **Cross-Tabulated Pattern Identification:** Examine the Crime Matrix Heatmap to detect emerging offense categories.
 4. **Formulate Recommendations:** Compile recommendations for checkpoint repositioning and submit formal quarterly PDF reports.
 
@@ -393,26 +376,23 @@ SecureTanza includes an automated, multi-stage interactive tour powered by **Dri
 
 ---
 
-## 15. Diagnostics & Troubleshooting Matrix
+## 14. Diagnostics & Troubleshooting Matrix
 
 | Symptom | Probable Cause | Corrective Action |
 | :--- | :--- | :--- |
 | **Map canvas is blank / grey tiles** | Network timeout or browser WebGL disabled | Refresh page (`Ctrl+F5`), verify internet connection, enable hardware acceleration in browser. |
-| **"Forecast Unavailable" in Predictive Tab** | Python ARIMA service offline or < 24 months data | Ensure backend microservice is running on port 8000; verify minimum 24-36 months of historical data exist. |
 | **Excel upload returns schema error** | Missing required headers or invalid date formats | Ensure headers match `incident_type`, `barangay`, `date_committed`, `time_committed`; dates must be `YYYY-MM-DD`. |
 | **PDF export fails to download** | Pop-up blocker triggered or memory limit reached | Allow automatic downloads for domain in browser settings; deselect 1-2 optional sections to reduce render buffer. |
 | **Cannot access Cases or Config page** | User role does not possess required clearance | Contact System Administrator to assign `admin` or `operational_officer` role in Access & Security settings. |
 
 ---
 
-## 16. Glossary of Terms
+## 15. Glossary of Terms
 
-- **ARIMA:** AutoRegressive Integrated Moving Average — statistical model for time-series forecasting.
 - **Barangay:** Smallest administrative division in the Philippines (Tanza has 41 barangays).
 - **Blotter:** Official police record of crime incidents and complaints.
 - **EGO:** Elected / Government Official classification tag.
 - **Heinous Crime:** Gravely punishable offenses (e.g., Murder, Rape, Severe Robbery).
-- **MAPE:** Mean Absolute Percentage Error — standard metric for forecast accuracy.
 - **Modus Operandi (MO):** Distinctive method or procedure of committing a criminal offense.
 - **RBAC:** Role-Based Access Control — security framework restricting system access by clearance level.
 - **Resolution Rate:** Proportion of total recorded cases that have been cleared or solved.

@@ -1,6 +1,8 @@
 "use client";
 
 import React from "react";
+import { ShieldCheck, Activity } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsSettings() {
   return (
@@ -10,7 +12,7 @@ export function DocsSettings() {
           System Administration & Role-Based Access Control
         </h2>
         <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          Located at <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/dashboard/config</code>, the security and configuration suite enforces granular clearance levels.
+          The System Settings suite manages role-based access control (RBAC), user credentials, and operational configuration.
         </p>
       </div>
 
@@ -72,6 +74,12 @@ export function DocsSettings() {
                 <td className="py-2.5 px-4 text-slate-400">✗ Restricted</td>
                 <td className="py-2.5 px-4 text-slate-400">✗ Restricted</td>
               </tr>
+              <tr>
+                <td className="py-2.5 px-4 font-medium text-slate-900 dark:text-white">Role-Based Guided Walkthrough</td>
+                <td className="py-2.5 px-4 text-purple-600 dark:text-purple-400 font-medium">7 Stages</td>
+                <td className="py-2.5 px-4 text-sky-600 dark:text-sky-400 font-medium">6 Stages</td>
+                <td className="py-2.5 px-4 text-emerald-600 dark:text-emerald-400 font-medium">4 Stages</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -101,6 +109,26 @@ export function DocsSettings() {
           </div>
         </div>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="System Administration Pro Tip"
+        suggestion="Regularly audit user clearances in Access & Security to enforce role-based segregation, and inspect batch upload logs to ensure data integrity across all 41 barangays."
+        actions={[
+          {
+            label: "Open System Settings",
+            href: "/dashboard/config",
+            icon: ShieldCheck,
+            variant: "primary",
+          },
+          {
+            label: "Inspect Audit Logs",
+            href: "/dashboard/config",
+            icon: Activity,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }

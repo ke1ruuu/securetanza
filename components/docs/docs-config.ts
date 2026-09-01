@@ -3,7 +3,6 @@ import {
   Map,
   BarChart3,
   TrendingUp,
-  Brain,
   FolderOpen,
   FileText,
   Bell,
@@ -16,7 +15,6 @@ import { DocsIntro } from "./docs-intro";
 import { DocsMap } from "./docs-map";
 import { DocsDashboard } from "./docs-dashboard";
 import { DocsAnalytics } from "./docs-analytics";
-import { DocsPredictive } from "./docs-predictive";
 import { DocsCases } from "./docs-cases";
 import { DocsReports } from "./docs-reports";
 import { DocsNotifications } from "./docs-notifications";
@@ -58,16 +56,8 @@ export const DOCS_SECTIONS: DocsSectionItem[] = [
     component: DocsAnalytics,
   },
   {
-    id: "predictive",
-    title: "5. Predictive Analytics & ARIMA",
-    icon: Brain,
-    badge: "AI Forecasting",
-    tags: ["predictive", "arima", "forecast", "confidence", "mape", "mae", "rmse", "ai"],
-    component: DocsPredictive,
-  },
-  {
     id: "cases",
-    title: "6. Case Blotter & Dossier",
+    title: "5. Case Blotter & Dossier",
     icon: FolderOpen,
     badge: "Cases",
     tags: ["cases", "blotter", "investigation", "dossier", "heinous", "sensational", "ego", "suspect"],
@@ -75,7 +65,7 @@ export const DOCS_SECTIONS: DocsSectionItem[] = [
   },
   {
     id: "reports",
-    title: "7. Institutional PDF Reports",
+    title: "6. Institutional PDF Reports",
     icon: FileText,
     badge: "Reports",
     tags: ["reports", "pdf", "export", "download", "executive", "summary", "print"],
@@ -83,7 +73,7 @@ export const DOCS_SECTIONS: DocsSectionItem[] = [
   },
   {
     id: "notifications",
-    title: "8. Alert & Notification Intelligence",
+    title: "7. Alert & Notification Intelligence",
     icon: Bell,
     badge: "Alerts",
     tags: ["notifications", "alerts", "rules", "critical", "warning", "threshold", "heinous"],
@@ -91,7 +81,7 @@ export const DOCS_SECTIONS: DocsSectionItem[] = [
   },
   {
     id: "settings",
-    title: "9. System Settings & RBAC Clearances",
+    title: "8. System Settings & RBAC Clearances",
     icon: ShieldCheck,
     badge: "Security",
     tags: ["settings", "rbac", "permissions", "roles", "admin", "clearance", "audit", "security"],
@@ -99,7 +89,7 @@ export const DOCS_SECTIONS: DocsSectionItem[] = [
   },
   {
     id: "upload",
-    title: "10. Batch Data Ingestion & Schema",
+    title: "9. Batch Data Ingestion & Schema",
     icon: Upload,
     badge: "Ingestion",
     tags: ["upload", "excel", "xlsx", "schema", "columns", "import", "data", "pipeline"],
@@ -107,10 +97,10 @@ export const DOCS_SECTIONS: DocsSectionItem[] = [
   },
   {
     id: "troubleshooting",
-    title: "11. System Diagnostics & Troubleshooting",
+    title: "10. System Diagnostics & Troubleshooting",
     icon: AlertCircle,
     badge: "Diagnostics",
-    tags: ["troubleshooting", "faq", "error", "map", "charts", "arima", "browser"],
+    tags: ["troubleshooting", "faq", "error", "map", "charts", "browser"],
     component: DocsTroubleshooting,
   },
 ];

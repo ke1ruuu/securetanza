@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { ShieldAlert, AlertCircle, Info } from "lucide-react";
+import { ShieldAlert, AlertCircle, Info, Bell, FolderOpen } from "lucide-react";
+import { DocsCta } from "./docs-cta";
 
 export function DocsNotifications() {
   return (
@@ -54,9 +55,29 @@ export function DocsNotifications() {
           Configuring Notification Rules in Settings
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-          Administrators can configure rules at <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs font-mono">/dashboard/config</code> under the <strong>Notification Rules</strong> tab. You can enable or disable rule conditions such as <code className="text-xs font-mono">HOURLY_PERCENT_EXCEEDS</code>, adjust percentage thresholds, and toggle automated alerts.
+          Administrators can configure rules in System Settings under the <strong>Notification Rules</strong> tab. You can enable or disable rule conditions such as <code className="text-xs font-mono">HOURLY_PERCENT_EXCEEDS</code>, adjust percentage thresholds, and toggle automated alerts.
         </p>
       </div>
+
+      {/* Action Suggestion & CTA */}
+      <DocsCta
+        title="Alert Automation Pro Tip"
+        suggestion="Configure automated notification thresholds in System Settings to receive real-time alerts on heinous crimes, critical spikes, and batch dataset ingest anomalies."
+        actions={[
+          {
+            label: "Configure Notification Rules",
+            href: "/dashboard/config",
+            icon: Bell,
+            variant: "primary",
+          },
+          {
+            label: "Review Recent Cases",
+            href: "/dashboard/cases",
+            icon: FolderOpen,
+            variant: "secondary",
+          },
+        ]}
+      />
     </div>
   );
 }
