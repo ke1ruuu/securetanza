@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
         data: {
           action: 'Auth',
           user: session.accountNumber,
-          ip: request.headers.get('x-forwarded-for') || request.ip || 'unknown',
+          ip: request.headers.get('x-forwarded-for') || (request as any).ip || 'unknown',
           session: session.sessionId,
           details: 'User logged out',
           outcome: 'success',

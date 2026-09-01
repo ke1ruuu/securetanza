@@ -147,15 +147,17 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
         {/* Right Side Actions */}
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          {/* Upload Button */}
-          <button
-            onClick={() => setShowUploadModal(true)}
-            data-tour="upload-data"
-            className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
-            title="Upload Data"
-          >
-            <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </button>
+          {/* Upload Button - Admin Only */}
+          {user && (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) && (
+            <button
+              onClick={() => setShowUploadModal(true)}
+              data-tour="upload-data"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center border transition-all duration-200 cursor-pointer bg-[#4e86fd]/10 border-[#4e86fd]/20 text-[#4e86fd] hover:bg-[#4e86fd]/20 hover:border-[#4e86fd]/30 dark:bg-[#0EA5E9]/10 dark:border-[#0EA5E9]/20 dark:text-[#0EA5E9] dark:hover:bg-[#0EA5E9]/20 dark:hover:border-[#0EA5E9]/30"
+              title="Upload Data"
+            >
+              <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+          )}
 
           {/* Notification Bell */}
           <NotificationBell />

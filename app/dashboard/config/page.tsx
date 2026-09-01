@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { MapProvider } from "@/context/MapContext";
@@ -22,19 +22,41 @@ import NotificationSettingsTab from "./components/NotificationSettingsTab";
 import ProfileTab from "./components/ProfileTab";
 
 function ConfigContent() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<string>("profile");
 
-  const sidebarNavItems = [
-    { id: "profile", label: "My Profile", icon: UserCircle, description: "Account & credentials" },
-    { id: "access-security", label: "Access & Security", icon: ShieldCheck, description: "Personnel & clearances" },
-    { id: "notifications", label: "Notification Rules", icon: Bell, description: "Analytical alert engine" },
-    { id: "audit-logs", label: "Audit Logs", icon: Activity, description: "Uploads & batch records" },
-    { id: "data-exports", label: "Data Exports", icon: FileSpreadsheet, description: "Scheduled reports" },
-    { id: "account", label: "Account Preferences", icon: Settings, description: "Theme & display settings" },
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [authLoading, user, router]);
+
+  const isAdmin = user && (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin"));
+
+  const allSidebarNavItems = [
+    { id: "profile", label: "My Profile", icon: UserCircle, description: "Account & credentials", adminOnly: false },
+    { id: "access-security", label: "Access & Security", icon: ShieldCheck, description: "Personnel & clearances", adminOnly: true },
+    { id: "notifications", label: "Notification Rules", icon: Bell, description: "Analytical alert engine", adminOnly: true },
+    { id: "audit-logs", label: "Audit Logs", icon: Activity, description: "Uploads & batch records", adminOnly: true },
+    { id: "data-exports", label: "Data Exports", icon: FileSpreadsheet, description: "Scheduled reports", adminOnly: true },
+    { id: "account", label: "Account Preferences", icon: Settings, description: "Theme & display settings", adminOnly: false },
   ];
+
+  const sidebarNavItems = allSidebarNavItems.filter(item => !item.adminOnly || isAdmin);
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0f172a]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0EA5E9] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100">

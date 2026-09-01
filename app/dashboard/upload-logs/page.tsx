@@ -1,12 +1,13 @@
 "use client";
 
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { RefreshCw } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { RefreshCw, Lock } from "lucide-react";
 import MapHeader from "@/components/layout/map-header";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
 import { MapProvider } from "@/context/MapContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { absoluteTime, isoTime, relativeTime } from "@/components/notifications/notification-meta";
 import { formatFileSize, uploadStatusMeta } from "@/components/upload/upload-meta";
 
@@ -40,6 +41,8 @@ function Separator() {
 }
 
 function UploadLogsContent() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const rawParamName = searchParams.get("name");
   const barangayName = rawParamName || "General Dashboard";
@@ -48,6 +51,12 @@ function UploadLogsContent() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [authLoading, user, router]);
 
   const loadLogs = useCallback(async () => {
     setLoading(true);
@@ -111,6 +120,32 @@ function UploadLogsContent() {
   }, [logs]);
 
   const windowed = logs.length < total;
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0f172a]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0EA5E9] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
+    return (
+      <div className="flex flex-col h-screen bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-white">
+        <MapHeader isVisible={true} />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6">
+            <Lock className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
+          <p className="text-slate-500 max-w-md mb-8">
+            You do not have the necessary administrative permissions to view the Upload Register.
+            Please contact your system administrator for authorization.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-[#f1f5f9] font-sans text-slate-900 transition-colors duration-700 dark:bg-[#0f172a] dark:text-slate-100">

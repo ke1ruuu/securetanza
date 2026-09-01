@@ -4,11 +4,10 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, Suspense } from "react";
 
 import MapHeader from "@/components/layout/map-header";
-import BarangayFilter from "@/components/layout/barangay-filter";
-import CrimeTypeFilter from "@/components/layout/crime-type-filter";
-import TimeSelector from "@/components/layout/time-selector";
+import UnifiedFilterBar from "@/components/layout/unified-filter-bar";
 import RealTimeClock from "@/components/layout/real-time-clock";
 import TimeFilter from "@/components/layout/time-filter";
+import LatestDataIndicator from "@/components/layout/latest-data-indicator";
 
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
@@ -74,15 +73,12 @@ function HomeContent() {
 			</div>
 
 			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
-				{/* Top Left Filters */}
+				{/* Top Left Unified Filter Bar (Barangay, Crime Type, Time Selector) */}
 				<div
-					data-tour="map-filters"
-					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${
+					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>
-					<BarangayFilter />
-					<CrimeTypeFilter />
-					<TimeSelector />
+					<UnifiedFilterBar />
 				</div>
 
 				{/* Top Right Legend */}
@@ -94,9 +90,12 @@ function HomeContent() {
 					<MapLegend />
 				</div>
 
-				{/* Bottom Right Controls */}
-				<div data-tour="map-zoom-controls" className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6">
-					<RightSidebarControls />
+				{/* Bottom Right: Latest Data Indicator beside Zoom Controls */}
+				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6 flex items-end gap-2.5 sm:gap-3">
+					<LatestDataIndicator />
+					<div data-tour="map-zoom-controls">
+						<RightSidebarControls />
+					</div>
 				</div>
 
 				{/* Time Filter - appears at bottom when filter is active */}
