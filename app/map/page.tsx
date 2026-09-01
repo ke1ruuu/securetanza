@@ -1,14 +1,15 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 import MapHeader from "@/components/layout/map-header";
-import BarangayFilter from "@/components/layout/barangay-filter";
-import CrimeTypeFilter from "@/components/layout/crime-type-filter";
-import TimeSelector from "@/components/layout/time-selector";
+import UnifiedFilterBar from "@/components/layout/unified-filter-bar";
 import RealTimeClock from "@/components/layout/real-time-clock";
 import TimeFilter from "@/components/layout/time-filter";
+import LatestDataIndicator from "@/components/layout/latest-data-indicator";
 
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
@@ -20,10 +21,18 @@ const TanzaMap = dynamic(() => import("@/components/map/tanza-map-root"), {
 });
 
 function HomeContent() {
+	const { user, loading: authLoading } = useAuth();
+	const router = useRouter();
 	const [isFilterActive, setIsFilterActive] = useState(false);
 	const [isPlaying, setIsPlaying] = useState(false);
 
 	const { setIsTimeFilterActive, setTimeFilter } = useMapContext();
+
+	useEffect(() => {
+		if (!authLoading && !user) {
+			router.replace("/login");
+		}
+	}, [authLoading, user, router]);
 
 	const handleFilterToggle = useCallback(
 		(isActive: boolean) => {
@@ -56,6 +65,18 @@ function HomeContent() {
 		});
 	}, [setIsTimeFilterActive]);
 
+	if (authLoading) {
+		return (
+			<div className="flex h-screen w-screen items-center justify-center bg-[#0f172a]">
+				<div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0EA5E9] border-t-transparent" />
+			</div>
+		);
+	}
+
+	if (!user) {
+		return null;
+	}
+
 	return (
 		<main className="relative h-screen w-screen bg-slate-50 dark:bg-[#020617] overflow-hidden text-slate-900 dark:text-slate-100 font-sans transition-colors duration-500">
 			<div className="fixed top-0 left-0 right-0 z-50 transition-transform duration-500 ease-in-out">
@@ -74,15 +95,12 @@ function HomeContent() {
 			</div>
 
 			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
-				{/* Top Left Filters */}
+				{/* Top Left Unified Filter Bar (Barangay, Crime Type, Time Selector) */}
 				<div
-					data-tour="map-filters"
-					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${
+					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>
-					<BarangayFilter />
-					<CrimeTypeFilter />
-					<TimeSelector />
+					<UnifiedFilterBar />
 				</div>
 
 				{/* Top Right Legend */}
@@ -94,9 +112,12 @@ function HomeContent() {
 					<MapLegend />
 				</div>
 
-				{/* Bottom Right Controls */}
-				<div data-tour="map-zoom-controls" className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6">
-					<RightSidebarControls />
+				{/* Bottom Right: Latest Data Indicator beside Zoom Controls */}
+				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6 flex items-end gap-2.5 sm:gap-3">
+					<LatestDataIndicator />
+					<div data-tour="map-zoom-controls">
+						<RightSidebarControls />
+					</div>
 				</div>
 
 				{/* Time Filter - appears at bottom when filter is active */}
@@ -127,10 +148,11 @@ function HomeContent() {
 	);
 }
 
-export default function Home() {
+export default function MapPage() {
 	return (
 		<MapProvider>
 			<HomeContent />
 		</MapProvider>
 	);
 }
+

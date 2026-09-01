@@ -66,11 +66,11 @@ cron.schedule('* * * * *', async () => {
           // Notify user
           await prisma.notification.create({
             data: {
-              userId: schedule.userId,
-              type: 'SYSTEM',
+              category: 'SYSTEM',
+              severity: 'INFO',
               title: 'Scheduled Export Ready',
               message: `Your scheduled ${schedule.frequency} data export is ready.`,
-              link: `/exports/${filename}`,
+              metadata: { link: `/exports/${filename}`, userId: schedule.userId },
               isRead: false,
             }
           });

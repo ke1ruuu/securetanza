@@ -53,8 +53,10 @@ function UploadLogsContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
+    if (!authLoading) {
+      if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
+        router.replace("/login");
+      }
     }
   }, [authLoading, user, router]);
 
@@ -133,21 +135,7 @@ function UploadLogsContent() {
   }
 
   if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
-    return (
-      <div className="flex flex-col h-screen bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-white">
-        <MapHeader isVisible={true} />
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6">
-            <Lock className="h-8 w-8 text-red-500" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-          <p className="text-slate-500 max-w-md mb-8">
-            You do not have the necessary administrative permissions to view the Upload Register.
-            Please contact your system administrator for authorization.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

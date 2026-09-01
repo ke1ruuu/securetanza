@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState, useCallback, Suspense } from "react";
+import { useState, useCallback, Suspense, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 import MapHeader from "@/components/layout/map-header";
 import UnifiedFilterBar from "@/components/layout/unified-filter-bar";
@@ -19,10 +21,18 @@ const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
 });
 
 function HomeContent() {
+	const { user, loading: authLoading } = useAuth();
+	const router = useRouter();
 	const [isFilterActive, setIsFilterActive] = useState(false);
 	const [isPlaying, setIsPlaying] = useState(false);
 
 	const { setIsTimeFilterActive, setTimeFilter } = useMapContext();
+
+	useEffect(() => {
+		if (!authLoading && !user) {
+			router.replace("/login");
+		}
+	}, [authLoading, user, router]);
 
 	const handleFilterToggle = useCallback(
 		(isActive: boolean) => {
@@ -54,6 +64,18 @@ function HomeContent() {
 			return newIsPlaying;
 		});
 	}, [setIsTimeFilterActive]);
+
+	if (authLoading) {
+		return (
+			<div className="flex h-screen w-screen items-center justify-center bg-[#0f172a]">
+				<div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0EA5E9] border-t-transparent" />
+			</div>
+		);
+	}
+
+	if (!user) {
+		return null;
+	}
 
 	return (
 		<main className="relative h-screen w-screen bg-slate-50 dark:bg-[#020617] overflow-hidden text-slate-900 dark:text-slate-100 font-sans transition-colors duration-500">
