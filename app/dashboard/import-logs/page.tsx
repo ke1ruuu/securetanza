@@ -1,12 +1,13 @@
 "use client";
 
 import React, { Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
 import { MapProvider } from "@/context/MapContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import { FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Clock, Download, RefreshCw } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Clock, Download, RefreshCw, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ImportLog {
@@ -21,6 +22,8 @@ interface ImportLog {
 }
 
 function ImportLogsContent() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const rawParamName = searchParams.get("name");
   const barangayName = rawParamName || "General Dashboard";
@@ -30,15 +33,22 @@ function ImportLogsContent() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.replace("/login");
+    }
+  }, [authLoading, user, router]);
+
   const loadLogs = async () => {
     setLoading(true);
     try {
       const response = await fetch('/api/import-logs?limit=100');
+      if (!response.ok) return;
       const data = await response.json();
       
       if (data.success) {
-        setLogs(data.logs);
-        setTotal(data.total);
+        setLogs(data.logs || []);
+        setTotal(data.total || 0);
       }
     } catch (error) {
       console.error('Error loading import logs:', error);
@@ -94,6 +104,32 @@ function ImportLogsContent() {
         return 'bg-slate-50 dark:bg-slate-500/10 border-slate-200 dark:border-slate-500/20 text-slate-700 dark:text-slate-300';
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#0f172a]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0EA5E9] border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
+    return (
+      <div className={`flex flex-col h-screen ${theme === "dark" ? "bg-[#0f172a] text-white" : "bg-[#f1f5f9] text-slate-900"}`}>
+        <MapHeader isVisible={true} />
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6">
+            <Lock className="h-8 w-8 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
+          <p className="text-slate-500 max-w-md mb-8">
+            You do not have the necessary administrative permissions to view the Import Logs.
+            Please contact your system administrator for authorization.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${

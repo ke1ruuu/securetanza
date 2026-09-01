@@ -101,6 +101,9 @@ export async function fetchCrimes(params?: {
     if (params?.year) searchParams.set('year', params.year.toString())
 
     const response = await fetch(`/api/crimes?${searchParams}`)
+    if (!response.ok) {
+      return []
+    }
     const result: ApiResponse<CrimeIncident[]> = await response.json()
     
     if (!result.success) {
@@ -108,7 +111,7 @@ export async function fetchCrimes(params?: {
     }
     
     // Filter by hour if specified
-    let crimes = result.data
+    let crimes = result.data || []
     if (params?.startHour !== undefined || params?.endHour !== undefined) {
       crimes = crimes.filter(crime => {
         const hour = new Date(crime.dateCommitted).getHours()
@@ -140,6 +143,9 @@ export async function fetchCrimeStats(params?: {
     if (params?.year) searchParams.set('year', params.year.toString())
 
     const response = await fetch(`/api/crimes/stats?${searchParams}`)
+    if (!response.ok) {
+      return null
+    }
     const result: ApiResponse<CrimeStats> = await response.json()
     
     if (!result.success) {
@@ -160,13 +166,16 @@ export async function fetchBarangays(search?: string): Promise<Barangay[]> {
     if (search) searchParams.set('search', search)
 
     const response = await fetch(`/api/barangays?${searchParams}`)
+    if (!response.ok) {
+      return []
+    }
     const result: ApiResponse<Barangay[]> = await response.json()
     
     if (!result.success) {
       throw new Error(result.error || 'Failed to fetch barangays')
     }
     
-    return result.data
+    return result.data || []
   } catch (error) {
     console.error('Error fetching barangays:', error)
     return []

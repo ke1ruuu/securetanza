@@ -67,6 +67,10 @@ export default function AccessSecurityTab() {
 		setUsersLoading(true);
 		try {
 			const response = await fetch("/api/users");
+			if (!response.ok) {
+				setMgmtError("Failed to fetch users (unauthorized or network error)");
+				return;
+			}
 			const data = await response.json();
 			if (data.success) {
 				setUsers(data.data);
@@ -81,6 +85,7 @@ export default function AccessSecurityTab() {
 	const fetchPermissions = async () => {
 		try {
 			const response = await fetch("/api/permissions");
+			if (!response.ok) return;
 			const data = await response.json();
 			if (data.success) {
 				setAvailablePermissions(data.data);
@@ -147,6 +152,16 @@ export default function AccessSecurityTab() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(formData),
 			});
+			if (!response.ok) {
+				const errorText = await response.text();
+				try {
+					const errorJson = JSON.parse(errorText);
+					setMgmtError(errorJson.error || "Failed to update access");
+				} catch {
+					setMgmtError("Failed to update access");
+				}
+				return;
+			}
 			const data = await response.json();
 			if (data.success) {
 				setMgmtSuccess("Privileged access levels updated");
@@ -167,6 +182,16 @@ export default function AccessSecurityTab() {
 		setMgmtSuccess("");
 		try {
 			const response = await fetch(`/api/users/${userId}`, { method: "DELETE" });
+			if (!response.ok) {
+				const errorText = await response.text();
+				try {
+					const errorJson = JSON.parse(errorText);
+					setMgmtError(errorJson.error || "Failed to revoke access");
+				} catch {
+					setMgmtError("Failed to revoke access");
+				}
+				return;
+			}
 			const data = await response.json();
 			if (data.success) {
 				setMgmtSuccess("Access revoked successfully");

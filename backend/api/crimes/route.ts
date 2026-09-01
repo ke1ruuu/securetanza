@@ -235,7 +235,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'Unknown IP'
+    const ip = request.headers.get('x-forwarded-for') || (request as any).ip || 'Unknown IP'
     await prisma.auditLog.create({
       data: {
         action: 'Import', // We'll use Import to represent data ingestion, or maybe 'Auth'? No, Import fits data creation best. Wait, the system considers it Import.

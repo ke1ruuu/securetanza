@@ -33,9 +33,11 @@ export default function MapFlyController({
     if (!geoJsonData) return;
 
     if (selectedBarangay) {
-      const feature = geoJsonData.features.find(
-        (f: any) => f.properties.adm4_en === selectedBarangay
-      );
+      const cleanSelected = selectedBarangay.toLowerCase().trim();
+      const feature = geoJsonData.features.find((f: any) => {
+        const name = f.properties?.adm4_en?.toLowerCase()?.trim();
+        return name === cleanSelected || cleanSelected.includes(name) || (name && cleanSelected.endsWith(name));
+      });
       if (feature) {
         const layer = L.geoJSON(feature);
         const bounds = layer.getBounds();

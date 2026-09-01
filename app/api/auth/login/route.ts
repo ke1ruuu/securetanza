@@ -69,6 +69,25 @@ export async function POST(request: NextRequest) {
     // Extract permissions
     const permissions = user.permissions.map(up => up.permission.permissionName);
 
+    // If user has zero permissions assigned (access revoked)
+    if (permissions.length === 0) {
+      await prisma.auditLog.create({
+        data: {
+          action: 'Auth',
+          user: user.accountNumber,
+          ip,
+          details: 'Failed login attempt - Access revoked / No permissions assigned',
+          errorMessage: 'Account access has been revoked',
+          outcome: 'failed',
+          severity: 'medium',
+        },
+      });
+      return NextResponse.json(
+        { error: 'Your account access has been revoked. Please contact your system administrator.' },
+        { status: 403 }
+      );
+    }
+
     // Create session
     const sessionId = await createSession({
       id: user.id,

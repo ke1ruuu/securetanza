@@ -109,8 +109,9 @@ export default function NotificationSettingsTab() {
   const fetchRules = useCallback(async () => {
     try {
       const res = await fetch("/api/notifications/rules");
+      if (!res.ok) throw new Error("Request failed");
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Request failed");
+      if (!data.success) throw new Error(data.error || "Request failed");
       setRules(data.data || []);
       setRulesStatus("ready");
     } catch (err) {
@@ -139,8 +140,9 @@ export default function NotificationSettingsTab() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
       });
+      if (!res.ok) throw new Error("Update was rejected");
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || "Update was rejected");
+      if (!data.success) throw new Error(data.error || "Update was rejected");
 
       setRules((prev) => prev.map((r) => (r.id === ruleId ? { ...r, ...data.data } : r)));
       setRowState((prev) => ({ ...prev, [ruleId]: { msg: "Saved" } }));

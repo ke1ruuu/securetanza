@@ -172,7 +172,11 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     const level = getThreatLevel(name);
     const color = THREAT_COLORS[level];
 
-    const isSelected = selectedBarangay === name;
+    const isSelected = Boolean(
+      selectedBarangay &&
+      (selectedBarangay.toLowerCase().trim() === name?.toLowerCase().trim() ||
+       selectedBarangay.toLowerCase().trim().endsWith(name?.toLowerCase().trim()))
+    );
     const isFocusMatch = hoveredThreatLevel
       ? level === hoveredThreatLevel
       : true;
