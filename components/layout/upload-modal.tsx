@@ -1,618 +1,624 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
-import { Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2, X, ChevronDown } from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronDown, FileSpreadsheet, Loader2, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { VisuallyHidden } from "@/components/ui/visually-hidden";
+  checkColumns,
+  columnCheckSummary,
+  formatFileSize,
+  normaliseHeader,
+  uploadStatusMeta,
+  type ColumnCheck,
+} from "@/components/upload/upload-meta";
 
 interface UploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Supplied by callers that refresh their own data; without it the page reloads once an entry is filed. */
+  onUploaded?: () => void;
 }
 
-// Expected database columns (from Prisma schema)
-const EXPECTED_COLUMNS = [
-  "blotter_no",
-  "date_encoded",
-  "police_regional_office",
-  "police_provincial_office",
-  "station",
-  "police_community_precinct",
-  "region",
-  "province",
-  "municipality",
-  "barangay",
-  "street",
-  "type_of_place",
-  "date_reported",
-  "time_reported",
-  "date_committed",
-  "time_committed",
-  "incident_type",
-  "is_crime",
-  "mode_reporting",
-  "stage_of_felony",
-  "offense",
-  "offense_type",
-  "section",
-  "modus",
-  "suspect_motive",
-  "suspect_sub_motive",
-  "heinous",
-  "sensational",
-  "threat_grp",
-  "grp_affiliation",
-  "incident_type_threat_grp",
-  "mrs",
-  "suspect_is_ego",
-  "suspect_ego_position",
-  "suspect_ego_class",
-  "suspect_count",
-  "suspect_arrested",
-  "victim_is_ego",
-  "victim_ego_position",
-  "victim_ego_class",
-  "victim_count",
-  "case_status",
-  "investigator",
-  "head_investigator",
-  "lat",
-  "lng",
-];
+const MAX_BYTES = 10 * 1024 * 1024;
 
-interface ColumnValidation {
-  found: string[];
-  missing: string[];
-  extra: string[];
-  isValid: boolean;
+/** idle → reading → staged → importing → done. One value, so two states can never both be true. */
+type Phase = "idle" | "reading" | "staged" | "importing" | "done";
+
+interface SheetFacts {
+  name: string;
+  headerCount: number;
+  rowCount: number;
 }
 
-export default function UploadModal({ open, onOpenChange }: UploadModalProps) {
+interface Receipt {
+  total: number;
+  inserted: number;
+  skipped: number;
+  errors: string[];
+  findings: number;
+}
+
+const MICRO = "text-[10px] font-medium tracking-[0.09em] uppercase text-slate-500 dark:text-slate-400";
+const SECTION = "text-[10px] font-semibold tracking-[0.11em] uppercase text-slate-500 dark:text-slate-400";
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4e86fd]/50 dark:focus-visible:ring-[#0EA5E9]/50";
+const GHOST =
+  "cursor-pointer rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]";
+const PRIMARY =
+  "flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#4e86fd] px-3.5 py-1.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#3d74e8] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd]";
+const MONO_LIST = "mt-1.5 font-mono text-[11px] leading-relaxed break-words";
+
+/** Key/value line, borrowed verbatim from the notification centre's findings list. */
+function LedgerRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-slate-200/80 py-2 last:border-b-0 dark:border-white/[0.06]">
+      <dt className="text-[11.5px] text-slate-500 dark:text-slate-400">{label}</dt>
+      <dd
+        className={`text-right text-[11.5px] font-semibold tabular-nums ${
+          tone ?? "text-slate-900 dark:text-slate-100"
+        }`}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}
+
+function ColumnDisclosure({
+  label,
+  columns,
+  tone,
+}: {
+  label: string;
+  columns: string[];
+  tone: string;
+}) {
+  return (
+    <details className="group mt-4 border-t border-slate-200 pt-3 dark:border-white/[0.06]">
+      <summary
+        className={`flex cursor-pointer list-none items-center justify-between gap-3 rounded [&::-webkit-details-marker]:hidden ${SECTION} ${FOCUS}`}
+      >
+        <span>{label}</span>
+        <span className="flex items-center gap-1.5 tabular-nums text-slate-400 dark:text-slate-500">
+          {columns.length}
+          <ChevronDown
+            className="h-3 w-3 transition-transform duration-200 group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </span>
+      </summary>
+      <p className={`${MONO_LIST} ${tone}`}>{columns.join(", ")}</p>
+    </details>
+  );
+}
+
+export default function UploadModal({ open, onOpenChange, onUploaded }: UploadModalProps) {
+  const [phase, setPhase] = useState<Phase>("idle");
   const [file, setFile] = useState<File | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [validation, setValidation] = useState<ColumnValidation | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [sheet, setSheet] = useState<SheetFacts | null>(null);
+  const [check, setCheck] = useState<ColumnCheck | null>(null);
+  const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  /** Bumped whenever a read is superseded, so a resolved read cannot repopulate a cleared dialog. */
+  const readToken = useRef(0);
 
-  // Reset state when dialog closes
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !uploading) {
-      setFile(null);
-      setValidation(null);
-      setError(null);
-      setUploadSuccess(false);
-      setUploadProgress(0);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+  const clearFile = useCallback(() => {
+    readToken.current += 1;
+    setPhase("idle");
+    setFile(null);
+    setSheet(null);
+    setCheck(null);
+    setReceipt(null);
+    setError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }, []);
+
+  const handleOpenChange = (next: boolean) => {
+    if (next) {
+      onOpenChange(true);
+      return;
     }
-    onOpenChange(newOpen);
+    // Never abandon a write that is already in flight.
+    if (phase === "importing") return;
+
+    const wasFiled = phase === "done";
+    clearFile();
+    onOpenChange(false);
+    if (wasFiled) {
+      if (onUploaded) onUploaded();
+      else window.location.reload();
+    }
   };
 
-  // Validate Excel file and check columns
-  const validateFile = useCallback(async (selectedFile: File) => {
-    setError(null);
-    setValidation(null);
+  /** Reads the header row locally so the officer learns about a bad file before anything is sent. */
+  const readFile = useCallback(
+    async (candidate: File) => {
+      setError(null);
+      setCheck(null);
+      setSheet(null);
+      setReceipt(null);
 
-    const validTypes = [
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
-    
-    if (!validTypes.includes(selectedFile.type) && !selectedFile.name.match(/\.(xlsx|xls)$/i)) {
-      setError("Please upload a valid Excel file (.xlsx or .xls)");
-      setFile(null);
-      return;
-    }
-
-    if (selectedFile.size > 10 * 1024 * 1024) {
-      setError("File size must be less than 10MB");
-      setFile(null);
-      return;
-    }
-
-    try {
-      const data = await selectedFile.arrayBuffer();
-      const workbook = XLSX.read(data, { type: "array" });
-      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }) as any[][];
-
-      if (jsonData.length === 0) {
-        setError("Excel file is empty");
-        setFile(null);
+      if (!/\.(xlsx|xls)$/i.test(candidate.name)) {
+        clearFile();
+        setError("That is not an Excel workbook. Choose a .xlsx or .xls file.");
         return;
       }
 
-      const headers = jsonData[0].map((h: any) => 
-        String(h).toLowerCase().trim().replace(/\s+/g, "_")
-      );
-
-      const found: string[] = [];
-      const missing: string[] = [];
-      const extra: string[] = [];
-
-      // Check which expected columns are found
-      EXPECTED_COLUMNS.forEach((col) => {
-        if (headers.includes(col)) {
-          found.push(col);
-        } else {
-          missing.push(col);
-        }
-      });
-
-      // Check for extra columns that don't exist in database
-      headers.forEach((header: string) => {
-        if (!EXPECTED_COLUMNS.includes(header) && header !== "") {
-          extra.push(header);
-        }
-      });
-
-      // Required columns that must be present
-      const requiredColumns = ["barangay", "date_reported", "time_reported", "date_committed", "time_committed", "incident_type"];
-      const missingRequired = requiredColumns.filter(col => !headers.includes(col));
-
-      // File is only valid if:
-      // 1. All required columns are present
-      // 2. No extra columns that don't exist in database
-      const isValid = missingRequired.length === 0 && extra.length === 0;
-
-      if (missingRequired.length > 0) {
-        setError(`Missing required columns: ${missingRequired.join(", ")}`);
-      } else if (extra.length > 0) {
-        setError(`File contains invalid columns that don't exist in the database. Please remove: ${extra.slice(0, 5).join(", ")}${extra.length > 5 ? ` and ${extra.length - 5} more` : ""}`);
+      if (candidate.size > MAX_BYTES) {
+        clearFile();
+        setError(
+          `${formatFileSize(candidate.size)} is over the 10 MB limit. Split the workbook by year or by station and import each part.`
+        );
+        return;
       }
 
-      setValidation({
-        found,
-        missing,
-        extra,
-        isValid,
-      });
+      setFile(candidate);
+      setPhase("reading");
+      const token = (readToken.current += 1);
 
-      setFile(selectedFile);
-    } catch (err) {
-      console.error("Error reading Excel file:", err);
-      setError("Failed to read Excel file. Please ensure it's a valid Excel file.");
-      setFile(null);
-    }
-  }, []);
+      try {
+        const buffer = await candidate.arrayBuffer();
+        if (readToken.current !== token) return;
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setIsDragging(false);
+        const workbook = XLSX.read(buffer, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const firstSheet = sheetName ? workbook.Sheets[sheetName] : undefined;
+        const rows = firstSheet
+          ? (XLSX.utils.sheet_to_json(firstSheet, { header: 1, blankrows: false }) as unknown[][])
+          : [];
 
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile) {
-        validateFile(droppedFile);
+        if (rows.length === 0) {
+          clearFile();
+          setError("The workbook has no rows. Export it again with the header row included.");
+          return;
+        }
+
+        const headers = (rows[0] ?? []).map(normaliseHeader);
+
+        setSheet({
+          name: sheetName || "Sheet 1",
+          headerCount: headers.filter(Boolean).length,
+          rowCount: Math.max(0, rows.length - 1),
+        });
+        setCheck(checkColumns(headers));
+        setPhase("staged");
+      } catch (err) {
+        if (readToken.current !== token) return;
+        console.error("Could not read the workbook:", err);
+        clearFile();
+        setError(
+          "The workbook could not be read. It may be password protected or saved in an older format — re-save it as .xlsx and try again."
+        );
       }
     },
-    [validateFile]
+    [clearFile]
   );
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFile = e.target.files?.[0];
-      if (selectedFile) {
-        validateFile(selectedFile);
-      }
-    },
-    [validateFile]
-  );
+  const importDataset = async () => {
+    if (!file || !check?.isValid || phase !== "staged") return;
 
-  const handleUpload = async () => {
-    if (!file || !validation?.isValid) return;
-
-    setUploading(true);
+    setPhase("importing");
     setError(null);
-    setUploadProgress(0);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const body = new FormData();
+      body.append("file", file);
 
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
+      const res = await fetch("/api/crimes/upload", { method: "POST", body });
+      const payload = await res.json();
 
-      const response = await fetch("/api/crimes/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      clearInterval(progressInterval);
-      setUploadProgress(100);
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "Upload failed");
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || "The register refused the file.");
       }
 
-      // Save upload log to database
-      await fetch('/api/upload-logs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
-          recordsImported: result.recordsImported || 0,
-          status: 'success',
-        }),
+      // The backend writes the register entry itself, so the client must not file a second one.
+      const data = payload.data ?? {};
+      setReceipt({
+        total: Number(data.total ?? sheet?.rowCount ?? 0),
+        inserted: Number(data.inserted ?? 0),
+        skipped: Number(data.skipped ?? 0),
+        errors: Array.isArray(data.errors) ? data.errors : [],
+        findings: Number(payload.notificationsGenerated ?? 0),
       });
-
-      setUploadSuccess(true);
-      setTimeout(() => {
-        handleOpenChange(false);
-        window.location.reload();
-      }, 2000);
+      setPhase("done");
     } catch (err) {
-      console.error("Upload error:", err);
-      setError(err instanceof Error ? err.message : "Failed to upload file");
-      setUploadProgress(0);
-    } finally {
-      setUploading(false);
+      console.error("Import failed:", err);
+      setError(err instanceof Error ? err.message : "The import did not finish. Try again.");
+      setPhase("staged");
     }
   };
 
+  const busy = phase === "reading" || phase === "importing";
+
+  const outcome = receipt
+    ? receipt.inserted === 0
+      ? "failed"
+      : receipt.skipped > 0
+        ? "partial"
+        : "success"
+    : "success";
+  const outcomeMeta = uploadStatusMeta(outcome);
+
+  const verdictMeta = uploadStatusMeta(check?.isValid ? "success" : "failed");
+  const verdictLabel = check?.isValid ? "Ready" : "Blocked";
+
+  const statusLine =
+    phase === "reading"
+      ? "Reading the header row."
+      : phase === "importing"
+        ? "Writing rows to the register. A large workbook can take a minute."
+        : phase === "done"
+          ? "Entry filed."
+          : check && !check.isValid
+            ? "Correct the header row in Excel, then choose the file again."
+            : check && sheet
+              ? `${sheet.rowCount.toLocaleString("en-US")} rows ready to import.`
+              : "";
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="!w-[1000px] !h-[800px] !max-w-[1000px] !max-h-[800px] bg-white dark:bg-[#0F172A] border-0 p-0 gap-0 overflow-hidden shadow-2xl flex flex-col">
-        <VisuallyHidden>
-          <DialogTitle>{file ? "Review Upload" : "Upload Crime Data"}</DialogTitle>
-        </VisuallyHidden>
-        
-        {!file ? (
-          // UPLOAD STATE - Centered, Simple
-          <div className="flex flex-col items-center justify-center w-full h-full p-16 overflow-y-auto">
-            <div
-              onDrop={handleDrop}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsDragging(true);
-              }}
-              onDragLeave={() => setIsDragging(false)}
-              onClick={() => fileInputRef.current?.click()}
-              className={`w-full max-w-xl border-2 border-dashed rounded-3xl p-20 transition-all duration-300 cursor-pointer ${
-                isDragging
-                  ? "border-blue-500 bg-blue-50/50 dark:bg-blue-500/5 scale-[1.02]"
-                  : "border-slate-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-600 hover:bg-slate-50/50 dark:hover:bg-slate-800/30"
-              }`}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-
-              <div className="flex flex-col items-center text-center space-y-6">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-                  <Upload className="h-10 w-10 text-white" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                    Upload Crime Data
-                  </h3>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    Drop your Excel file here or click to browse
-                  </p>
-                  <p className="text-sm text-slate-400 dark:text-slate-500">
-                    Supports .xlsx and .xls • Maximum 10MB
-                  </p>
-                </div>
-              </div>
-            </div>
+      <DialogContent
+        showCloseButton={false}
+        className="flex max-h-[88vh] w-[calc(100%-1.5rem)] max-w-[calc(100%-1.5rem)] flex-col gap-0 overflow-hidden rounded-xl border-0 bg-white p-0 ring-slate-900/10 sm:max-w-2xl dark:bg-[#0F172A] dark:ring-white/[0.12]"
+      >
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-white/[0.06]">
+          <div className="min-w-0">
+            <DialogTitle className="font-heading text-[15px] font-semibold text-slate-900 dark:text-white">
+              Import crime dataset
+            </DialogTitle>
+            <DialogDescription className="mt-1 max-w-xl text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              The header row is checked against the crime register before any row is written.
+              Analytical findings are generated once the entry is filed.
+            </DialogDescription>
           </div>
-        ) : (
-          // VALIDATION STATE - Full Layout
-          <>
-            {/* Header - Fixed */}
-            <div className="flex-shrink-0 px-12 py-8 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
-                    Review Upload
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400">
-                    Verify your data before importing
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setFile(null);
-                    setValidation(null);
-                    setError(null);
-                    if (fileInputRef.current) fileInputRef.current.value = "";
+
+          <button
+            type="button"
+            onClick={() => handleOpenChange(false)}
+            disabled={phase === "importing"}
+            className={`cursor-pointer rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/[0.06] dark:hover:text-white ${FOCUS}`}
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+            <span className="sr-only">Close the import dialog</span>
+          </button>
+        </header>
+
+        {/* Indeterminate, because neither the read nor the write reports real progress. */}
+        <div className="h-[2px] shrink-0 overflow-hidden" aria-hidden="true">
+          {busy && (
+            <div className="h-full w-1/3 animate-pulse rounded-full bg-[#4e86fd] dark:bg-[#0EA5E9]" />
+          )}
+        </div>
+
+        <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-5">
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={(e) => {
+              const selected = e.target.files?.[0];
+              if (selected) readFile(selected);
+            }}
+          />
+
+          <div className="divide-y divide-slate-200 dark:divide-white/[0.06]">
+            {phase === "idle" && (
+              <section className="py-4">
+                <button
+                  type="button"
+                  onClick={() => inputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
                   }}
-                  className="h-10 w-10 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    const dropped = e.dataTransfer.files[0];
+                    if (dropped) readFile(dropped);
+                  }}
+                  className={`flex w-full cursor-pointer flex-col items-start gap-2.5 rounded-xl border border-dashed px-6 py-10 text-left transition-colors ${FOCUS} ${
+                    isDragging
+                      ? "border-[#4e86fd] bg-[#4e86fd]/[0.06] dark:border-[#0EA5E9] dark:bg-[#0EA5E9]/[0.08]"
+                      : "border-slate-300 hover:border-slate-400 hover:bg-slate-50 dark:border-white/[0.14] dark:hover:border-white/25 dark:hover:bg-white/[0.025]"
+                  }`}
                 >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
+                  <span className={`flex items-center gap-1.5 ${MICRO}`}>
+                    <FileSpreadsheet className="h-3 w-3 shrink-0" aria-hidden="true" />
+                    Source file
+                  </span>
+                  <span className="font-heading text-[15px] leading-snug font-semibold text-slate-900 dark:text-white">
+                    Drop an Excel workbook here, or click to browse
+                  </span>
+                  <span className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    .xlsx or .xls, up to 10 MB. The first sheet is read.
+                  </span>
+                </button>
 
-            {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto px-12 py-8 space-y-8 min-h-0">
-              {/* File Info */}
-              <div className="flex items-center gap-4 p-6 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-                <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center">
-                  <FileSpreadsheet className="h-7 w-7 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-slate-900 dark:text-white truncate">
-                    {file.name}
-                  </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">
-                    {(file.size / 1024).toFixed(2)} KB
-                  </p>
-                </div>
-              </div>
-
-              {/* Validation Status */}
-              {validation && (
-                <>
-                  {/* Status Card */}
-                  <div className={`p-6 rounded-2xl border-2 ${
-                    validation.isValid
-                      ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20"
-                      : "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20"
-                  }`}>
-                    <div className="flex items-start gap-4">
-                      {validation.isValid ? (
-                        <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                      )}
-                      <div>
-                        <h3 className={`font-bold text-lg mb-1 ${
-                          validation.isValid
-                            ? "text-emerald-900 dark:text-emerald-400"
-                            : "text-red-900 dark:text-red-400"
-                        }`}>
-                          {validation.isValid ? "Ready to Upload" : "Validation Failed"}
-                        </h3>
-                        <p className={`text-sm ${
-                          validation.isValid
-                            ? "text-emerald-700 dark:text-emerald-300"
-                            : "text-red-700 dark:text-red-300"
-                        }`}>
-                          {validation.isValid
-                            ? "All columns match the database schema"
-                            : validation.extra.length > 0
-                              ? "Remove invalid columns before uploading"
-                              : "Add missing required columns"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="p-6 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                      <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">
-                        {validation.found.length}
-                      </div>
-                      <div className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
-                        Valid Columns
-                      </div>
-                    </div>
-
-                    <div className="p-6 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-                      <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
-                        {validation.missing.length}
-                      </div>
-                      <div className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                        Optional
-                      </div>
-                    </div>
-
-                    <div className="p-6 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-                      <div className="text-3xl font-bold text-red-600 dark:text-red-400 mb-1">
-                        {validation.extra.length}
-                      </div>
-                      <div className="text-sm font-medium text-red-700 dark:text-red-300">
-                        Invalid
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Column Details */}
-                  <Accordion type="multiple" className="space-y-3">
-                    {/* Valid Columns */}
-                    <AccordionItem value="found" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <div className="flex items-center gap-3 w-full">
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                          <span className="font-semibold text-slate-900 dark:text-white">Valid Columns</span>
-                          <span className="ml-auto text-sm text-slate-500 dark:text-slate-400 mr-2">
-                            {validation.found.length}
-                          </span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 pb-4">
-                        <div className="flex flex-wrap gap-2 pt-2">
-                          {validation.found.map((col) => (
-                            <span
-                              key={col}
-                              className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20 font-medium"
-                            >
-                              {col}
-                            </span>
-                          ))}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-
-                    {/* Optional Columns */}
-                    {validation.missing.length > 0 && (
-                      <AccordionItem value="missing" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50">
-                        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <div className="flex items-center gap-3 w-full">
-                            <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                            <span className="font-semibold text-slate-900 dark:text-white">Optional Columns</span>
-                            <span className="ml-auto text-sm text-slate-500 dark:text-slate-400 mr-2">
-                              {validation.missing.length}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-6 pb-4 space-y-3">
-                          <p className="text-sm text-amber-700 dark:text-amber-300">
-                            These columns are not required. Data will be imported without them.
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {validation.missing.map((col) => (
-                              <span
-                                key={col}
-                                className="text-xs px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/20 font-medium"
-                              >
-                                {col}
-                              </span>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    )}
-
-                    {/* Invalid Columns */}
-                    {validation.extra.length > 0 && (
-                      <AccordionItem value="extra" className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50">
-                        <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <div className="flex items-center gap-3 w-full">
-                            <X className="h-5 w-5 text-red-600 dark:text-red-400" />
-                            <span className="font-semibold text-slate-900 dark:text-white">Invalid Columns</span>
-                            <span className="ml-auto text-sm text-slate-500 dark:text-slate-400 mr-2">
-                              {validation.extra.length}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="px-6 pb-4 space-y-3">
-                          <p className="text-sm text-red-700 dark:text-red-300 font-medium">
-                            ⚠️ These columns don't exist in the database. Remove them from your file.
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {validation.extra.map((col) => (
-                              <span
-                                key={col}
-                                className="text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-500/20 font-medium"
-                              >
-                                {col}
-                              </span>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    )}
-                  </Accordion>
-                </>
-              )}
-
-              {/* Error Message */}
-              {error && (
-                <div className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
-                  <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                {error && (
+                  <p
+                    role="alert"
+                    className="mt-3 text-xs leading-relaxed text-red-700 dark:text-red-400"
+                  >
+                    <span className="font-semibold">File refused. </span>
                     {error}
                   </p>
-                </div>
-              )}
+                )}
+              </section>
+            )}
 
-              {/* Upload Progress */}
-              {uploading && (
-                <div className="space-y-3 p-6 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Loader2 className="h-5 w-5 text-blue-600 dark:text-blue-400 animate-spin" />
-                      <span className="font-semibold text-blue-900 dark:text-blue-400">
-                        Uploading...
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                      {uploadProgress}%
-                    </span>
-                  </div>
-                  <div className="h-2 bg-blue-100 dark:bg-blue-900/30 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 transition-all duration-300"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
+            {file && phase !== "idle" && (
+              <section className="py-4">
+                <p className={SECTION}>Source file</p>
+                <div className="mt-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5">
+                  <h3 className="min-w-0 font-heading text-[13.5px] leading-snug font-semibold break-all text-slate-900 dark:text-white">
+                    {file.name}
+                  </h3>
+                  {phase !== "importing" && (
+                    <button
+                      type="button"
+                      onClick={clearFile}
+                      className={`shrink-0 cursor-pointer rounded text-[11.5px] font-medium text-[#2b62d8] underline-offset-2 hover:underline dark:text-[#38BDF8] ${FOCUS}`}
+                    >
+                      {phase === "done" ? "Import another file" : "Choose another file"}
+                    </button>
+                  )}
                 </div>
-              )}
 
-              {/* Success Message */}
-              {uploadSuccess && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                  <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-400">
-                    Upload successful! Refreshing data...
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Footer - Fixed */}
-            <div className="flex-shrink-0 px-12 py-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-              <div className="flex items-center justify-end gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => handleOpenChange(false)}
-                  disabled={uploading}
-                  className="px-6"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleUpload}
-                  disabled={!file || !validation?.isValid || uploading || uploadSuccess}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 disabled:opacity-50"
-                >
-                  {uploading ? (
+                <dl className="mt-2">
+                  <LedgerRow label="Size" value={formatFileSize(file.size)} />
+                  {sheet && (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      Uploading
-                    </>
-                  ) : uploadSuccess ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Uploaded
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Data
+                      <LedgerRow label="Sheet" value={sheet.name} />
+                      <LedgerRow
+                        label="Rows in sheet"
+                        value={sheet.rowCount.toLocaleString("en-US")}
+                      />
+                      <LedgerRow
+                        label="Headers read"
+                        value={sheet.headerCount.toLocaleString("en-US")}
+                      />
                     </>
                   )}
-                </Button>
-              </div>
+                </dl>
+              </section>
+            )}
+
+            {check && phase !== "done" && (
+              <section className="relative py-4 pl-4">
+                <span
+                  aria-hidden="true"
+                  className={`absolute top-4 bottom-4 left-0 w-[2px] ${verdictMeta.spine}`}
+                />
+
+                <p className={`flex flex-wrap items-center gap-1.5 ${MICRO}`}>
+                  Column check
+                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
+                    /
+                  </span>
+                  <span className={`font-semibold ${verdictMeta.text}`}>{verdictLabel}</span>
+                </p>
+
+                <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                  {columnCheckSummary(check)}
+                </p>
+
+                <dl className="mt-3">
+                  <LedgerRow
+                    label="Recognised"
+                    value={String(check.recognised.length)}
+                  />
+                  {check.missingRequired.length > 0 && (
+                    <LedgerRow
+                      label="Required, not present"
+                      value={String(check.missingRequired.length)}
+                      tone="text-red-700 dark:text-red-400"
+                    />
+                  )}
+                  <LedgerRow
+                    label="Optional, not present"
+                    value={String(check.missingOptional.length)}
+                  />
+                  {check.unknown.length > 0 && (
+                    <LedgerRow
+                      label="Not in the register"
+                      value={String(check.unknown.length)}
+                      tone="text-red-700 dark:text-red-400"
+                    />
+                  )}
+                </dl>
+
+                {check.missingRequired.length > 0 && (
+                  <div className="mt-4">
+                    <p className={SECTION}>Add these to the header row</p>
+                    <p className={`${MONO_LIST} text-red-700 dark:text-red-400`}>
+                      {check.missingRequired.join(", ")}
+                    </p>
+                  </div>
+                )}
+
+                {check.unknown.length > 0 && (
+                  <div className="mt-4">
+                    <p className={SECTION}>Remove these from the header row</p>
+                    <p className={`${MONO_LIST} text-red-700 dark:text-red-400`}>
+                      {check.unknown.join(", ")}
+                    </p>
+                  </div>
+                )}
+
+                {check.missingOptional.length > 0 && (
+                  <ColumnDisclosure
+                    label="Optional columns left empty"
+                    columns={check.missingOptional}
+                    tone="text-slate-500 dark:text-slate-400"
+                  />
+                )}
+
+                {check.recognised.length > 0 && (
+                  <ColumnDisclosure
+                    label="Recognised columns"
+                    columns={check.recognised}
+                    tone="text-slate-600 dark:text-slate-300"
+                  />
+                )}
+
+                {error && (
+                  <p
+                    role="alert"
+                    className="mt-4 border-t border-slate-200 pt-3 text-xs leading-relaxed text-red-700 dark:border-white/[0.06] dark:text-red-400"
+                  >
+                    <span className="font-semibold">Import stopped. </span>
+                    {error}
+                  </p>
+                )}
+              </section>
+            )}
+
+            {receipt && phase === "done" && (
+              <section className="relative py-4 pl-4">
+                <span
+                  aria-hidden="true"
+                  className={`absolute top-4 bottom-4 left-0 w-[2px] ${outcomeMeta.spine}`}
+                />
+
+                <p className={`flex flex-wrap items-center gap-1.5 ${MICRO}`}>
+                  Import receipt
+                  <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
+                    /
+                  </span>
+                  <span className={`font-semibold ${outcomeMeta.text}`}>{outcomeMeta.label}</span>
+                </p>
+
+                <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-300">
+                  {receipt.inserted === 0
+                    ? "No rows could be written. Every row was missing a barangay, a date or an incident type."
+                    : receipt.skipped > 0
+                      ? `${receipt.skipped.toLocaleString("en-US")} row${
+                          receipt.skipped === 1 ? " was" : "s were"
+                        } left out because required values were blank. The rest are in the register.`
+                      : "Every row in the workbook was written to the register."}
+                </p>
+
+                <dl className="mt-3">
+                  <LedgerRow label="Rows read" value={receipt.total.toLocaleString("en-US")} />
+                  <LedgerRow
+                    label="Records imported"
+                    value={receipt.inserted.toLocaleString("en-US")}
+                  />
+                  <LedgerRow
+                    label="Rows skipped"
+                    value={receipt.skipped.toLocaleString("en-US")}
+                    tone={
+                      receipt.skipped > 0
+                        ? "text-amber-700 dark:text-amber-400"
+                        : undefined
+                    }
+                  />
+                  <LedgerRow
+                    label="Findings generated"
+                    value={receipt.findings.toLocaleString("en-US")}
+                  />
+                </dl>
+
+                {receipt.errors.length > 0 && (
+                  <div className="mt-4">
+                    <p className={SECTION}>First skipped rows</p>
+                    <ul className="mt-1.5 space-y-1">
+                      {receipt.errors.slice(0, 3).map((message, i) => (
+                        <li
+                          key={i}
+                          className="font-mono text-[11px] leading-relaxed break-words text-slate-500 dark:text-slate-400"
+                        >
+                          {message}
+                        </li>
+                      ))}
+                    </ul>
+                    {receipt.errors.length > 3 && (
+                      <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+                        {(receipt.errors.length - 3).toLocaleString("en-US")} more are kept on the
+                        register entry.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <p className="mt-4 border-t border-slate-200 pt-3 text-xs leading-relaxed text-slate-500 dark:border-white/[0.06] dark:text-slate-400">
+                  The entry is filed in{" "}
+                  <Link
+                    href="/dashboard/upload-logs"
+                    onClick={() => handleOpenChange(false)}
+                    className="font-medium text-[#2b62d8] underline-offset-2 hover:underline dark:text-[#38BDF8]"
+                  >
+                    upload history
+                  </Link>
+                  {receipt.findings > 0
+                    ? ". The new findings are waiting in the notification bell."
+                    : "."}
+                </p>
+              </section>
+            )}
+          </div>
+        </div>
+
+        {phase !== "idle" && (
+          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-slate-200 px-5 py-3.5 dark:border-white/[0.06]">
+            <p
+              role="status"
+              aria-live="polite"
+              className="min-h-4 text-[11px] tabular-nums text-slate-500 dark:text-slate-400"
+            >
+              {statusLine}
+            </p>
+
+            <div className="ml-auto flex items-center gap-2">
+              {phase === "done" ? (
+                <button type="button" onClick={() => handleOpenChange(false)} className={`${PRIMARY} ${FOCUS}`}>
+                  Done
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenChange(false)}
+                    disabled={phase === "importing"}
+                    className={`${GHOST} ${FOCUS}`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={importDataset}
+                    disabled={phase !== "staged" || !check?.isValid}
+                    className={`${PRIMARY} ${FOCUS}`}
+                  >
+                    {phase === "importing" && (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    )}
+                    {phase === "importing" ? "Importing" : "Import dataset"}
+                  </button>
+                </>
+              )}
             </div>
-          </>
+          </footer>
         )}
       </DialogContent>
     </Dialog>

@@ -6,6 +6,7 @@ import { useState, useCallback, Suspense } from "react";
 import MapHeader from "@/components/layout/map-header";
 import BarangayFilter from "@/components/layout/barangay-filter";
 import CrimeTypeFilter from "@/components/layout/crime-type-filter";
+import TimeSelector from "@/components/layout/time-selector";
 import RealTimeClock from "@/components/layout/real-time-clock";
 import TimeFilter from "@/components/layout/time-filter";
 
@@ -76,11 +77,12 @@ function HomeContent() {
 				{/* Top Left Filters */}
 				<div
 					data-tour="map-filters"
-					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row gap-2 sm:gap-3 ${
+					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>
 					<BarangayFilter />
 					<CrimeTypeFilter />
+					<TimeSelector />
 				</div>
 
 				{/* Top Right Legend */}

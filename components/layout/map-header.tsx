@@ -8,7 +8,6 @@ import { useMapContext } from "@/context/MapContext";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import UploadModal from "./upload-modal";
-import TimeSelector from "./time-selector";
 import UserMenu from "./user-menu";
 import NotificationBell from "@/components/notifications/notification-bell";
 
@@ -148,11 +147,6 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
 
         {/* Right Side Actions */}
         <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
-          {/* Time Selector - Hidden on small mobile */}
-          <div className="hidden sm:block">
-            <TimeSelector />
-          </div>
-          
           {/* Upload Button */}
           <button
             onClick={() => setShowUploadModal(true)}

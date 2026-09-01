@@ -1,366 +1,339 @@
 "use client";
 
-import React, { Suspense, useState, useEffect } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { RefreshCw } from "lucide-react";
 import MapHeader from "@/components/layout/map-header";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
 import { MapProvider } from "@/context/MapContext";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import { FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Clock, Download, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { ThemeProvider } from "@/context/ThemeContext";
+import { absoluteTime, isoTime, relativeTime } from "@/components/notifications/notification-meta";
+import { formatFileSize, uploadStatusMeta } from "@/components/upload/upload-meta";
 
 interface UploadLog {
   id: string;
   fileName: string | null;
   fileSize: number | null;
-  recordsImported: number | null;
-  outcome: string | null;
+  recordsImported: number;
+  outcome: string;
+  status: string;
   errorMessage?: string | null;
   user?: string | null;
+  uploadedBy?: string | null;
   createdAt: string;
+  uploadedAt: string;
+}
+
+const SECTION = "text-[10px] font-semibold tracking-[0.11em] uppercase text-slate-500 dark:text-slate-400";
+const TH = `pb-2 align-bottom ${SECTION}`;
+const CELL = "py-3 align-top text-[11.5px] text-slate-500 dark:text-slate-400";
+const SKELETON = "h-2 rounded-full bg-slate-100 dark:bg-white/[0.07]";
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4e86fd]/50 dark:focus-visible:ring-[#0EA5E9]/50";
+
+function Separator() {
+  return (
+    <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
+      /
+    </span>
+  );
 }
 
 function UploadLogsContent() {
   const searchParams = useSearchParams();
   const rawParamName = searchParams.get("name");
   const barangayName = rawParamName || "General Dashboard";
-  const { theme } = useTheme();
-  
+
   const [logs, setLogs] = useState<UploadLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  const loadLogs = async () => {
+  const loadLogs = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/audit-logs?action=Import&limit=100');
+      const response = await fetch("/api/audit-logs?action=Import&limit=100");
       const data = await response.json();
-      
-      if (data.success) {
-        setLogs(data.data);
-        setTotal(data.meta.total);
+
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "The register did not respond.");
       }
-    } catch (error) {
-      console.error('Error loading upload logs:', error);
+
+      const rawLogs = Array.isArray(data.data) ? data.data : (Array.isArray(data.logs) ? data.logs : []);
+      const mappedLogs: UploadLog[] = rawLogs.map((log: any) => {
+        const rawStatus = log.outcome || log.status || "success";
+        const dateStr = log.createdAt || log.created_at || log.uploadedAt || new Date().toISOString();
+        const userName = log.user || log.uploadedBy || null;
+        return {
+          id: String(log.id),
+          fileName: log.fileName ?? log.file_name ?? null,
+          fileSize: typeof log.fileSize === "number" ? log.fileSize : (typeof log.file_size === "number" ? log.file_size : null),
+          recordsImported: Number(log.recordsImported ?? log.records_imported ?? 0),
+          outcome: rawStatus,
+          status: rawStatus,
+          errorMessage: log.errorMessage ?? log.error_message ?? null,
+          user: userName,
+          uploadedBy: userName,
+          createdAt: dateStr,
+          uploadedAt: dateStr,
+        };
+      });
+
+      setLogs(mappedLogs);
+      setTotal(Number(data?.meta?.total ?? data?.total ?? mappedLogs.length));
+    } catch (err) {
+      console.error("Error loading upload logs:", err);
+      // An empty table would read as "nothing has ever been imported", which is a different fact.
+      setError("The register could not be read. Check the connection and try again.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadLogs();
-  }, []);
+  }, [loadLogs]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    }).format(date);
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
-      case 'failed':
-        return <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />;
-      case 'partial':
-        return <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400" />;
-      default:
-        return <FileSpreadsheet className="h-5 w-5 text-slate-600 dark:text-slate-400" />;
+  const tally = useMemo(() => {
+    let imported = 0;
+    let partial = 0;
+    let failed = 0;
+    let records = 0;
+    for (const log of logs) {
+      const status = log.status || log.outcome;
+      if (status === "success") imported++;
+      else if (status === "partial") partial++;
+      else failed++;
+      records += (log.recordsImported || 0);
     }
-  };
+    return { imported, partial, failed, records };
+  }, [logs]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success':
-        return 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300';
-      case 'failed':
-        return 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-red-300';
-      case 'partial':
-        return 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-300';
-      default:
-        return 'bg-slate-50 dark:bg-slate-500/10 border-slate-200 dark:border-slate-500/20 text-slate-700 dark:text-slate-300';
-    }
-  };
+  const windowed = logs.length < total;
 
   return (
-    <div className={`flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans ${
-      theme === "dark" ? "bg-[#0f172a] text-slate-100" : "bg-[#f1f5f9] text-slate-900"
-    }`}>
+    <div className="flex h-screen flex-col overflow-hidden bg-[#f1f5f9] font-sans text-slate-900 transition-colors duration-700 dark:bg-[#0f172a] dark:text-slate-100">
       <MapHeader isVisible={true} />
 
-      {/* Dashboard Sub-header */}
-      <div className={`flex items-center justify-between gap-4 px-6 py-3 border-b shrink-0 ${
-        theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
-      }`}>
-        <div className="flex items-center gap-4">
-          <DashboardBarangaySelector currentBarangay={barangayName} />
-          <div className={`h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
-          <span className={`text-sm font-medium ${
-            theme === "dark" ? "text-slate-500" : "text-slate-400"
-          }`}>
-            Upload history and logs
-          </span>
-        </div>
-        <Button
-          onClick={loadLogs}
-          variant="ghost"
-          size="sm"
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
+      <div className="flex shrink-0 items-center gap-4 border-b border-slate-200/60 bg-white/60 px-6 py-3 dark:border-white/[0.04] dark:bg-[#0f172a]/80">
+        <DashboardBarangaySelector currentBarangay={barangayName} />
+        <div className="h-5 w-px bg-slate-200 dark:bg-white/10" />
+        <span className="text-sm font-medium text-slate-400 dark:text-slate-500">Upload register</span>
       </div>
 
-      <main className={`flex-1 flex flex-col min-w-0 overflow-hidden ${
-        theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"
-      }`}>
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
-          {/* Stats Cards */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-pulse">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={`p-6 rounded-xl border ${
-                  theme === "dark" 
-                    ? "bg-slate-900/50 border-slate-800" 
-                    : "bg-white border-slate-200"
-                }`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                    <div className="flex-1">
-                      <div className={`h-8 w-16 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                      <div className={`h-4 w-24 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className={`p-6 rounded-xl border ${
-                theme === "dark" 
-                  ? "bg-slate-900/50 border-slate-800" 
-                  : "bg-white border-slate-200"
-              }`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-500/10 flex items-center justify-center">
-                    <FileSpreadsheet className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {total}
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Total Uploads
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="custom-scrollbar flex-1 overflow-x-hidden overflow-y-auto scroll-smooth">
+          <div className="mx-auto w-full max-w-5xl px-6 py-6">
+            <header className="border-b border-slate-200 pb-4 dark:border-white/[0.06]">
+              <p className={SECTION}>Ingestion</p>
+              <h1 className="font-heading mt-1.5 text-[19px] font-semibold tracking-tight text-slate-900 dark:text-white">
+                Upload register
+              </h1>
+              <p className="mt-1.5 max-w-2xl text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                Every workbook filed against the crime register, newest first. A row is skipped when a
+                required value is blank — the reason is kept on the entry.
+              </p>
+            </header>
 
-              <div className={`p-6 rounded-xl border ${
-                theme === "dark" 
-                  ? "bg-slate-900/50 border-slate-800" 
-                  : "bg-white border-slate-200"
-              }`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
-                    <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {logs.filter(l => l.outcome === 'success').length}
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Successful
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-slate-200 py-2.5 dark:border-white/[0.06]">
+              {loading ? (
+                <span className="flex items-center gap-2" aria-hidden="true">
+                  <span className={`${SKELETON} w-24 animate-pulse`} />
+                  <span className={`${SKELETON} w-16 animate-pulse`} />
+                  <span className={`${SKELETON} w-20 animate-pulse`} />
+                </span>
+              ) : (
+                <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+                  <span className="font-medium text-slate-700 dark:text-slate-200">
+                    {total.toLocaleString("en-US")} {total === 1 ? "entry" : "entries"}
+                  </span>
+                  {windowed && (
+                    <>
+                      <Separator />
+                      <span>latest {logs.length.toLocaleString("en-US")} shown</span>
+                    </>
+                  )}
+                  <Separator />
+                  <span>{tally.imported.toLocaleString("en-US")} imported</span>
+                  {tally.partial > 0 && (
+                    <>
+                      <Separator />
+                      <span className="text-amber-700 dark:text-amber-400">
+                        {tally.partial.toLocaleString("en-US")} partial
+                      </span>
+                    </>
+                  )}
+                  {tally.failed > 0 && (
+                    <>
+                      <Separator />
+                      <span className="text-red-700 dark:text-red-400">
+                        {tally.failed.toLocaleString("en-US")} failed
+                      </span>
+                    </>
+                  )}
+                  <Separator />
+                  <span>
+                    {tally.records.toLocaleString("en-US")} records{windowed ? " in view" : ""}
+                  </span>
+                </p>
+              )}
 
-              <div className={`p-6 rounded-xl border ${
-                theme === "dark" 
-                  ? "bg-slate-900/50 border-slate-800" 
-                  : "bg-white border-slate-200"
-              }`}>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-500/10 flex items-center justify-center">
-                    <Download className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {logs.reduce((sum, log) => sum + (log.recordsImported || 0), 0).toLocaleString()}
-                    </div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">
-                      Total Records
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Upload Logs Table */}
-          <div className={`rounded-xl border overflow-hidden ${
-            theme === "dark" 
-              ? "bg-slate-900/50 border-slate-800" 
-              : "bg-white border-slate-200"
-          }`}>
-            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                Upload History
-              </h2>
+              <button
+                type="button"
+                onClick={loadLogs}
+                disabled={loading}
+                className={`ml-auto flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05] ${FOCUS}`}
+              >
+                <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
+                Refresh
+              </button>
             </div>
 
-            {loading ? (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className={`${
-                    theme === "dark" ? "bg-slate-800/50" : "bg-slate-50"
-                  }`}>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        File Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Size
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Records
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Uploaded At
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 animate-pulse">
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                      <tr key={i}>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`h-5 w-5 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                            <div className={`h-4 w-64 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className={`h-4 w-20 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className={`h-6 w-16 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className={`h-6 w-24 rounded-lg ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className={`h-4 w-4 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                            <div className={`h-4 w-32 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`}></div>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {error ? (
+              <div role="alert" className="py-14">
+                <h2 className="font-heading text-[15px] font-semibold text-slate-900 dark:text-white">
+                  Register unavailable
+                </h2>
+                <p className="mt-1.5 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {error}
+                </p>
+                <button
+                  type="button"
+                  onClick={loadLogs}
+                  className={`mt-3 cursor-pointer rounded-lg bg-[#4e86fd] px-3.5 py-1.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#3d74e8] dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd] ${FOCUS}`}
+                >
+                  Try again
+                </button>
               </div>
-            ) : logs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <div className="w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-                  <FileSpreadsheet className="h-10 w-10 text-slate-400 dark:text-slate-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                  No Upload Logs
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 max-w-sm">
-                  Upload history will appear here once you successfully import data files
+            ) : !loading && logs.length === 0 ? (
+              <div className="py-14">
+                <h2 className="font-heading text-[15px] font-semibold text-slate-900 dark:text-white">
+                  Nothing imported yet
+                </h2>
+                <p className="mt-1.5 max-w-md text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  Use the upload button in the header to import an Excel workbook. Each import is filed
+                  here with its record count, the officer who filed it, and any rows that were skipped.
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className={`${
-                    theme === "dark" ? "bg-slate-800/50" : "bg-slate-50"
-                  }`}>
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        File Name
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Size
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Records
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        Uploaded At
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                    {logs.map((log) => (
-                      <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            {getStatusIcon(log.outcome || 'success')}
-                            <div>
-                              <div className="font-medium text-slate-900 dark:text-white">
-                                {log.fileName}
-                              </div>
+              <table className="w-full table-fixed border-collapse text-left">
+                <caption className="sr-only">
+                  Upload history, newest first: file name, records imported, outcome, who filed it, and
+                  when.
+                </caption>
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-white/[0.06]">
+                    <th scope="col" className={`${TH} pl-4`}>
+                      File
+                    </th>
+                    <th scope="col" className={`${TH} hidden w-24 text-right md:table-cell`}>
+                      Records
+                    </th>
+                    <th scope="col" className={`${TH} hidden w-24 md:table-cell`}>
+                      Outcome
+                    </th>
+                    <th scope="col" className={`${TH} hidden w-44 lg:table-cell`}>
+                      Filed by
+                    </th>
+                    <th scope="col" className={`${TH} hidden w-24 text-right md:table-cell`}>
+                      Filed
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
+                  {loading
+                    ? Array.from({ length: 8 }).map((_, i) => (
+                        <tr key={i} className="animate-pulse" aria-hidden="true">
+                          <td className={`${CELL} pl-4`}>
+                            <span className={`${SKELETON} block w-2/3`} />
+                          </td>
+                          <td className={`${CELL} hidden md:table-cell`}>
+                            <span className={`${SKELETON} ml-auto block w-10`} />
+                          </td>
+                          <td className={`${CELL} hidden md:table-cell`}>
+                            <span className={`${SKELETON} block w-14`} />
+                          </td>
+                          <td className={`${CELL} hidden lg:table-cell`}>
+                            <span className={`${SKELETON} block w-24`} />
+                          </td>
+                          <td className={`${CELL} hidden md:table-cell`}>
+                            <span className={`${SKELETON} ml-auto block w-12`} />
+                          </td>
+                        </tr>
+                      ))
+                    : logs.map((log) => {
+                        const status = uploadStatusMeta(log.status);
+                        return (
+                          <tr
+                            key={log.id}
+                            className="transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.02]"
+                          >
+                            <td className={`${CELL} relative pl-4`}>
+                              <span
+                                aria-hidden="true"
+                                className={`absolute top-3 bottom-3 left-0 w-[2px] ${status.spine}`}
+                              />
+                              <span className="font-heading block leading-snug font-semibold break-all text-slate-900 dark:text-white">
+                                {log.fileName || "Unnamed file"}
+                              </span>
+
+                              {/* Narrow screens have no columns to read, so the same facts flow inline. */}
+                              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] tabular-nums md:hidden">
+                                <span className={`font-semibold ${status.text}`}>{status.label}</span>
+                                <Separator />
+                                <span>
+                                  {log.recordsImported.toLocaleString("en-US")}{" "}
+                                  {log.recordsImported === 1 ? "record" : "records"}
+                                </span>
+                                <Separator />
+                                <span>{relativeTime(log.uploadedAt)}</span>
+                              </span>
+
+                              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] text-slate-400 tabular-nums dark:text-slate-500">
+                                <span>{log.fileSize ? formatFileSize(log.fileSize) : "—"}</span>
+                                {log.uploadedBy && (
+                                  <span className="lg:hidden">
+                                    <Separator /> {log.uploadedBy}
+                                  </span>
+                                )}
+                              </span>
+
                               {log.errorMessage && (
-                                <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                <span
+                                  title={log.errorMessage}
+                                  className="mt-1.5 line-clamp-2 block text-[11px] leading-relaxed text-slate-500 dark:text-slate-400"
+                                >
                                   {log.errorMessage}
-                                </div>
+                                </span>
                               )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                          {formatFileSize(log.fileSize)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-lg font-semibold text-slate-900 dark:text-white">
-                            {log.recordsImported.toLocaleString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border ${getStatusColor(log.outcome || 'success')}`}>
-                            <div className={`w-1.5 h-1.5 rounded-full ${
-                              log.outcome === 'success' ? 'bg-emerald-500' :
-                              log.outcome === 'failed' ? 'bg-red-500' :
-                              log.outcome === 'partial' ? 'bg-amber-500' :
-                              'bg-slate-500'
-                            }`}></div>
-                            {(log.outcome || 'success').charAt(0).toUpperCase() + (log.outcome || 'success').slice(1)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                            <Clock className="h-4 w-4" />
-                            {formatDate(log.createdAt)}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            </td>
+
+                            <td
+                              className={`${CELL} hidden text-right font-semibold tabular-nums text-slate-900 md:table-cell dark:text-slate-100`}
+                            >
+                              {log.recordsImported.toLocaleString("en-US")}
+                            </td>
+
+                            <td className={`${CELL} hidden md:table-cell`}>
+                              <span className={`font-semibold ${status.text}`}>{status.label}</span>
+                            </td>
+
+                            <td className={`${CELL} hidden truncate lg:table-cell`}>
+                              {log.uploadedBy || "—"}
+                            </td>
+
+                            <td className={`${CELL} hidden text-right tabular-nums md:table-cell`}>
+                              <time dateTime={isoTime(log.uploadedAt)} title={absoluteTime(log.uploadedAt)}>
+                                {relativeTime(log.uploadedAt)}
+                              </time>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                </tbody>
+              </table>
             )}
           </div>
         </div>
@@ -373,7 +346,13 @@ export default function UploadLogsPage() {
   return (
     <ThemeProvider>
       <MapProvider>
-        <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+        <Suspense
+          fallback={
+            <div className="flex h-screen items-center justify-center bg-[#f1f5f9] text-[11px] tracking-[0.09em] text-slate-500 uppercase dark:bg-[#0f172a] dark:text-slate-400">
+              Loading register
+            </div>
+          }
+        >
           <UploadLogsContent />
         </Suspense>
       </MapProvider>
