@@ -226,10 +226,31 @@ model User {
   updatedAt          DateTime @updatedAt @map("updated_at")
 
   // Relations
-  permissions UserPermission[]
+  permissions     UserPermission[]
+  exportSchedules ExportSchedule[]
 
   @@index([accountNumber])
   @@map("users")
+}
+
+model ExportSchedule {
+  id           String  @id @default(cuid())
+  userId       Int     @map("user_id")
+  enabled      Boolean @default(false)
+  frequency    String  @default("weekly") // "daily", "weekly", "monthly"
+  dayOfWeek    String? @map("day_of_week") // e.g., "Monday"
+  dayOfMonth   String? @map("day_of_month") // e.g., "1"
+  monthlyOn    String? @map("monthly_on") // Day of year for annually if needed
+  timeOfDay    String? @map("time_of_day") // e.g. "14:30"
+  deliveryMode String  @default("prompt") @map("delivery_mode") // "prompt", "auto"
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("export_schedules")
 }
 
 model Permission {

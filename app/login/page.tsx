@@ -23,7 +23,12 @@ export default function LoginPage() {
     if (user && user.mustChangePassword) {
       setShowForceChange(true);
     } else if (user && !user.mustChangePassword && !authLoading) {
-      router.push("/");
+      const pref = typeof window !== "undefined" ? localStorage.getItem("landingPage") : null;
+      let target = "/";
+      if (pref === "dashboard") target = "/dashboard/overview";
+      if (pref === "analytics") target = "/dashboard/analytics";
+      
+      router.push(target);
     }
   }, [user, authLoading, router]);
 
@@ -55,7 +60,12 @@ export default function LoginPage() {
         setShowForceChange(true);
         setLoading(false);
       } else {
-        router.push("/");
+        const pref = typeof window !== "undefined" ? localStorage.getItem("landingPage") : null;
+        let target = "/";
+        if (pref === "dashboard") target = "/dashboard/overview";
+        if (pref === "analytics") target = "/dashboard/analytics";
+        
+        router.push(target);
         router.refresh();
       }
     } catch (error) {
@@ -201,7 +211,12 @@ export default function LoginPage() {
         <ForceChangePasswordModal 
           onSuccess={() => {
             setShowForceChange(false);
-            router.push("/");
+            const pref = typeof window !== "undefined" ? localStorage.getItem("landingPage") : null;
+            let target = "/";
+            if (pref === "dashboard") target = "/dashboard/overview";
+            if (pref === "analytics") target = "/dashboard/analytics";
+            
+            router.push(target);
             router.refresh();
           }} 
         />

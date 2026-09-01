@@ -239,6 +239,20 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ExportScheduleScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  enabled: 'enabled',
+  frequency: 'frequency',
+  dayOfWeek: 'dayOfWeek',
+  dayOfMonth: 'dayOfMonth',
+  monthlyOn: 'monthlyOn',
+  timeOfDay: 'timeOfDay',
+  deliveryMode: 'deliveryMode',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.PermissionScalarFieldEnum = {
   id: 'id',
   permissionName: 'permissionName',
@@ -309,6 +323,7 @@ exports.Prisma.ModelName = {
   Notification: 'Notification',
   NotificationRule: 'NotificationRule',
   User: 'User',
+  ExportSchedule: 'ExportSchedule',
   Permission: 'Permission',
   UserPermission: 'UserPermission'
 };
