@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     // Filter by year if specified
     if (year) {
-      const yearNum = parseInt(year)
+      const yearNum = parseInt(year, 10)
       const startOfYear = new Date(yearNum, 0, 1) // January 1st
       const endOfYear = new Date(yearNum, 11, 31, 23, 59, 59, 999) // December 31st
       
@@ -165,24 +165,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Push hour filtering down to database level
+    if (hour !== null && hour !== undefined && hour !== '') {
+      const targetHour = parseInt(hour, 10)
+      if (!isNaN(targetHour)) {
+        const padded = targetHour.toString().padStart(2, '0')
+        const unpadded = targetHour.toString()
+        where.OR = [
+          { timeCommitted: { startsWith: `${padded}:` } },
+          { timeCommitted: { startsWith: `${unpadded}:` } },
+        ]
+      }
+    }
+
+    // Safe bounds: default to 500 records, max 2000 records to prevent memory exhaustion
+    const take = limit ? Math.min(Math.max(1, parseInt(limit, 10)), 2000) : 500
+
     const crimes = await prisma.crimeIncident.findMany({
       where,
       orderBy: {
         dateCommitted: 'desc'
       },
-      take: limit ? parseInt(limit) : undefined
+      take
     })
 
-    // Filter by hour if specified
-    let filteredCrimes = crimes
-    if (hour !== null && hour !== undefined) {
-      const targetHour = parseInt(hour)
-      filteredCrimes = crimes.filter(crime => {
-        const timeParts = crime.timeCommitted.split(':')
-        const crimeHour = parseInt(timeParts[0])
-        return crimeHour === targetHour
-      })
-    }
+    const filteredCrimes = crimes
 
     return NextResponse.json({
       success: true,

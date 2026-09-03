@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
-import { getSession, hashPassword, createSession } from '@/lib/auth';
+import { getSession, hashPassword, createSession, invalidateSessionCache } from '@/lib/auth';
 import { z } from 'zod';
 
 const changePasswordSchema = z.object({
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     const permissions = updatedUser.permissions.map(up => up.permission.permissionName);
 
     // Refresh the session with the new mustChangePassword flag
+    invalidateSessionCache(session.userId);
     const sessionId = await createSession({
       id: updatedUser.id,
       accountNumber: updatedUser.accountNumber,

@@ -74,34 +74,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Initial check on mount
   useEffect(() => {
     checkSession();
+  }, [checkSession]);
 
-    // Check session on window focus and visibility change (e.g. when user switches tabs after admin revoked access)
+  // Check session on window focus and visibility change only when authenticated and not on login page
+  useEffect(() => {
+    if (pathname === "/login") return;
+
     const handleFocus = () => {
-      checkSession();
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (userRef.current !== null) {
         checkSession();
       }
     };
 
-    // Fast heartbeat check every 2.5 seconds to detect revoked access in real-time
-    const interval = setInterval(() => {
-      checkSession();
-    }, 2500);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && userRef.current !== null) {
+        checkSession();
+      }
+    };
 
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [checkSession]);
+  }, [checkSession, pathname]);
+
+  // Heartbeat check ONLY when user is logged in and not on login page
+  useEffect(() => {
+    if (!user || pathname === "/login") {
+      return;
+    }
+
+    // Heartbeat check every 30 seconds to detect revoked permissions
+    const interval = setInterval(() => {
+      checkSession();
+    }, 30000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [user, pathname, checkSession]);
 
   const logout = async () => {
     try {

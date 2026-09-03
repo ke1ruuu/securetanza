@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    const [notifications, total, unreadCount, activeCount, archivedCount] = await Promise.all([
+    const [notifications, total, unreadCount, archiveGroups] = await Promise.all([
       prisma.notification.findMany({
         where,
         orderBy: { createdAt: 'desc' },
@@ -66,9 +66,21 @@ export async function GET(request: NextRequest) {
       }),
       prisma.notification.count({ where }),
       prisma.notification.count({ where: { isRead: false } }),
-      prisma.notification.count({ where: { isArchived: false } }),
-      prisma.notification.count({ where: { isArchived: true } }),
+      prisma.notification.groupBy({
+        by: ['isArchived'],
+        _count: { isArchived: true },
+      }),
     ]);
+
+    let activeCount = 0;
+    let archivedCount = 0;
+    for (const g of archiveGroups) {
+      if (g.isArchived) {
+        archivedCount = g._count.isArchived;
+      } else {
+        activeCount = g._count.isArchived;
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -23,7 +23,8 @@ export interface CrimeStats {
 export async function getCrimesForBarangay(
   barangayName: string,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
+  limit: number = 200
 ): Promise<CrimeIncident[]> {
   try {
     const where: any = {
@@ -44,7 +45,8 @@ export async function getCrimesForBarangay(
       where,
       orderBy: {
         dateCommitted: 'desc'
-      }
+      },
+      take: Math.min(Math.max(1, limit), 1000)
     })
 
     // Map Prisma model to CrimeIncident interface
@@ -86,75 +88,90 @@ export async function getCrimeStats(
       }
     }
 
-    // Get total count
-    const totalCrimes = await prisma.crimeIncident.count({ where })
-
     // Get recent crimes (last 7 days)
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const recentCrimes = await prisma.crimeIncident.count({
-      where: {
-        ...where,
-        dateCommitted: {
-          gte: sevenDaysAgo
-        }
-      }
-    })
-
-    // Get crimes by type
-    const crimesByType = await prisma.crimeIncident.groupBy({
-      by: ['incidentType'],
-      where,
-      _count: {
-        incidentType: true
-      },
-      orderBy: {
-        _count: {
-          incidentType: 'desc'
-        }
-      }
-    })
-
-    // Get crimes by barangay
-    const crimesByBarangay = await prisma.crimeIncident.groupBy({
-      by: ['barangay'],
-      where,
-      _count: {
-        barangay: true
-      },
-      orderBy: {
-        _count: {
-          barangay: 'desc'
-        }
-      }
-    })
-
-    // Get monthly stats for current year
+    // Get monthly stats for current year (or date range year)
     const currentYear = new Date().getFullYear()
-    const yearStart = new Date(`${currentYear}-01-01`)
-    const yearEnd = new Date(`${currentYear + 1}-01-01`)
+    const yearStart = startDate || new Date(`${currentYear}-01-01T00:00:00.000Z`)
+    const yearEnd = endDate || new Date(`${currentYear + 1}-01-01T00:00:00.000Z`)
 
-    const monthlyData = await prisma.crimeIncident.findMany({
-      where: {
-        ...where,
-        dateCommitted: {
-          gte: yearStart,
-          lt: yearEnd
+    const monthlyQuery = barangayName
+      ? prisma.$queryRaw<Array<{ month: number; count: number | bigint }>>`
+          SELECT 
+            EXTRACT(MONTH FROM date_committed)::integer AS month,
+            COUNT(*)::integer AS count
+          FROM crime_incidents
+          WHERE date_committed >= ${yearStart}
+            AND date_committed < ${yearEnd}
+            AND LOWER(barangay) = LOWER(${barangayName})
+          GROUP BY month
+          ORDER BY month ASC
+        `
+      : prisma.$queryRaw<Array<{ month: number; count: number | bigint }>>`
+          SELECT 
+            EXTRACT(MONTH FROM date_committed)::integer AS month,
+            COUNT(*)::integer AS count
+          FROM crime_incidents
+          WHERE date_committed >= ${yearStart}
+            AND date_committed < ${yearEnd}
+          GROUP BY month
+          ORDER BY month ASC
+        `
+
+    // Run all aggregate queries concurrently in PostgreSQL
+    const [
+      totalCrimes,
+      recentCrimes,
+      crimesByType,
+      crimesByBarangay,
+      monthlyCountsRaw
+    ] = await Promise.all([
+      prisma.crimeIncident.count({ where }),
+      prisma.crimeIncident.count({
+        where: {
+          ...where,
+          dateCommitted: {
+            gte: sevenDaysAgo
+          }
         }
-      },
-      select: {
-        dateCommitted: true
-      }
-    })
+      }),
+      prisma.crimeIncident.groupBy({
+        by: ['incidentType'],
+        where,
+        _count: {
+          incidentType: true
+        },
+        orderBy: {
+          _count: {
+            incidentType: 'desc'
+          }
+        }
+      }),
+      prisma.crimeIncident.groupBy({
+        by: ['barangay'],
+        where,
+        _count: {
+          barangay: true
+        },
+        orderBy: {
+          _count: {
+            barangay: 'desc'
+          }
+        }
+      }),
+      monthlyQuery
+    ])
 
     // Process monthly stats
     const monthlyStats = Array.from({ length: 12 }, (_, i) => {
       const month = i + 1
-      const count = monthlyData.filter(crime => 
-        crime.dateCommitted.getMonth() + 1 === month
-      ).length
-      return { month, count }
+      const found = monthlyCountsRaw.find(m => Number(m.month) === month)
+      return {
+        month,
+        count: found ? Number(found.count) : 0
+      }
     })
 
     return {

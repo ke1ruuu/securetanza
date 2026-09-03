@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
-import { getSession } from '@/lib/auth';
+import { getSession, invalidateSessionCache } from '@/lib/auth';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
 
@@ -66,17 +66,18 @@ export async function PUT(
         where: { userId },
       });
 
-      // Assign new permissions
-      await Promise.all(validatedData.permissionIds.map(pid => 
-        prisma.userPermission.create({
-          data: {
-            userId,
-            permissionId: pid,
-            assignedBy: session.userId,
-          },
-        })
-      ));
+      // Assign new permissions via bulk createMany
+      await prisma.userPermission.createMany({
+        data: validatedData.permissionIds.map(pid => ({
+          userId,
+          permissionId: pid,
+          assignedBy: session.userId,
+        })),
+      });
     }
+
+    // Invalidate cached session for the updated user
+    invalidateSessionCache(userId);
 
     // Audit log
     await prisma.auditLog.create({
@@ -158,6 +159,8 @@ export async function DELETE(
     await prisma.user.delete({
       where: { id: userId },
     });
+
+    invalidateSessionCache(userId);
 
     // Audit log
     await prisma.auditLog.create({

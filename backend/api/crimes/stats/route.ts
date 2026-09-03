@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
 
     const where: any = {}
 
+    let dbBarangayName: string | undefined
     if (barangay) {
       // Map GeoJSON barangay name to database name (e.g., "Amaya I" -> "Daang Amaya I")
-      const dbBarangayName = mapGeoJsonToDb(barangay)
+      dbBarangayName = mapGeoJsonToDb(barangay)
       where.barangay = {
         equals: dbBarangayName,
         mode: 'insensitive'
@@ -39,155 +40,123 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Get total count (all time)
-    const totalCrimes = await prisma.crimeIncident.count({ where })
-
-    // Get crimes by type
-    const crimesByType = await prisma.crimeIncident.groupBy({
-      by: ['incidentType'],
-      where,
-      _count: {
-        incidentType: true
-      },
-      orderBy: {
-        _count: {
-          incidentType: 'desc'
-        }
-      }
-    })
-
-    // Get crimes by barangay
-    const crimesByBarangay = await prisma.crimeIncident.groupBy({
-      by: ['barangay'],
-      where,
-      _count: {
-        barangay: true
-      },
-      orderBy: {
-        _count: {
-          barangay: 'desc'
-        }
-      }
-    })
-
-    // Get recent crimes (last 7 days)
+    // Calculate 7 days ago for recent crimes
     const sevenDaysAgo = new Date()
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
 
-    const recentCrimes = await prisma.crimeIncident.count({
-      where: {
-        ...where,
-        dateCommitted: {
-          gte: sevenDaysAgo
-        }
-      }
-    })
-
-    // Get crimes resolved today (based on updatedAt and caseStatus)
+    // Calculate today and tomorrow for resolved today
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
 
+    const resolvedStatusFilter = {
+      OR: [
+        { caseStatus: { equals: 'Cleared', mode: 'insensitive' as const } },
+        { caseStatus: { equals: 'Solved', mode: 'insensitive' as const } },
+        { caseStatus: { equals: 'Archived', mode: 'insensitive' as const } },
+        { caseStatus: { equals: 'Closed', mode: 'insensitive' as const } }
+      ]
+    }
+
     const resolvedTodayWhere: any = Object.keys(where).length > 0
       ? {
           AND: [
             where,
-            {
-              OR: [
-                { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
-                { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
-                { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
-                { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
-              ]
-            },
-            {
-              updatedAt: {
-                gte: today,
-                lt: tomorrow
-              }
-            }
+            resolvedStatusFilter,
+            { updatedAt: { gte: today, lt: tomorrow } }
           ]
         }
       : {
-          OR: [
-            { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
-            { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
-            { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
-            { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
-          ],
-          updatedAt: {
-            gte: today,
-            lt: tomorrow
-          }
+          ...resolvedStatusFilter,
+          updatedAt: { gte: today, lt: tomorrow }
         }
 
-    const resolvedToday = await prisma.crimeIncident.count({
-      where: resolvedTodayWhere
-    })
-
-    // Get cleared/solved cases for safety index calculation
-    const clearedCasesWhere: any = Object.keys(where).length > 0 
+    const clearedCasesWhere: any = Object.keys(where).length > 0
       ? {
           AND: [
             where,
-            {
-              OR: [
-                { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
-                { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
-                { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
-                { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
-              ]
-            }
+            resolvedStatusFilter
           ]
         }
-      : {
-          OR: [
-            { caseStatus: { equals: 'Cleared', mode: 'insensitive' } },
-            { caseStatus: { equals: 'Solved', mode: 'insensitive' } },
-            { caseStatus: { equals: 'Archived', mode: 'insensitive' } },
-            { caseStatus: { equals: 'Closed', mode: 'insensitive' } }
-          ]
+      : resolvedStatusFilter
+
+    // Monthly stats date boundaries
+    const targetYear = year ? parseInt(year, 10) : new Date().getFullYear()
+    const startDateCommitted = startDate
+      ? new Date(startDate)
+      : new Date(`${targetYear}-01-01T00:00:00.000Z`)
+    const endDateCommitted = endDate
+      ? new Date(endDate)
+      : new Date(`${targetYear + 1}-01-01T00:00:00.000Z`)
+
+    const monthlyQuery = dbBarangayName
+      ? prisma.$queryRaw<Array<{ month: number; count: number | bigint }>>`
+          SELECT 
+            EXTRACT(MONTH FROM date_committed)::integer AS month,
+            COUNT(*)::integer AS count
+          FROM crime_incidents
+          WHERE date_committed >= ${startDateCommitted}
+            AND date_committed < ${endDateCommitted}
+            AND LOWER(barangay) = LOWER(${dbBarangayName})
+          GROUP BY month
+          ORDER BY month ASC
+        `
+      : prisma.$queryRaw<Array<{ month: number; count: number | bigint }>>`
+          SELECT 
+            EXTRACT(MONTH FROM date_committed)::integer AS month,
+            COUNT(*)::integer AS count
+          FROM crime_incidents
+          WHERE date_committed >= ${startDateCommitted}
+            AND date_committed < ${endDateCommitted}
+          GROUP BY month
+          ORDER BY month ASC
+        `
+
+    // Run all 7 database queries concurrently in PostgreSQL
+    const [
+      totalCrimes,
+      crimesByType,
+      crimesByBarangay,
+      recentCrimes,
+      resolvedToday,
+      clearedCases,
+      monthlyCountsRaw
+    ] = await Promise.all([
+      prisma.crimeIncident.count({ where }),
+      prisma.crimeIncident.groupBy({
+        by: ['incidentType'],
+        where,
+        _count: { incidentType: true },
+        orderBy: { _count: { incidentType: 'desc' } }
+      }),
+      prisma.crimeIncident.groupBy({
+        by: ['barangay'],
+        where,
+        _count: { barangay: true },
+        orderBy: { _count: { barangay: 'desc' } }
+      }),
+      prisma.crimeIncident.count({
+        where: {
+          ...where,
+          dateCommitted: { gte: sevenDaysAgo }
         }
-    
-    const clearedCases = await prisma.crimeIncident.count({
-      where: clearedCasesWhere
-    })
+      }),
+      prisma.crimeIncident.count({ where: resolvedTodayWhere }),
+      prisma.crimeIncident.count({ where: clearedCasesWhere }),
+      monthlyQuery
+    ])
 
     // Get active cases (total - cleared)
-    const activeCases = totalCrimes - clearedCases
+    const activeCases = Math.max(0, totalCrimes - clearedCases)
 
-    // Get crimes by month for the selected year or current year
-    const targetYear = year ? parseInt(year) : new Date().getFullYear()
-    
-    // Build the where clause for monthly stats
-    // If where already has dateCommitted (from year filter), use it
-    // Otherwise, set it to the target year
-    const monthlyWhere: any = { ...where }
-    if (!monthlyWhere.dateCommitted) {
-      monthlyWhere.dateCommitted = {
-        gte: new Date(`${targetYear}-01-01`),
-        lt: new Date(`${targetYear + 1}-01-01`)
-      }
-    }
-    
-    const crimesByMonth = await prisma.crimeIncident.groupBy({
-      by: ['dateCommitted'],
-      where: monthlyWhere,
-      _count: {
-        dateCommitted: true
-      }
-    })
-
-    // Process monthly data for activity chart
+    // Format monthly counts into 12-month array
     const monthlyStats = Array.from({ length: 12 }, (_, i) => {
       const month = i + 1
-      const monthCrimes = crimesByMonth.filter(crime => 
-        crime.dateCommitted.getMonth() + 1 === month
-      )
+      const found = monthlyCountsRaw.find(m => Number(m.month) === month)
       return {
         month,
-        count: monthCrimes.reduce((sum, crime) => sum + crime._count.dateCommitted, 0)
+        count: found ? Number(found.count) : 0
       }
     })
 
@@ -195,16 +164,6 @@ export async function GET(request: NextRequest) {
     const safetyIndex = totalCrimes > 0 
       ? Math.round((clearedCases / totalCrimes) * 100)
       : 100
-
-    console.log('📊 Stats API Response:', {
-      year,
-      targetYear,
-      totalCrimes,
-      monthlyStatsSum: monthlyStats.reduce((sum, m) => sum + m.count, 0),
-      activitySum: monthlyStats.map(s => s.count).reduce((a, b) => a + b, 0),
-      activity: monthlyStats.map(s => s.count),
-      crimesByMonthLength: crimesByMonth.length
-    })
 
     return NextResponse.json({
       success: true,
@@ -223,7 +182,7 @@ export async function GET(request: NextRequest) {
           count: item._count.barangay
         })),
         monthlyStats,
-        activity: monthlyStats.map(stat => stat.count) // Return actual raw counts instead of scaled percentages
+        activity: monthlyStats.map(stat => stat.count)
       }
     })
   } catch (error) {

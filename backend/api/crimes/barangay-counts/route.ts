@@ -44,10 +44,8 @@ export async function GET(request: NextRequest) {
         gte: new Date(startDateCommitted),
         lte: new Date(endDateCommitted)
       }
-      console.log('📅 Using date range filter:', where.dateCommitted)
     } else if (year) {
-      // Filter by year if specified and no date range provided
-      const yearNum = parseInt(year)
+      const yearNum = parseInt(year, 10)
       const startOfYear = new Date(yearNum, 0, 1)
       const endOfYear = new Date(yearNum, 11, 31, 23, 59, 59, 999)
       
@@ -55,104 +53,41 @@ export async function GET(request: NextRequest) {
         gte: startOfYear,
         lte: endOfYear
       }
-      console.log('📅 Using year filter:', { 
-        year: yearNum, 
-        startOfYear: startOfYear.toISOString(), 
-        endOfYear: endOfYear.toISOString() 
-      })
-    } else {
-      console.log('⚠️ No date filter applied - fetching ALL crimes')
     }
 
-    // If hour is specified, we need to filter by timeCommitted field
-    // Since timeCommitted is stored as string (HH:MM:SS), we need to fetch all and filter in memory
-    let crimes
-    if (hour !== null && hour !== undefined) {
-      // Fetch all crimes in the date range
-      crimes = await prisma.crimeIncident.findMany({
+    // Push hour filtering down to database query (supports padded "09:" and unpadded "9:")
+    if (hour !== null && hour !== undefined && hour !== '') {
+      const targetHour = parseInt(hour, 10)
+      if (!isNaN(targetHour)) {
+        const padded = targetHour.toString().padStart(2, '0')
+        const unpadded = targetHour.toString()
+        where.OR = [
+          { timeCommitted: { startsWith: `${padded}:` } },
+          { timeCommitted: { startsWith: `${unpadded}:` } },
+        ]
+      }
+    }
+
+    // Execute aggregated counts and total count concurrently in PostgreSQL
+    const [barangayCounts, totalCrimes] = await Promise.all([
+      prisma.crimeIncident.groupBy({
+        by: ['barangay'],
         where,
-        select: {
-          barangay: true,
-          timeCommitted: true,
-          dateCommitted: true
-        }
-      })
-
-      console.log(`📊 Found ${crimes.length} crimes in date range before hour filter`)
-
-      // Filter by hour from timeCommitted string (format: "HH:MM:SS" or "HH:MM")
-      const targetHour = parseInt(hour)
-      crimes = crimes.filter(crime => {
-        const timeParts = crime.timeCommitted.split(':')
-        const crimeHour = parseInt(timeParts[0])
-        const matches = crimeHour === targetHour
-        if (!matches && crimeHour >= 0 && crimeHour < 24) {
-          console.log(`⏰ Crime at hour ${crimeHour} (${crime.timeCommitted}) doesn't match target hour ${targetHour}`)
-        }
-        return matches
-      })
-
-      console.log(`⏰ After filtering by hour ${targetHour}: ${crimes.length} crimes`)
-      
-      // Log ALL crimes that matched for verification
-      if (crimes.length > 0) {
-        console.log(`✅ ALL ${crimes.length} crimes at hour ${targetHour}:`, crimes.map(c => ({
-          barangay: c.barangay,
-          time: c.timeCommitted,
-          date: new Date(c.dateCommitted).toLocaleDateString()
-        })))
-      }
-
-      // Count by barangay manually
-      const counts: Record<string, number> = {}
-      crimes.forEach(crime => {
-        counts[crime.barangay] = (counts[crime.barangay] || 0) + 1
-      })
-
-      const totalCrimes = crimes.length
-      const barangayCount = Object.keys(counts).length
-
-      console.log('✅ Barangay counts by barangay:', counts)
-      console.log('✅ Total crimes:', totalCrimes, 'Barangays affected:', barangayCount)
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          barangayCounts: counts,
-          totalCrimes,
-          barangayCount
-        }
-      })
-    }
-
-    // No hour filter - use groupBy for efficiency
-    const barangayCounts = await prisma.crimeIncident.groupBy({
-      by: ['barangay'],
-      where,
-      _count: {
-        barangay: true
-      },
-      orderBy: {
         _count: {
-          barangay: 'desc'
+          barangay: true
+        },
+        orderBy: {
+          _count: {
+            barangay: 'desc'
+          }
         }
-      }
-    })
+      }),
+      prisma.crimeIncident.count({ where })
+    ])
 
-    // Transform to a simple object for easier use
     const counts: Record<string, number> = {}
     barangayCounts.forEach(item => {
       counts[item.barangay] = item._count.barangay
-    })
-
-    // Get total crime count for statistics
-    const totalCrimes = await prisma.crimeIncident.count({ where })
-
-    console.log('✅ Barangay Counts Result:', {
-      totalCrimes,
-      barangayCount: barangayCounts.length,
-      counts,
-      whereClause: where
     })
 
     return NextResponse.json({

@@ -97,8 +97,29 @@ export async function createSession(user: User): Promise<string> {
 
 import { prisma } from '@/backend/lib/prisma';
 
+interface CachedUserValidation {
+  fullName: string;
+  permissions: string[];
+  mustChangePassword: boolean;
+  defaultLandingPage: string;
+  accountNumber: string;
+  cachedAt: number;
+}
+
+const userSessionCache = new Map<number, CachedUserValidation>();
+const SESSION_CACHE_TTL_MS = 20000; // 20 seconds
+const MAX_CACHE_ENTRIES = 500;
+
+export function invalidateSessionCache(userId?: number): void {
+  if (userId) {
+    userSessionCache.delete(userId);
+  } else {
+    userSessionCache.clear();
+  }
+}
+
 /**
- * Get the current session with real-time database validation
+ * Get the current session with real-time database validation (cached for 20s)
  */
 export async function getSession(validateWithDb: boolean = true): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
@@ -115,43 +136,75 @@ export async function getSession(validateWithDb: boolean = true): Promise<Sessio
 
   if (validateWithDb) {
     try {
-      // Check database to ensure user still exists and access has not been revoked
-      const user = await prisma.user.findUnique({
-        where: { id: payload.userId },
-        include: {
-          permissions: {
-            include: {
-              permission: true,
+      const now = Date.now();
+      const cached = userSessionCache.get(payload.userId);
+      let userData: CachedUserValidation | null = null;
+
+      if (cached && now - cached.cachedAt < SESSION_CACHE_TTL_MS) {
+        if (cached.accountNumber !== payload.accountNumber || cached.permissions.length === 0) {
+          try {
+            cookieStore.delete('session');
+          } catch {}
+          return null;
+        }
+        userData = cached;
+      } else {
+        // Query database to ensure user still exists and access has not been revoked
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
+          include: {
+            permissions: {
+              include: {
+                permission: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      // If user was removed or account number doesn't match, revoke immediately
-      if (!user || user.accountNumber !== payload.accountNumber) {
-        try {
-          cookieStore.delete('session');
-        } catch {}
-        return null;
-      }
+        // If user was removed or account number doesn't match, revoke immediately
+        if (!user || user.accountNumber !== payload.accountNumber) {
+          userSessionCache.delete(payload.userId);
+          try {
+            cookieStore.delete('session');
+          } catch {}
+          return null;
+        }
 
-      // Sync active permissions directly from database in real-time
-      const activePermissions = user.permissions.map(p => p.permission.permissionName);
+        // Sync active permissions directly from database
+        const activePermissions = user.permissions.map(p => p.permission.permissionName);
 
-      // If user has all permissions revoked (0 permissions), revoke session
-      if (activePermissions.length === 0) {
-        try {
-          cookieStore.delete('session');
-        } catch {}
-        return null;
+        // If user has all permissions revoked (0 permissions), revoke session
+        if (activePermissions.length === 0) {
+          userSessionCache.delete(payload.userId);
+          try {
+            cookieStore.delete('session');
+          } catch {}
+          return null;
+        }
+
+        userData = {
+          fullName: user.fullName,
+          permissions: activePermissions,
+          mustChangePassword: user.mustChangePassword,
+          defaultLandingPage: user.defaultLandingPage,
+          accountNumber: user.accountNumber,
+          cachedAt: now,
+        };
+
+        // Bound cache size
+        if (userSessionCache.size >= MAX_CACHE_ENTRIES) {
+          const firstKey = userSessionCache.keys().next().value;
+          if (firstKey !== undefined) userSessionCache.delete(firstKey);
+        }
+        userSessionCache.set(payload.userId, userData);
       }
 
       return {
         ...payload,
-        fullName: user.fullName,
-        permissions: activePermissions,
-        mustChangePassword: user.mustChangePassword,
-        defaultLandingPage: user.defaultLandingPage,
+        fullName: userData.fullName,
+        permissions: userData.permissions,
+        mustChangePassword: userData.mustChangePassword,
+        defaultLandingPage: userData.defaultLandingPage,
       };
     } catch (error) {
       console.error('Error validating session with database:', error);
@@ -167,6 +220,13 @@ export async function getSession(validateWithDb: boolean = true): Promise<Sessio
  */
 export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
+  const token = cookieStore.get('session')?.value;
+  if (token) {
+    const payload = await verifyToken(token);
+    if (payload?.userId) {
+      invalidateSessionCache(payload.userId);
+    }
+  }
   cookieStore.delete('session');
 }
 
