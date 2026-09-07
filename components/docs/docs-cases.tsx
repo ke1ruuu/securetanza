@@ -6,85 +6,109 @@ import { DocsCta } from "./docs-cta";
 
 export function DocsCases() {
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Crime Cases & Blotter Dossier Management
-        </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          The Cases module provides investigative officers with complete blotter incident dossiers, status tracking, and spatial context.
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Case Blotter
+        </h1>
+        <p className="text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+          The Case Blotter module provides detailed incident dossiers, investigative status tracking, statutory classifications, and geospatial context for individual crime reports.
         </p>
       </div>
 
-      {/* Key Filters */}
-      <div className="p-6 rounded-2xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 space-y-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-          Search, Filter & Clearance Classifications
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30">
-            <span className="font-semibold text-emerald-800 dark:text-emerald-300 text-sm">🟢 Cleared</span>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Identified suspect, case referred to prosecutor.</p>
-          </div>
-          <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-950/30">
-            <span className="font-semibold text-blue-800 dark:text-blue-300 text-sm">🔵 Under Investigation</span>
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Active police investigation ongoing.</p>
-          </div>
-          <div className="p-3 rounded-xl border border-purple-200 dark:border-purple-800/50 bg-purple-50 dark:bg-purple-950/30">
-            <span className="font-semibold text-purple-800 dark:text-purple-300 text-sm">🟣 Filed in Court</span>
-            <p className="text-xs text-purple-600 dark:text-purple-400 mt-1">Formally docketed in municipal or regional trial court.</p>
-          </div>
-          <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
-            <span className="font-semibold text-slate-800 dark:text-slate-200 text-sm">⚪ Archived / Closed</span>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">Case concluded or archived after legal process.</p>
-          </div>
+      {/* Clearance Classifications */}
+      <section id="clearance-status" className="space-y-4 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Clearance Status Classifications
+        </h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Cases are classified by legal and investigative standing:
+        </p>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+                <th className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Status</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Operational Meaning</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-400">
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Cleared</td>
+                <td className="py-2 px-3">Suspect has been identified and case referred to the prosecutor or judicial authority.</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Under Investigation</td>
+                <td className="py-2 px-3">Active police inquiry, evidence collection, and suspect identification ongoing.</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Filed in Court</td>
+                <td className="py-2 px-3">Formal information docketed in the municipal or regional trial court.</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Archived / Closed</td>
+                <td className="py-2 px-3">Case concluded or archived following due administrative or judicial process.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </div>
+      </section>
 
       {/* Dossier Attributes */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          Case Dossier Fields & Special Crime Attributes
-        </h3>
+      <section id="dossier-fields" className="space-y-6 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Dossier Fields & Police Classifications
+        </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
-              Special Police Classifications
-            </h4>
-            <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-              <li><strong>Heinous Crime Flag:</strong> Flags grave crimes involving murder, rape, or severe offenses.</li>
-              <li><strong>Sensational Crime Flag:</strong> Highlights incidents of major public interest or media coverage.</li>
-              <li><strong>Threat Group Involvement:</strong> Tracks organized crime syndicates or illicit groups.</li>
-            </ul>
-          </div>
-
-          <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
-              EGO & Investigator Attribution
-            </h4>
-            <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-              <li><strong>EGO Tracking:</strong> Flags Elected/Government Official involvement as suspect or victim with position classification.</li>
-              <li><strong>Investigator Attribution:</strong> Logs the designated case investigator and supervising officer.</li>
-              <li><strong>Geospatial Coordinates:</strong> Exact latitude/longitude mapping for visual pin plotting.</li>
-            </ul>
-          </div>
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Special Classifications
+          </h3>
+          <ul className="list-disc pl-5 mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>
+              <strong>Heinous Crime Flag:</strong> Flags serious capital offenses (e.g., murder, homicide, rape, robbery with homicide).
+            </li>
+            <li>
+              <strong>Sensational Crime Flag:</strong> Highlights incidents of significant public interest, community impact, or media attention.
+            </li>
+            <li>
+              <strong>Threat Group Involvement:</strong> Identifies potential involvement of organized crime syndicates or illicit groups.
+            </li>
+          </ul>
         </div>
-      </div>
 
-      {/* Action Suggestion & CTA */}
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Attribution & Geospatial Data
+          </h3>
+          <ul className="list-disc pl-5 mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>
+              <strong>Elected/Government Official (EGO) Tracking:</strong> Records involvement of government officials as either suspect or victim.
+            </li>
+            <li>
+              <strong>Investigator Attribution:</strong> Logs designated lead investigator and officer-in-charge.
+            </li>
+            <li>
+              <strong>Geospatial Coordinates:</strong> Exact latitude and longitude values for mapping pins and spatial queries.
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Next Steps */}
       <DocsCta
-        title="Blotter Investigation Pro Tip"
-        suggestion="Filter records by clearance status ('Under Investigation' or 'Cleared') and leverage the full-text search to quickly prepare case profiles for court submittals."
+        title="Case Directory"
+        suggestion="Filter records by clearance status or review the upload history to inspect newly ingested blotter sheets."
         actions={[
           {
-            label: "Open Case Directory",
+            label: "Open Cases",
             href: "/dashboard/cases",
             icon: FolderOpen,
             variant: "primary",
           },
           {
-            label: "Review Upload History",
+            label: "Upload Logs",
             href: "/dashboard/upload-logs",
             icon: FileSpreadsheet,
             variant: "secondary",

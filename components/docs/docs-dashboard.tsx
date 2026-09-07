@@ -6,101 +6,99 @@ import { DocsCta } from "./docs-cta";
 
 export function DocsDashboard() {
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Executive Dashboard & Overview
-        </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          The Executive Dashboard serves as the high-level operational command center for monitoring crime trends and municipal statistics.
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Overview Dashboard
+        </h1>
+        <p className="text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+          The Executive Dashboard provides an operational summary of incident volume, statutory offense distribution, and recent blotter entries across Tanza, Cavite.
         </p>
       </div>
 
-      {/* Metric Cards Guide */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Volume</span>
-            <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-500">📊</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Total Crimes</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-            Cumulative blotter incident count in the selected geographic scope and time frame.
-          </p>
-        </div>
+      {/* Metric Indicators */}
+      <section id="kpi-metrics" className="space-y-4 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Key Performance Indicators
+        </h2>
 
-        <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Prevalence</span>
-            <span className="p-1.5 rounded-lg bg-purple-500/10 text-purple-500">🎯</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Top Offense Type</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-            The most statistically frequent crime category (e.g. Theft, Physical Injury, Vehicular Accident).
-          </p>
-        </div>
-
-        <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hotspot</span>
-            <span className="p-1.5 rounded-lg bg-rose-500/10 text-rose-500">🚨</span>
-          </div>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white">Critical Hotspot</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">
-            The barangay exhibiting the highest crime density (visible in General Dashboard view).
-          </p>
-        </div>
-      </div>
-
-      {/* Visual Charts & Recent Activity Blotter */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          Visual Charts & Recent Activity Blotter
-        </h3>
-        
-        <div className="space-y-3">
-          <div className="p-4 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
-              12-Month Crime Volume Trajectory
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Shows monthly incident volume progression with trend markers, identifying seasonal peaks (such as holiday increases or festive months).
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+              Total Crimes
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+              Cumulative count of recorded blotter incidents within the active date range and selected barangay scope.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
-              Categorical Offense Distribution
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Interactive donut chart presenting proportional breakdowns of index and non-index crimes.
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+              Top Offense Type
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+              The statutory crime classification with the highest recorded frequency during the observation period (e.g., Theft, Physical Injury, Robbery).
             </p>
           </div>
 
-          <div className="p-4 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
-              Recent Blotter Activity Table
-            </h4>
-            <p className="text-xs text-slate-600 dark:text-slate-400">
-              Live table of recently recorded incidents with Case ID, timestamp, barangay, and status tags. Click <strong>"View Cases →"</strong> to jump directly into the full case investigation directory.
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+              Critical Hotspot
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+              The barangay exhibiting the highest crime density within the municipality during the selected timeframe.
             </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Action Suggestion & CTA */}
+      {/* Visual Charts & Feeds */}
+      <section id="charts-blotter" className="space-y-6 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Charts & Blotter Activity
+        </h2>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            12-Month Crime Volume Trajectory
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            Displays monthly incident totals over time, highlighting upward or downward momentum and identifying seasonal surges (e.g., holiday or summer peaks).
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Categorical Offense Distribution
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            Provides proportional breakdown of index crimes (crimes against persons and property) versus non-index and special law violations.
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Recent Blotter Activity
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            A chronological feed of recent blotter recordings displaying Case ID, timestamp, barangay, crime type, and clearance status.
+          </p>
+        </div>
+      </section>
+
+      {/* Next Steps */}
       <DocsCta
-        title="Executive Monitoring Pro Tip"
-        suggestion="Switch the Barangay Scope selector at the top from 'General Dashboard' to an individual barangay to isolate localized trends, KPI snapshots, and recent blotter activity."
+        title="Dashboard Navigation"
+        suggestion="Filter the dashboard by selecting a specific barangay in the scope selector, or drill down into raw case files."
         actions={[
           {
-            label: "Open Executive Dashboard",
+            label: "Open Dashboard",
             href: "/dashboard/overview",
             icon: BarChart3,
             variant: "primary",
           },
           {
-            label: "Investigate Case Blotters",
+            label: "View Cases",
             href: "/dashboard/cases",
             icon: FolderOpen,
             variant: "secondary",

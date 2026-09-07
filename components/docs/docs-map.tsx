@@ -1,129 +1,127 @@
 "use client";
 
 import React from "react";
-import { Layers, Crosshair, Clock, ChevronRight, Map as MapIcon, BarChart3 } from "lucide-react";
+import { Map as MapIcon, BarChart3 } from "lucide-react";
 import { DocsCta } from "./docs-cta";
 
 export function DocsMap() {
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Interactive GIS Crime Map
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          GIS Crime Map
+        </h1>
+        <p className="text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+          The Interactive Crime Map is the primary spatial intelligence interface, visualizing geographic crime distribution, hot-spot clusters, and historical trends across all 41 barangays of Tanza, Cavite.
+        </p>
+      </div>
+
+      {/* Threat Level Classifications */}
+      <section id="threat-levels" className="space-y-4 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Barangay Threat Levels
         </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          The Interactive Crime Map is the primary spatial intelligence hub, visualizing geographic crime distribution across Tanza, Cavite.
-        </p>
-      </div>
-
-      {/* Threat Level Matrix */}
-      <div className="p-6 rounded-2xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 space-y-4">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Layers className="w-5 h-5 text-sky-500" />
-          Barangay Threat Level Color Coding
-        </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Each barangay polygon dynamically calculates its threat level based on active incident count in the selected time range:
+          Barangay polygon boundaries dynamically calculate threat levels based on incident counts within the active time filter. The platform uses quartile distributions (0–25th, 25–50th, 50–75th, and 75th+ percentiles) with standard base fallback thresholds:
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          <div className="p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-950/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-sm" />
-              <span className="font-semibold text-emerald-800 dark:text-emerald-300 text-sm">Secure</span>
-            </div>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">0 - 5 incidents</span>
-          </div>
-          <div className="p-3 rounded-xl border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-950/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3.5 h-3.5 rounded-full bg-blue-500 shadow-sm" />
-              <span className="font-semibold text-blue-800 dark:text-blue-300 text-sm">Low</span>
-            </div>
-            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">6 - 10 incidents</span>
-          </div>
-          <div className="p-3 rounded-xl border border-yellow-200 dark:border-yellow-800/50 bg-yellow-50 dark:bg-yellow-950/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3.5 h-3.5 rounded-full bg-yellow-500 shadow-sm" />
-              <span className="font-semibold text-yellow-800 dark:text-yellow-300 text-sm">Moderate</span>
-            </div>
-            <span className="text-xs text-yellow-600 dark:text-yellow-400 font-medium">11 - 20 incidents</span>
-          </div>
-          <div className="p-3 rounded-xl border border-orange-200 dark:border-orange-800/50 bg-orange-50 dark:bg-orange-950/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm" />
-              <span className="font-semibold text-orange-800 dark:text-orange-300 text-sm">High</span>
-            </div>
-            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">21 - 30 incidents</span>
-          </div>
-          <div className="p-3 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-950/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3.5 h-3.5 rounded-full bg-red-500 shadow-sm" />
-              <span className="font-semibold text-red-800 dark:text-red-300 text-sm">Critical</span>
-            </div>
-            <span className="text-xs text-red-600 dark:text-red-400 font-medium">31+ incidents</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Map Controls & Operations */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+                <th className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Threat Level</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Base Threshold</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Dynamic Quartile Rule</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">Color</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-400">
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Secure</td>
+                <td className="py-2 px-3">0 incidents</td>
+                <td className="py-2 px-3">Exactly 0 incidents recorded in the period</td>
+                <td className="py-2 px-3 text-sky-600 dark:text-sky-400 font-medium">Sky Blue (#0ea5e9)</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Low</td>
+                <td className="py-2 px-3">1 – 2 incidents</td>
+                <td className="py-2 px-3">1 to Q1 (25th percentile)</td>
+                <td className="py-2 px-3 text-emerald-600 dark:text-emerald-400 font-medium">Emerald (#10b981)</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Moderate</td>
+                <td className="py-2 px-3">3 – 5 incidents</td>
+                <td className="py-2 px-3">Q1 to Q2 (25th–50th percentile / median)</td>
+                <td className="py-2 px-3 text-yellow-600 dark:text-yellow-400 font-medium">Yellow (#eab308)</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">High</td>
+                <td className="py-2 px-3">6 – 10 incidents</td>
+                <td className="py-2 px-3">Q2 to Q3 (50th–75th percentile)</td>
+                <td className="py-2 px-3 text-orange-600 dark:text-orange-400 font-medium">Orange (#f97316)</td>
+              </tr>
+              <tr>
+                <td className="py-2 px-3 font-medium text-slate-900 dark:text-white">Critical</td>
+                <td className="py-2 px-3">11+ incidents</td>
+                <td className="py-2 px-3">Above Q3 (75th+ percentile)</td>
+                <td className="py-2 px-3 text-red-600 dark:text-red-400 font-medium">Red (#ef4444)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* Map Controls & Spatial Tools */}
+      <section id="map-controls" className="space-y-6 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
           Map Controls & Spatial Tools
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-              <Crosshair className="w-4 h-4 text-sky-500" />
-              Barangay & Crime Filtering
-            </h4>
-            <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-              <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 text-sky-500 mt-0.5 shrink-0" />
-                <span><strong>Barangay Multi-Select:</strong> Focus on one or multiple specific barangays. The camera smoothly flies and pans to the selected polygon bounds.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 text-sky-500 mt-0.5 shrink-0" />
-                <span><strong>Crime Type Filter:</strong> Isolate theft, robbery, physical injury, or specific statutory violations.</span>
-              </li>
-            </ul>
-          </div>
+        </h2>
 
-          <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-            <h4 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-              <Clock className="w-4 h-4 text-purple-500" />
-              Timeline Scrubber & Playback
-            </h4>
-            <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-2">
-              <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
-                <span><strong>Time Aggregation:</strong> Switch between Quarter (Q1-Q4), Half-Year (H1-H2), Month (Jan-Dec), or specific Days.</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ChevronRight className="w-4 h-4 text-purple-500 mt-0.5 shrink-0" />
-                <span><strong>Animated Playback:</strong> Press the <strong>Play</strong> button to animate crime progression chronologically over months.</span>
-              </li>
-            </ul>
-          </div>
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Barangay & Crime Filtering
+          </h3>
+          <ul className="list-disc pl-5 mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>
+              <strong>Barangay Multi-Select:</strong> Focus on one or multiple specific barangays. The camera smoothly pans and fits to the selected polygon bounds.
+            </li>
+            <li>
+              <strong>Crime Type Filter:</strong> Isolate specific crime categories such as theft, robbery, physical injury, or vehicular accidents.
+            </li>
+          </ul>
         </div>
 
-        {/* Barangay Drawer & Inspection */}
-        <div className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60">
-          <h4 className="font-semibold text-slate-900 dark:text-white mb-2">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Timeline Scrubber & Temporal Playback
+          </h3>
+          <ul className="list-disc pl-5 mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>
+              <strong>Time Aggregation:</strong> Switch between Quarter (Q1–Q4), Half-Year (H1–H2), Month (Jan–Dec), or custom date selections.
+            </li>
+            <li>
+              <strong>Animated Playback:</strong> Press the Play button to animate chronological crime distribution across months automatically.
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
             Barangay Intelligence Drawer
-          </h4>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Clicking on any barangay polygon opens the <strong>Barangay Drawer</strong> on the right. It summarizes total incidents, top crime category, safety score, clearance rate, demographic population density, and quick links to open the filtered dashboard or case list for that barangay.
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            Clicking any barangay polygon opens the slide-out intelligence drawer. It details the barangay incident count, top offense category, safety index, clearance rate, and demographic population density, with direct links to filtered dashboards.
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* Action Suggestion & CTA */}
+      {/* Next Steps */}
       <DocsCta
-        title="Spatial Intelligence Pro Tip"
-        suggestion="Use the bottom Time Slider to scrub through historical month-by-month incident progression, or click on any barangay boundary to view its localized threat profile."
+        title="Explore the Map"
+        suggestion="Use the timeline scrubber at the bottom to review monthly trends, or click any barangay to open its localized profile."
         actions={[
           {
-            label: "Open Interactive Map",
+            label: "Open Crime Map",
             href: "/",
             icon: MapIcon,
             variant: "primary",

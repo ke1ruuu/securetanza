@@ -6,73 +6,72 @@ import { DocsCta } from "./docs-cta";
 
 export function DocsReports() {
   const reportSections = [
-    { icon: "📋", title: "1. Executive Summary", desc: "High-level overview and critical takeaways." },
-    { icon: "📊", title: "2. Current Statistics", desc: "Total incident volume and clearance rates." },
-    { icon: "📈", title: "3. Temporal Trends", desc: "12-month historical crime progression." },
-    { icon: "⏰", title: "4. Time Patterns (Radar)", desc: "24-hour peak incident hours analysis." },
-    { icon: "🔍", title: "5. Crime Classification", desc: "Detailed breakdown of offense categories." },
-    { icon: "📍", title: "6. Barangay Comparison", desc: "Cross-barangay rankings and comparative metrics." },
-    { icon: "🔥", title: "7. Crime Heatmap Matrix", desc: "Monthly distribution matrix across crime types." },
-    { icon: "💡", title: "8. Tactical Recommendations", desc: "Actionable patrol and security interventions." },
+    { title: "Executive Summary", desc: "High-level overview and critical operational takeaways." },
+    { title: "Current Statistics", desc: "Total incident volume and clearance rates." },
+    { title: "Temporal Trends", desc: "12-month historical crime progression." },
+    { title: "Time Patterns (Radar)", desc: "24-hour peak incident hours analysis." },
+    { title: "Crime Classification", desc: "Detailed breakdown of offense categories." },
+    { title: "Barangay Comparison", desc: "Cross-barangay rankings and comparative metrics." },
+    { title: "Crime Heatmap Matrix", desc: "Monthly distribution matrix across crime types." },
+    { title: "Tactical Recommendations", desc: "Actionable patrol and security interventions." },
   ];
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          Institutional PDF Report Generator
-        </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          The Report Generator compiles structured, publication-grade PDF documentation for command briefings, LGU peace and order councils, and official submissions.
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          PDF Reports
+        </h1>
+        <p className="text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+          The Report Generator compiles structured, publication-grade PDF documentation for command briefings, municipal peace and order councils, and official records.
         </p>
       </div>
 
       {/* Available Sections */}
-      <div className="space-y-4">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-          Configurable Report Sections (Toggle On/Off)
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <section id="report-sections" className="space-y-4 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Configurable Report Sections
+        </h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Individual modules can be toggled on or off to tailor the report for specific audiences:
+        </p>
+
+        <ol className="list-decimal pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
           {reportSections.map((sec, idx) => (
-            <div key={idx} className="p-4 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 flex items-start gap-3">
-              <span className="text-2xl shrink-0">{sec.icon}</span>
-              <div>
-                <h4 className="font-semibold text-sm text-slate-900 dark:text-white">{sec.title}</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">{sec.desc}</p>
-              </div>
-            </div>
+            <li key={idx}>
+              <strong className="text-slate-900 dark:text-white">{sec.title}</strong> — {sec.desc}
+            </li>
           ))}
-        </div>
-      </div>
+        </ol>
+      </section>
 
       {/* Step by Step Generation */}
-      <div className="p-6 rounded-2xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 space-y-3">
-        <h3 className="text-base font-bold text-slate-900 dark:text-white">
-          Steps to Generate & Download Reports
-        </h3>
-        <ol className="text-sm text-slate-600 dark:text-slate-400 space-y-2 list-decimal list-inside">
+      <section id="exporting-reports" className="space-y-4 scroll-mt-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2">
+          Generating and Exporting Reports
+        </h2>
+        <ol className="list-decimal pl-5 space-y-2 text-sm text-slate-600 dark:text-slate-400">
           <li>Navigate to <strong>Dashboard → Reports</strong>.</li>
-          <li>Select desired barangay scope (or General Dashboard for all barangays).</li>
-          <li>Toggle the section cards to include or omit specific analytical modules.</li>
-          <li>Review the real-time publication cover preview in the right panel.</li>
-          <li>Click <strong>"Export Report"</strong> to generate the PDF with embedded vector charts and automatic download.</li>
+          <li>Select the desired barangay scope (or General Dashboard for all barangays).</li>
+          <li>Toggle sections on or off based on your briefing requirements.</li>
+          <li>Review the real-time publication cover preview in the side panel.</li>
+          <li>Click <strong>Export Report</strong> to generate the PDF with embedded vector charts and trigger automatic download.</li>
         </ol>
-      </div>
+      </section>
 
-      {/* Action Suggestion & CTA */}
+      {/* Next Steps */}
       <DocsCta
-        title="Document Publication Pro Tip"
-        suggestion="Tailor PDF outputs for specific council briefings by toggling off optional modules — e.g. export an Executive Summary + 24-Hour Time Radar brief for shift commanders."
+        title="Report Generation"
+        suggestion="Tailor PDF outputs for specific council briefings by omitting optional sections — for example, exporting an Executive Summary plus 24-Hour Time Radar for shift commanders."
         actions={[
           {
-            label: "Open Report Generator",
+            label: "Open Reports",
             href: "/dashboard/reports",
             icon: FileText,
             variant: "primary",
           },
           {
-            label: "Explore Analytics Visuals",
+            label: "View Analytics",
             href: "/dashboard/analytics",
             icon: TrendingUp,
             variant: "secondary",
