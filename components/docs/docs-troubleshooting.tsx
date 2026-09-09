@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { AlertCircle, Map, Sparkles } from "lucide-react";
+import { Map, Sparkles } from "lucide-react";
 import { DocsCta } from "./docs-cta";
 
 interface DocsTroubleshootingProps {
@@ -12,7 +12,7 @@ export function DocsTroubleshooting({ onReplayTour }: DocsTroubleshootingProps) 
   const issues = [
     {
       problem: "Interactive Crime Map appears blank or tiles do not load",
-      cause: "Temporary network timeout or WebGL hardware acceleration disabled in browser.",
+      cause: "Network timeout or WebGL hardware acceleration disabled in browser.",
       solutions: [
         "Verify internet connection to allow OpenStreetMap tile fetching.",
         "Ensure Hardware Acceleration is enabled under browser Settings > System.",
@@ -22,74 +22,73 @@ export function DocsTroubleshooting({ onReplayTour }: DocsTroubleshootingProps) 
     },
     {
       problem: "Cannot access Crime Cases Blotter or Settings page",
-      cause: "User session token expired or user role lacks required administrative or operational clearance.",
+      cause: "User session token expired or account lacks administrative or operational clearance.",
       solutions: [
         "Log in again with valid credentials via the User Menu.",
         "Verify your account number and password.",
-        "Contact a System Administrator to assign 'admin' or 'operational_officer' role in Access & Security settings."
+        "Contact a System Administrator to assign 'admin' or 'operational_officer' clearance in Access & Security settings."
       ]
     },
     {
       problem: "PDF Report Generation times out or fails to download",
-      cause: "Browser pop-up blocker triggered or high-resolution chart capture buffer overflow.",
+      cause: "Browser pop-up blocker triggered or high-resolution chart capture buffer delay.",
       solutions: [
         "Allow automatic file downloads from the SecureTanza domain in browser settings.",
-        "Desensitise export scope by unchecking 1 or 2 optional sections.",
-        "Wait for all analytics charts on the page to finish rendering before triggering export."
+        "Reduce report scope by unchecking 1 or 2 optional sections.",
+        "Ensure all analytics charts on the page finish rendering before initiating export."
       ]
     },
     {
       problem: "Batch Excel Upload reports schema error",
       cause: "Missing mandatory column headers or invalid date/time cell formatting.",
       solutions: [
-        "Verify that column headers match the exact names: incident_type, barangay, date_committed, time_committed.",
+        "Verify that column headers match exact names: incident_type, barangay, date_committed, time_committed.",
         "Ensure dates are formatted as YYYY-MM-DD and times as HH:MM:SS in Excel.",
-        "Verify that the file size is under 10 MB and file extension is .xlsx or .xls."
+        "Verify file size is under 10 MB and file extension is .xlsx or .xls."
       ]
     }
   ];
 
   return (
-    <div className="space-y-8 animate-fadeIn">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-          System Diagnostics & Troubleshooting
-        </h2>
-        <p className="text-lg text-slate-600 dark:text-slate-300 mt-2">
-          Reference guide for resolving common operational anomalies and system errors.
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Troubleshooting
+        </h1>
+        <p className="text-base text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+          Frequently encountered operational issues, diagnostic causes, and step-by-step resolutions.
         </p>
       </div>
 
-      {/* Issue Cards */}
-      <div className="space-y-4">
+      {/* Issues List */}
+      <section id="troubleshooting-issues" className="space-y-6 scroll-mt-6">
         {issues.map((issue, idx) => (
-          <div key={idx} className="p-5 rounded-xl border bg-white dark:bg-slate-800/60 border-slate-200 dark:border-slate-700/60 space-y-2">
-            <h4 className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 text-sm">
-              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+          <div key={idx} className="space-y-2 border-b border-slate-200 dark:border-slate-800 pb-6 last:border-b-0">
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
               {issue.problem}
-            </h4>
-            <div className="text-xs text-slate-500 dark:text-slate-400">
-              <strong>Probable Cause:</strong> {issue.cause}
-            </div>
-            <div className="mt-2 space-y-1.5 pl-6 border-l-2 border-sky-500/30">
-              {issue.solutions.map((sol, sIdx) => (
-                <div key={sIdx} className="text-xs text-slate-600 dark:text-slate-300 flex items-start gap-1.5">
-                  <span className="text-sky-500 font-bold">•</span>
-                  <span>{sol}</span>
-                </div>
-              ))}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              <strong className="text-slate-700 dark:text-slate-300">Cause:</strong> {issue.cause}
+            </p>
+            <div className="pt-1">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Resolution:</p>
+              <ul className="list-disc pl-5 space-y-1 text-xs text-slate-600 dark:text-slate-400">
+                {issue.solutions.map((sol, sIdx) => (
+                  <li key={sIdx}>{sol}</li>
+                ))}
+              </ul>
             </div>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Action Suggestion & CTA */}
+      {/* Next Steps */}
       <DocsCta
-        title="Operational Assistance & Diagnostics"
-        suggestion="If you encounter persistent permission restrictions or display anomalies, verify your role clearance in System Settings or restart the interactive guided tour."
+        title="Need further help?"
+        suggestion="If problems persist, verify your role clearance in System Settings or restart the guided walkthrough."
         actions={[
           {
-            label: "Return to Home Map",
+            label: "Home Map",
             href: "/",
             icon: Map,
             variant: "primary",
@@ -97,7 +96,7 @@ export function DocsTroubleshooting({ onReplayTour }: DocsTroubleshootingProps) 
           ...(onReplayTour
             ? [
                 {
-                  label: "Restart Guided Tour",
+                  label: "Guided Tour",
                   onClick: onReplayTour,
                   icon: Sparkles,
                   variant: "secondary" as const,
