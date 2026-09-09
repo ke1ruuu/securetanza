@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
+import { ConfigService } from '@/backend/services/config.service';
 import { getSession } from '@/lib/auth';
 
-// PUT /api/notifications/rules/[id] - Update a notification rule (Admin only)
+// PUT /api/notifications/rules/[id] - Update a notification rule (Admin only, with cache invalidation)
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -25,16 +26,13 @@ export async function PUT(
     const body = await request.json();
     const { name, description, isEnabled, severity, parameters } = body;
 
-    const updatedRule = await prisma.notificationRule.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-        ...(isEnabled !== undefined && { isEnabled }),
-        ...(severity !== undefined && { severity }),
-        ...(parameters !== undefined && { parameters }),
-        updatedBy: session.userId,
-      },
+    const updatedRule = await ConfigService.updateNotificationRule(id, {
+      ...(name !== undefined && { name }),
+      ...(description !== undefined && { description }),
+      ...(isEnabled !== undefined && { isEnabled }),
+      ...(severity !== undefined && { severity }),
+      ...(parameters !== undefined && { parameters }),
+      updatedBy: session.userId,
     });
 
     // Audit log

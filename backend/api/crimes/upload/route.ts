@@ -4,6 +4,8 @@ import * as XLSX from 'xlsx'
 import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper'
 import { NotificationEngine, BatchRecordItem } from '@/backend/lib/notification-engine'
 import { getSession } from '@/lib/auth'
+import { cacheService, CacheKeys } from '@/backend/cache'
+import { generateCrimeFingerprint, findExistingCrimeFingerprints } from '@/backend/lib/crime-deduplication'
 
 // POST /api/crimes/upload - Upload Excel/CSV file with crime data
 export async function POST(request: NextRequest) {
@@ -50,16 +52,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 Processing ${jsonData.length} rows from ${file.name}`)
 
-    // Process and insert data
+    // Process and insert data with two-tier deduplication
     const results = {
       total: jsonData.length,
       inserted: 0,
       skipped: 0,
+      duplicatesSkipped: 0,
       errors: [] as string[],
     }
 
     const insertedBatchRecords: BatchRecordItem[] = []
-
+    const seenInFileFingerprints = new Set<string>()
+    const candidateRows: Array<{ rowIndex: number; data: any; fingerprint: string }> = []
     const validRowsToInsert: any[] = []
 
     for (let i = 0; i < jsonData.length; i++) {
@@ -112,8 +116,8 @@ export async function POST(request: NextRequest) {
         const latitude = normalizedRow.lat ? parseFloat(normalizedRow.lat) : null
         const longitude = normalizedRow.lng ? parseFloat(normalizedRow.lng) : null
 
-        validRowsToInsert.push({
-          blotterNo: normalizedRow.blotter_no || null,
+        const candidateData = {
+          blotterNo: normalizedRow.blotter_no ? String(normalizedRow.blotter_no).trim() : null,
           dateEncoded,
           pro: normalizedRow.police_regional_office || null,
           ppo: normalizedRow.police_provincial_office || null,
@@ -158,7 +162,19 @@ export async function POST(request: NextRequest) {
           headInves: normalizedRow.head_investigator || null,
           latitude,
           longitude,
-        })
+        }
+
+        // Tier 1: In-File Deduplication
+        const fingerprint = generateCrimeFingerprint(candidateData)
+        if (seenInFileFingerprints.has(fingerprint)) {
+          results.skipped++
+          results.duplicatesSkipped++
+          results.errors.push(`Row ${i + 2}: Duplicate record within uploaded file (skipped)`)
+          continue
+        }
+
+        seenInFileFingerprints.add(fingerprint)
+        candidateRows.push({ rowIndex: i + 2, data: candidateData, fingerprint })
       } catch (error) {
         results.skipped++
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -166,7 +182,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert valid rows in chunked batches (250 rows per batch) for 20x-50x faster insertion
+    // Tier 2: In-Database Deduplication
+    if (candidateRows.length > 0) {
+      const existingDbFingerprints = await findExistingCrimeFingerprints(
+        candidateRows.map(r => r.data),
+        prisma
+      )
+
+      for (const candidate of candidateRows) {
+        if (existingDbFingerprints.has(candidate.fingerprint)) {
+          results.skipped++
+          results.duplicatesSkipped++
+          results.errors.push(`Row ${candidate.rowIndex}: Record already exists in crime register (duplicate skipped)`)
+        } else {
+          validRowsToInsert.push(candidate.data)
+          // Add to existing set to avoid any collision
+          existingDbFingerprints.add(candidate.fingerprint)
+        }
+      }
+    }
+
+    console.log(`🔍 Deduplication results: ${candidateRows.length} unique in file, ${results.duplicatesSkipped} duplicates rejected, ${validRowsToInsert.length} ready to insert`)
+
+    // Insert valid unique rows in chunked batches (250 rows per batch)
     const BATCH_SIZE = 250
     for (let b = 0; b < validRowsToInsert.length; b += BATCH_SIZE) {
       const chunk = validRowsToInsert.slice(b, b + BATCH_SIZE)
@@ -225,14 +263,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped`)
+    console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped (${results.duplicatesSkipped} duplicates rejected)`)
+
+    // Invalidate cached crime analytics and queries
+    if (results.inserted > 0) {
+      await cacheService.deleteByPattern(CacheKeys.crimes.pattern());
+    }
 
     // 1. Record AuditLog
     const ip = request.headers.get('x-forwarded-for') || (request as any).ip || 'Unknown IP';
+    const auditDetails = results.duplicatesSkipped > 0
+      ? `Imported ${results.inserted} records from ${file.name} (${results.duplicatesSkipped} duplicate(s) rejected)`
+      : `Imported ${results.inserted} records from ${file.name}`;
+
+    const outcome = results.inserted === 0 
+      ? (results.duplicatesSkipped > 0 ? 'duplicate' : 'failed') 
+      : results.skipped > 0 
+      ? 'partial' 
+      : 'success';
+
     const uploadLog = await prisma.auditLog.create({
       data: {
         action: 'Import',
-        details: `Imported ${results.inserted} records from ${file.name}`,
+        details: auditDetails,
         user: session?.fullName || session?.accountNumber || 'Operational Officer',
         resource: 'CrimeData',
         ip: ip,
@@ -240,24 +293,33 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileSize: file.size,
         recordsImported: results.inserted,
-        outcome: results.inserted === 0 ? 'failed' : results.skipped > 0 ? 'partial' : 'success',
+        outcome,
         errorMessage: results.errors.length > 0 ? results.errors.slice(0, 5).join('; ') : null,
       },
     })
 
     // 2. Trigger Post-Ingestion Notification Engine
-    const generatedNotifsCount = await NotificationEngine.evaluateBatch({
-      uploadLogId: uploadLog.id,
-      fileName: file.name,
-      totalRows: jsonData.length,
-      insertedRecords: insertedBatchRecords,
-      skippedRows: results.skipped,
-      errors: results.errors,
-    })
+    let generatedNotifsCount = 0;
+    if (insertedBatchRecords.length > 0) {
+      generatedNotifsCount = await NotificationEngine.evaluateBatch({
+        uploadLogId: uploadLog.id,
+        fileName: file.name,
+        totalRows: jsonData.length,
+        insertedRecords: insertedBatchRecords,
+        skippedRows: results.skipped,
+        errors: results.errors,
+      });
+    }
+
+    const responseMsg = results.inserted > 0
+      ? `Successfully uploaded ${results.inserted} record(s)${results.duplicatesSkipped > 0 ? ` (${results.duplicatesSkipped} duplicate(s) rejected)` : ''}. Generated ${generatedNotifsCount} analytical notification(s).`
+      : results.duplicatesSkipped > 0
+      ? `Upload skipped: All ${results.duplicatesSkipped} record(s) in this file already exist in the crime register.`
+      : `No valid records found to import.`;
 
     return NextResponse.json({
       success: true,
-      message: `Successfully uploaded ${results.inserted} records. Generated ${generatedNotifsCount} analytical notification(s).`,
+      message: responseMsg,
       data: results,
       uploadLogId: uploadLog.id,
       notificationsGenerated: generatedNotifsCount,

@@ -96,6 +96,7 @@ export async function createSession(user: User): Promise<string> {
 }
 
 import { prisma } from '@/backend/lib/prisma';
+import { cacheService, CacheKeys, TTL } from '@/backend/cache';
 
 interface CachedUserValidation {
   fullName: string;
@@ -103,23 +104,29 @@ interface CachedUserValidation {
   mustChangePassword: boolean;
   defaultLandingPage: string;
   accountNumber: string;
-  cachedAt: number;
 }
-
-const userSessionCache = new Map<number, CachedUserValidation>();
-const SESSION_CACHE_TTL_MS = 20000; // 20 seconds
-const MAX_CACHE_ENTRIES = 500;
 
 export function invalidateSessionCache(userId?: number): void {
   if (userId) {
-    userSessionCache.delete(userId);
+    cacheService.delete(CacheKeys.auth.userSession(userId)).catch(() => {});
   } else {
-    userSessionCache.clear();
+    cacheService.deleteByPattern(CacheKeys.auth.pattern()).catch(() => {});
   }
 }
 
+export async function getSessionCacheStats() {
+  const stats = await cacheService.getStats();
+  return {
+    size: stats.activeKeys,
+    maxSize: 5000,
+    ttlMs: TTL.USER_SESSION * 1000,
+    hitRatio: stats.hitRatio,
+    queriesSaved: stats.dbQueriesSaved,
+  };
+}
+
 /**
- * Get the current session with real-time database validation (cached for 20s)
+ * Get the current session with real-time database validation (cached with single-flight stampede protection)
  */
 export async function getSession(validateWithDb: boolean = true): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
@@ -136,67 +143,54 @@ export async function getSession(validateWithDb: boolean = true): Promise<Sessio
 
   if (validateWithDb) {
     try {
-      const now = Date.now();
-      const cached = userSessionCache.get(payload.userId);
-      let userData: CachedUserValidation | null = null;
+      const cacheKey = CacheKeys.auth.userSession(payload.userId);
 
-      if (cached && now - cached.cachedAt < SESSION_CACHE_TTL_MS) {
-        if (cached.accountNumber !== payload.accountNumber || cached.permissions.length === 0) {
-          try {
-            cookieStore.delete('session');
-          } catch {}
-          return null;
-        }
-        userData = cached;
-      } else {
-        // Query database to ensure user still exists and access has not been revoked
-        const user = await prisma.user.findUnique({
-          where: { id: payload.userId },
-          include: {
-            permissions: {
-              include: {
-                permission: true,
+      const userData = await cacheService.getOrSet<CachedUserValidation | null>(
+        cacheKey,
+        TTL.USER_SESSION,
+        async () => {
+          // Query database to ensure user still exists and access has not been revoked
+          const user = await prisma.user.findUnique({
+            where: { id: payload.userId },
+            include: {
+              permissions: {
+                include: {
+                  permission: true,
+                },
               },
             },
-          },
-        });
+          });
 
-        // If user was removed or account number doesn't match, revoke immediately
-        if (!user || user.accountNumber !== payload.accountNumber) {
-          userSessionCache.delete(payload.userId);
-          try {
-            cookieStore.delete('session');
-          } catch {}
-          return null;
+          // If user was removed or account number doesn't match, revoke immediately
+          if (!user || user.accountNumber !== payload.accountNumber) {
+            return null;
+          }
+
+          // Sync active permissions directly from database
+          const activePermissions = user.permissions.map(p => p.permission.permissionName);
+
+          // If user has all permissions revoked (0 permissions), revoke session
+          if (activePermissions.length === 0) {
+            return null;
+          }
+
+          return {
+            fullName: user.fullName,
+            permissions: activePermissions,
+            mustChangePassword: user.mustChangePassword,
+            defaultLandingPage: user.defaultLandingPage,
+            accountNumber: user.accountNumber,
+          };
         }
+      );
 
-        // Sync active permissions directly from database
-        const activePermissions = user.permissions.map(p => p.permission.permissionName);
-
-        // If user has all permissions revoked (0 permissions), revoke session
-        if (activePermissions.length === 0) {
-          userSessionCache.delete(payload.userId);
-          try {
-            cookieStore.delete('session');
-          } catch {}
-          return null;
-        }
-
-        userData = {
-          fullName: user.fullName,
-          permissions: activePermissions,
-          mustChangePassword: user.mustChangePassword,
-          defaultLandingPage: user.defaultLandingPage,
-          accountNumber: user.accountNumber,
-          cachedAt: now,
-        };
-
-        // Bound cache size
-        if (userSessionCache.size >= MAX_CACHE_ENTRIES) {
-          const firstKey = userSessionCache.keys().next().value;
-          if (firstKey !== undefined) userSessionCache.delete(firstKey);
-        }
-        userSessionCache.set(payload.userId, userData);
+      // If user was invalid or revoked in DB, delete cookie and reject
+      if (!userData || userData.accountNumber !== payload.accountNumber || userData.permissions.length === 0) {
+        try {
+          cookieStore.delete('session');
+        } catch {}
+        await cacheService.delete(cacheKey);
+        return null;
       }
 
       return {

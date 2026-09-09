@@ -66,3 +66,26 @@ export async function disconnectPrisma(): Promise<void> {
     }
   }
 }
+
+export function getPoolStats() {
+  const pool = globalForPrisma.pgPool
+  if (!pool) {
+    return {
+      max: 10,
+      totalCount: 0,
+      idleCount: 0,
+      waitingCount: 0,
+      activeCount: 0,
+    }
+  }
+  const total = pool.totalCount ?? 0
+  const idle = pool.idleCount ?? 0
+  const active = Math.max(0, total - idle)
+  return {
+    max: 10,
+    totalCount: total,
+    idleCount: idle,
+    waitingCount: pool.waitingCount ?? 0,
+    activeCount: active,
+  }
+}

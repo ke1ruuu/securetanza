@@ -95,12 +95,27 @@ function HomeContent() {
 			</div>
 
 			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
-				{/* Top Left Unified Filter Bar (Barangay, Crime Type, Time Selector) */}
+				{/* Left Rail: Unified Filter Bar (Barangay, Crime Type, Time Selector) + Hourly Timeline */}
 				<div
-					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
-						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
+					className={`absolute left-3 sm:left-4 lg:left-6 flex flex-col items-start gap-3 transition-all duration-500 ease-in-out ${
+						isFilterActive
+							? "top-3 bottom-[76px] sm:top-4 sm:bottom-[84px] lg:top-6 lg:bottom-[92px]"
+							: "top-[72px] sm:top-20"
 					}`}>
 					<UnifiedFilterBar />
+
+					{/* Hour-by-hour timeline sits at the foot of the rail, just above the clock toggle */}
+					{isFilterActive && (
+						<div className="mt-auto flex min-h-0 flex-col w-[280px] sm:w-[296px] max-w-[calc(100vw-24px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
+							<TimeFilter
+								key="time-filter-active"
+								onFilterChange={handleFilterChange}
+								isPlaying={isPlaying}
+								onPlayPauseToggle={handlePlayPauseToggle}
+								onClose={() => handleFilterToggle(false)}
+							/>
+						</div>
+					)}
 				</div>
 
 				{/* Top Right Legend */}
@@ -120,26 +135,11 @@ function HomeContent() {
 					</div>
 				</div>
 
-				{/* Time Filter - appears at bottom when filter is active */}
-				<div
-					className={`absolute left-1/2 -translate-x-1/2 transition-all duration-500 ease-in-out px-3 sm:px-0 ${
-						isFilterActive ? "bottom-3 sm:bottom-4 lg:bottom-6 opacity-100" : "-bottom-32 opacity-0"
-					}`}>
-					{isFilterActive && (
-						<TimeFilter
-							key="time-filter-active"
-							onFilterChange={handleFilterChange}
-							isPlaying={isPlaying}
-							onPlayPauseToggle={handlePlayPauseToggle}
-						/>
-					)}
-				</div>
-
-				{/* Real Time Clock */}
+				{/* Real Time Clock - hidden while the temporal filter is open (it closes via its own X) */}
 				<div
 					data-tour="real-time-clock"
-					className={`absolute left-3 sm:left-4 lg:left-6 transition-all duration-500 ease-in-out ${
-						isFilterActive ? "bottom-[100px] sm:bottom-4 lg:bottom-6" : "bottom-3 sm:bottom-4 lg:bottom-6"
+					className={`absolute left-3 sm:left-4 lg:left-6 bottom-3 sm:bottom-4 lg:bottom-6 transition-all duration-300 ease-in-out ${
+						isFilterActive ? "pointer-events-none invisible opacity-0" : "visible opacity-100"
 					}`}>
 					<RealTimeClock onFilterToggle={handleFilterToggle} isFilterActive={isFilterActive} />
 				</div>

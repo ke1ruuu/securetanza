@@ -2,6 +2,7 @@
 
 import React, { Suspense, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { MapProvider } from "@/context/MapContext";
 import {
@@ -115,6 +116,27 @@ function ConfigContent() {
                 );
               })}
             </nav>
+
+            {isAdmin && (
+              <div className="mt-6 pt-6 border-t border-slate-200 dark:border-white/[0.06]">
+                <Link
+                  href="/dashboard/performance"
+                  className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all text-left bg-[#0EA5E9]/10 hover:bg-[#0EA5E9]/20 text-[#0EA5E9] border border-[#0EA5E9]/30 shadow-sm"
+                >
+                  <div className="p-2 rounded-lg bg-[#0EA5E9]/20 text-[#0EA5E9]">
+                    <Activity className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-[#0EA5E9] truncate">
+                      Process Monitor
+                    </div>
+                    <div className="text-[11px] mt-0.5 text-sky-400/80 truncate">
+                      Telemetry & Diagnostics
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            )}
           </div>
         </aside>
 

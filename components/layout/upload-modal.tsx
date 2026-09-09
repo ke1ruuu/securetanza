@@ -41,6 +41,7 @@ interface Receipt {
   total: number;
   inserted: number;
   skipped: number;
+  duplicatesSkipped?: number;
   errors: string[];
   findings: number;
 }
@@ -234,6 +235,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
         total: Number(data.total ?? sheet?.rowCount ?? 0),
         inserted: Number(data.inserted ?? 0),
         skipped: Number(data.skipped ?? 0),
+        duplicatesSkipped: Number(data.duplicatesSkipped ?? 0),
         errors: Array.isArray(data.errors) ? data.errors : [],
         findings: Number(payload.notificationsGenerated ?? 0),
       });
@@ -510,11 +512,13 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
 
                 <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                   {receipt.inserted === 0
-                    ? "No rows could be written. Every row was missing a barangay, a date or an incident type."
+                    ? receipt.duplicatesSkipped && receipt.duplicatesSkipped > 0
+                      ? `No rows written. All ${receipt.duplicatesSkipped.toLocaleString("en-US")} rows are duplicates already recorded in the register.`
+                      : "No rows could be written. Every row was missing a barangay, a date or an incident type."
                     : receipt.skipped > 0
                       ? `${receipt.skipped.toLocaleString("en-US")} row${
                           receipt.skipped === 1 ? " was" : "s were"
-                        } left out because required values were blank. The rest are in the register.`
+                        } left out (${receipt.duplicatesSkipped && receipt.duplicatesSkipped > 0 ? `${receipt.duplicatesSkipped} duplicate${receipt.duplicatesSkipped === 1 ? "" : "s"}` : "missing required values"}). The rest are in the register.`
                       : "Every row in the workbook was written to the register."}
                 </p>
 
@@ -524,6 +528,13 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     label="Records imported"
                     value={receipt.inserted.toLocaleString("en-US")}
                   />
+                  {receipt.duplicatesSkipped !== undefined && receipt.duplicatesSkipped > 0 && (
+                    <LedgerRow
+                      label="Duplicates rejected"
+                      value={receipt.duplicatesSkipped.toLocaleString("en-US")}
+                      tone="text-amber-600 dark:text-amber-400"
+                    />
+                  )}
                   <LedgerRow
                     label="Rows skipped"
                     value={receipt.skipped.toLocaleString("en-US")}
