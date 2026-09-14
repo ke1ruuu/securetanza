@@ -115,6 +115,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Tab-Session Enforcer (Logout on tab close / new tab isolation)
+  useEffect(() => {
+    if (user && typeof window !== "undefined" && window.location.pathname !== "/login") {
+      const hasTabSession = sessionStorage.getItem("tabSessionActive");
+      
+      if (!hasTabSession) {
+        // This is a new tab or the session was lost (tab closed previously).
+        // We explicitly log out to destroy the persistent cookie session.
+        fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+          window.location.href = "/login";
+        });
+      }
+    }
+  }, [user]);
+
   const logout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });

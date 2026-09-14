@@ -27,7 +27,7 @@ export default function LoginPage() {
       let target = "/";
       if (pref === "dashboard") target = "/dashboard/overview";
       if (pref === "analytics") target = "/dashboard/analytics";
-      
+
       router.push(target);
     }
   }, [user, authLoading, router]);
@@ -57,14 +57,16 @@ export default function LoginPage() {
       await refreshSession();
 
       if (data.mustChangePassword) {
+        sessionStorage.setItem("tabSessionActive", "true");
         setShowForceChange(true);
         setLoading(false);
       } else {
+        sessionStorage.setItem("tabSessionActive", "true");
         const pref = data.user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
         let target = "/";
         if (pref === "dashboard") target = "/dashboard/overview";
         if (pref === "analytics") target = "/dashboard/analytics";
-        
+
         router.push(target);
         router.refresh();
       }
@@ -206,19 +208,19 @@ export default function LoginPage() {
           SecureTanza v1.0.0 • © 2026
         </p>
       </div>
-      
+
       {showForceChange && (
-        <ForceChangePasswordModal 
+        <ForceChangePasswordModal
           onSuccess={() => {
             setShowForceChange(false);
             const pref = user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
             let target = "/";
             if (pref === "dashboard") target = "/dashboard/overview";
             if (pref === "analytics") target = "/dashboard/analytics";
-            
+
             router.push(target);
             router.refresh();
-          }} 
+          }}
         />
       )}
     </div>
