@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
+import {
   Search,
   MapPin,
   Calendar,
@@ -13,7 +13,13 @@ import { useMapContext } from "@/context/MapContext";
 import { useTimeRangeData } from "@/hooks/useTimeRangeData";
 import { fetchCrimes, CrimeIncident } from "@/lib/api";
 import { Select } from "@/components/ui/select";
-
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 interface IncidentsTabProps {
   barangayName?: string;
 }
@@ -31,7 +37,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   const [dateRangeFilter, setDateRangeFilter] = useState("(All)");
   const [barangayFilter, setBarangayFilter] = useState("(All)");
   const [statusFilter, setStatusFilter] = useState("(All)");
-  
+  const [isModalOpen, setIsModalOpen] = useState(false);
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20); // 20 items per page
@@ -45,7 +51,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
       console.log('⏳ Cases: Waiting for time range selections...')
       return
     }
-    
+
     async function loadCases() {
       setLoading(true);
       try {
@@ -68,7 +74,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
             // Calculate additional date range filter
             const endDate = new Date();
             const startDate = new Date();
-            
+
             if (dateRangeFilter === "(Last 7 Days)") {
               startDate.setDate(startDate.getDate() - 7);
             } else if (dateRangeFilter === "(Last 30 Days)") {
@@ -107,21 +113,21 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
         });
 
         const results = await Promise.all(fetchPromises);
-        
+
         // Combine all results and remove duplicates by id
         const allCases = results.flat();
         const uniqueCases = Array.from(
           new Map(allCases.map(crime => [crime.id, crime])).values()
         );
-        
+
         // Sort by date committed (most recent first)
-        uniqueCases.sort((a, b) => 
+        uniqueCases.sort((a, b) =>
           new Date(b.dateCommitted).getTime() - new Date(a.dateCommitted).getTime()
         );
 
         setCases(uniqueCases);
         setFilteredCases(uniqueCases);
-        
+
         // Auto-select first case
         if (uniqueCases.length > 0) {
           setSelectedCase(uniqueCases[0]);
@@ -223,19 +229,19 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   // Format time to 12-hour with AM/PM
   const formatTime = (timeString: string) => {
     if (!timeString) return '';
-    
+
     // If timeString is in HH:MM or HH:MM:SS format
     const parts = timeString.split(':');
     if (parts.length >= 2) {
       const hour = parseInt(parts[0]);
       const minute = parts[1];
-      
+
       if (hour === 0) return `12:${minute} AM`;
       if (hour < 12) return `${hour}:${minute} AM`;
       if (hour === 12) return `12:${minute} PM`;
       return `${hour - 12}:${minute} PM`;
     }
-    
+
     return timeString;
   };
 
@@ -252,7 +258,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
       <div className="max-w-[1400px] mx-auto space-y-6 animate-pulse">
         {/* Search Bar Skeleton */}
         <div className={`h-12 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-slate-200"}`}></div>
-        
+
         {/* Filters Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
@@ -305,11 +311,10 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
             placeholder="Search cases by ID, type, location"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
-              theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white placeholder-slate-500"
-                : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
-            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            className={`w-full pl-12 pr-4 py-3 rounded-xl border ${theme === "dark"
+              ? "bg-[#1e293b] border-white/10 text-white placeholder-slate-500"
+              : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
+              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
           />
         </div>
 
@@ -317,19 +322,17 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Crime Type Filter */}
           <div>
-            <label className={`text-sm font-medium mb-2 block ${
-              theme === "dark" ? "text-slate-400" : "text-slate-600"
-            }`}>
+            <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+              }`}>
               Crime Type
             </label>
             <select
               value={crimeTypeFilter}
               onChange={(e) => setCrimeTypeFilter(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                theme === "dark"
-                  ? "bg-[#1e293b] border-white/10 text-white"
-                  : "bg-white border-slate-200 text-slate-900"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
+                ? "bg-[#1e293b] border-white/10 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               {crimeTypes.map((type) => (
                 <option key={type} value={type}>
@@ -341,19 +344,17 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
           {/* Date Range Filter */}
           <div>
-            <label className={`text-sm font-medium mb-2 block ${
-              theme === "dark" ? "text-slate-400" : "text-slate-600"
-            }`}>
+            <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+              }`}>
               Date Range
             </label>
             <select
               value={dateRangeFilter}
               onChange={(e) => setDateRangeFilter(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                theme === "dark"
-                  ? "bg-[#1e293b] border-white/10 text-white"
-                  : "bg-white border-slate-200 text-slate-900"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
+                ? "bg-[#1e293b] border-white/10 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               <option>(All)</option>
               <option>(Last 7 Days)</option>
@@ -365,19 +366,17 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
           {/* Barangay Filter - Only show for general dashboard */}
           {isGeneralDashboard && (
             <div>
-              <label className={`text-sm font-medium mb-2 block ${
-                theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
+              <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                }`}>
                 Barangay
               </label>
               <select
                 value={barangayFilter}
                 onChange={(e) => setBarangayFilter(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${
-                  theme === "dark"
-                    ? "bg-[#1e293b] border-white/10 text-white"
-                    : "bg-white border-slate-200 text-slate-900"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
+                  ? "bg-[#1e293b] border-white/10 text-white"
+                  : "bg-white border-slate-200 text-slate-900"
+                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
               >
                 {barangays.map((barangay) => (
                   <option key={barangay} value={barangay}>
@@ -390,19 +389,17 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
           {/* Status Filter */}
           <div>
-            <label className={`text-sm font-medium mb-2 block ${
-              theme === "dark" ? "text-slate-400" : "text-slate-600"
-            }`}>
+            <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+              }`}>
               Status
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border ${
-                theme === "dark"
-                  ? "bg-[#1e293b] border-white/10 text-white"
-                  : "bg-white border-slate-200 text-slate-900"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
+                ? "bg-[#1e293b] border-white/10 text-white"
+                : "bg-white border-slate-200 text-slate-900"
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
             >
               {statuses.map((status) => (
                 <option key={status} value={status}>
@@ -417,37 +414,30 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cases List */}
-        <Card data-tour="cases-list" className={`lg:col-span-2 border-0 shadow-lg ${
-          theme === "dark" ? "bg-[#1e293b]" : "bg-white"
-        }`}>
+        <Card data-tour="cases-list" className={`lg:col-span-2 border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"
+          }`}>
           <CardContent className="p-0">
             {/* Table Header */}
-            <div className={`grid grid-cols-5 gap-4 px-6 py-4 border-b ${
-              theme === "dark" ? "border-white/10" : "border-slate-200"
-            }`}>
-              <div className={`text-sm font-semibold ${
-                theme === "dark" ? "text-slate-400" : "text-slate-600"
+            <div className={`grid grid-cols-5 gap-4 px-6 py-4 border-b ${theme === "dark" ? "border-white/10" : "border-slate-200"
               }`}>
+              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                }`}>
                 Case ID
               </div>
-              <div className={`text-sm font-semibold ${
-                theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
+              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                }`}>
                 Type
               </div>
-              <div className={`text-sm font-semibold ${
-                theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
+              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                }`}>
                 Location
               </div>
-              <div className={`text-sm font-semibold ${
-                theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
+              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                }`}>
                 Date
               </div>
-              <div className={`text-sm font-semibold ${
-                theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
+              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                }`}>
                 Status
               </div>
             </div>
@@ -463,43 +453,36 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                   <div
                     key={crime.id}
                     onClick={() => setSelectedCase(crime)}
-                    className={`grid grid-cols-5 gap-4 px-6 py-4 border-b cursor-pointer transition-colors ${
-                      theme === "dark"
-                        ? "border-white/5 hover:bg-white/5"
-                        : "border-slate-100 hover:bg-slate-50"
-                    } ${
-                      selectedCase?.id === crime.id
+                    className={`grid grid-cols-5 gap-4 px-6 py-4 border-b cursor-pointer transition-colors ${theme === "dark"
+                      ? "border-white/5 hover:bg-white/5"
+                      : "border-slate-100 hover:bg-slate-50"
+                      } ${selectedCase?.id === crime.id
                         ? theme === "dark"
                           ? "bg-blue-500/10"
                           : "bg-blue-50"
                         : ""
-                    }`}
+                      }`}
                   >
-                    <div className={`text-sm font-medium ${
-                      theme === "dark" ? "text-slate-300" : "text-slate-700"
-                    }`}>
+                    <div className={`text-sm font-medium ${theme === "dark" ? "text-slate-300" : "text-slate-700"
+                      }`}>
                       {getCaseId(crime)}
                     </div>
-                    <div className={`text-sm ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
+                    <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                      }`}>
                       {crime.incidentType}
                     </div>
-                    <div className={`text-sm ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
+                    <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                      }`}>
                       {crime.street ? `${crime.street}, ${crime.barangay}` : crime.barangay}
                     </div>
-                    <div className={`text-sm ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
+                    <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                      }`}>
                       {formatDate(crime.dateCommitted)}
                     </div>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${getStatusColor(crime.caseStatus)}`} />
-                      <span className={`text-sm ${
-                        theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
+                      <span className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                        }`}>
                         {getStatusLabel(crime.caseStatus)}
                       </span>
                     </div>
@@ -510,31 +493,28 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
             {/* Pagination */}
             {filteredCases.length > 0 && (
-              <div className={`flex items-center justify-between px-6 py-4 border-t ${
-                theme === "dark" ? "border-white/10" : "border-slate-200"
-              }`}>
-                <div className={`text-sm ${
-                  theme === "dark" ? "text-slate-400" : "text-slate-600"
+              <div className={`flex items-center justify-between px-6 py-4 border-t ${theme === "dark" ? "border-white/10" : "border-slate-200"
                 }`}>
+                <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                  }`}>
                   Showing {startIndex + 1} to {Math.min(endIndex, filteredCases.length)} of {filteredCases.length} cases
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === 1
-                        ? theme === "dark"
-                          ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-                          : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                        : theme === "dark"
-                          ? "bg-slate-700 text-white hover:bg-slate-600"
-                          : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === 1
+                      ? theme === "dark"
+                        ? "bg-slate-800 text-slate-600 cursor-not-allowed"
+                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : theme === "dark"
+                        ? "bg-slate-700 text-white hover:bg-slate-600"
+                        : "bg-slate-200 text-slate-900 hover:bg-slate-300"
+                      }`}
                   >
                     Previous
                   </button>
-                  
+
                   {/* Page numbers */}
                   <div className="flex items-center gap-1">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
@@ -548,20 +528,19 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                       } else {
                         pageNum = currentPage - 2 + i;
                       }
-                      
+
                       return (
                         <button
                           key={pageNum}
                           onClick={() => setCurrentPage(pageNum)}
-                          className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                            currentPage === pageNum
-                              ? theme === "dark"
-                                ? "bg-blue-500 text-white"
-                                : "bg-blue-500 text-white"
-                              : theme === "dark"
-                                ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                                : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                          }`}
+                          className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
+                            ? theme === "dark"
+                              ? "bg-blue-500 text-white"
+                              : "bg-blue-500 text-white"
+                            : theme === "dark"
+                              ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                              : "bg-slate-200 text-slate-700 hover:bg-slate-300"
+                            }`}
                         >
                           {pageNum}
                         </button>
@@ -572,15 +551,14 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                      currentPage === totalPages
-                        ? theme === "dark"
-                          ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-                          : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                        : theme === "dark"
-                          ? "bg-slate-700 text-white hover:bg-slate-600"
-                          : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-                    }`}
+                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPages
+                      ? theme === "dark"
+                        ? "bg-slate-800 text-slate-600 cursor-not-allowed"
+                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : theme === "dark"
+                        ? "bg-slate-700 text-white hover:bg-slate-600"
+                        : "bg-slate-200 text-slate-900 hover:bg-slate-300"
+                      }`}
                   >
                     Next
                   </button>
@@ -591,56 +569,56 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
         </Card>
 
         {/* Case Details Panel */}
-        <Card data-tour="cases-details-panel" className={`border-0 shadow-lg ${
-          theme === "dark" ? "bg-[#1e293b]" : "bg-white"
-        }`}>
+        <Card
+          data-tour="cases-details-panel"
+          onClick={() => {
+            if (selectedCase) setIsModalOpen(true);
+          }}
+          className={`border-0 shadow-lg cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/50 ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"
+            }`}
+        >
           <CardContent className="p-6">
             {selectedCase ? (
               <div className="space-y-6">
                 <div>
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    theme === "dark" ? "text-white" : "text-slate-900"
-                  }`}>
-                    Case Details: {getCaseId(selectedCase)}
-                  </h3>
-                  <p className={`text-sm ${
-                    theme === "dark" ? "text-slate-400" : "text-slate-600"
-                  }`}>
+                  <div className="flex items-center justify-between">
+                    <h3 className={`text-lg font-bold mb-2 ${theme === "dark" ? "text-white" : "text-slate-900"
+                      }`}>
+                      Case Details: {getCaseId(selectedCase)}
+                    </h3>
+                  </div>
+                  <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                    }`}>
                     {selectedCase.incidentType}
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className={`text-sm font-semibold mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
+                    <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                      }`}>
                       Description
                     </h4>
-                    <p className={`text-sm ${
-                      theme === "dark" ? "text-slate-300" : "text-slate-700"
-                    }`}>
+                    <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
+                      }`}>
                       {selectedCase.offense || "No description available"}
                     </p>
                   </div>
 
                   <div>
-                    <h4 className={`text-sm font-semibold mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
+                    <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                      }`}>
                       Location
                     </h4>
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
                       <div>
-                        <p className={`text-sm ${
-                          theme === "dark" ? "text-slate-300" : "text-slate-700"
-                        }`}>
+                        <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
+                          }`}>
                           {selectedCase.street || "Street not specified"}
                         </p>
-                        <p className={`text-sm ${
-                          theme === "dark" ? "text-slate-400" : "text-slate-600"
-                        }`}>
+                        <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                          }`}>
                           Brgy. {selectedCase.barangay}
                         </p>
                       </div>
@@ -648,16 +626,14 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                   </div>
 
                   <div>
-                    <h4 className={`text-sm font-semibold mb-2 ${
-                      theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
+                    <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                      }`}>
                       Date & Time
                     </h4>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-500" />
-                      <p className={`text-sm ${
-                        theme === "dark" ? "text-slate-300" : "text-slate-700"
-                      }`}>
+                      <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
+                        }`}>
                         {formatDate(selectedCase.dateCommitted)} at {formatTime(selectedCase.timeCommitted)}
                       </p>
                     </div>
@@ -665,14 +641,12 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
                   {selectedCase.modus && (
                     <div>
-                      <h4 className={`text-sm font-semibold mb-2 ${
-                        theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
+                      <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                        }`}>
                         Modus Operandi
                       </h4>
-                      <p className={`text-sm ${
-                        theme === "dark" ? "text-slate-300" : "text-slate-700"
-                      }`}>
+                      <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
+                        }`}>
                         {selectedCase.modus}
                       </p>
                     </div>
@@ -680,14 +654,12 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
                   {selectedCase.suspectMotive && (
                     <div>
-                      <h4 className={`text-sm font-semibold mb-2 ${
-                        theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
+                      <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                        }`}>
                         Suspect Motive
                       </h4>
-                      <p className={`text-sm ${
-                        theme === "dark" ? "text-slate-300" : "text-slate-700"
-                      }`}>
+                      <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
+                        }`}>
                         {selectedCase.suspectMotive}
                       </p>
                     </div>
@@ -695,14 +667,12 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
                   {selectedCase.latitude && selectedCase.longitude && (
                     <div>
-                      <h4 className={`text-sm font-semibold mb-2 ${
-                        theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
+                      <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
+                        }`}>
                         Location Map
                       </h4>
-                      <div className={`w-full h-48 rounded-lg overflow-hidden ${
-                        theme === "dark" ? "bg-slate-800" : "bg-slate-200"
-                      }`}>
+                      <div className={`w-full h-48 rounded-lg overflow-hidden ${theme === "dark" ? "bg-slate-800" : "bg-slate-200"
+                        }`}>
                         <iframe
                           width="100%"
                           height="100%"
@@ -712,6 +682,12 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                       </div>
                     </div>
                   )}
+
+                  <div className="pt-4">
+                    <Button onClick={() => setIsModalOpen(true)} className="w-full">
+                      View Full Details
+                    </Button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -722,6 +698,95 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Full Details Modal */}
+      {selectedCase && (
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className={`w-full max-w-5xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[85vh] overflow-y-auto p-6 md:p-8 ${theme === "dark" ? "bg-[#1e293b] text-slate-100" : "bg-white text-slate-900"}`}>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold border-b pb-4">Case Details: {getCaseId(selectedCase)}</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-semibold text-lg border-b pb-2 mb-3 text-blue-500">Basic Information</h4>
+                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
+                    <span className="text-slate-500 font-medium">Case ID:</span> <span>{getCaseId(selectedCase)}</span>
+                    <span className="text-slate-500 font-medium">Incident Type:</span> <span>{selectedCase.incidentType}</span>
+                    <span className="text-slate-500 font-medium">Blotter No:</span> <span>{selectedCase.blotterNo || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Date Committed:</span> <span>{formatDate(selectedCase.dateCommitted)}</span>
+                    <span className="text-slate-500 font-medium">Time Committed:</span> <span>{formatTime(selectedCase.timeCommitted)}</span>
+                    <span className="text-slate-500 font-medium">Date Reported:</span> <span>{formatDate(selectedCase.dateReported)}</span>
+                    <span className="text-slate-500 font-medium">Time Reported:</span> <span>{formatTime(selectedCase.timeReported)}</span>
+                    <span className="text-slate-500 font-medium">Date Encoded:</span> <span>{selectedCase.dateEncoded ? formatDate(selectedCase.dateEncoded) : "N/A"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Location</h4>
+                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
+                    <span className="text-slate-500 font-medium">Barangay:</span> <span>{selectedCase.barangay}</span>
+                    <span className="text-slate-500 font-medium">Street:</span> <span>{selectedCase.street || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">City/Municipality:</span> <span>{selectedCase.municipal || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Province:</span> <span>{selectedCase.province || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Region:</span> <span>{selectedCase.region || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Type of Place:</span> <span>{selectedCase.typeOfPlace || "N/A"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Police Unit</h4>
+                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
+                    <span className="text-slate-500 font-medium">PCP:</span> <span>{selectedCase.pcp || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Station:</span> <span>{selectedCase.stn || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">PPO:</span> <span>{selectedCase.ppo || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">PRO:</span> <span>{selectedCase.pro || "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-semibold text-lg border-b pb-2 mb-3 text-blue-500">Case Status & Legal</h4>
+                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm items-center">
+                    <span className="text-slate-500 font-medium">Status:</span>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold w-max ${getStatusColor(selectedCase.caseStatus)} text-white shadow-sm`}>{getStatusLabel(selectedCase.caseStatus)}</span>
+                    <span className="text-slate-500 font-medium">Offense:</span> <span>{selectedCase.offense || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Offense Type:</span> <span>{selectedCase.offenseType || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Section:</span> <span>{selectedCase.section || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Stage of Felony:</span> <span>{selectedCase.stageOfFelony || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Is Crime:</span> <span>{selectedCase.isCrime ? "Yes" : "No"}</span>
+                    <span className="text-slate-500 font-medium">Heinous:</span> <span>{selectedCase.heinous ? "Yes" : "No"}</span>
+                    <span className="text-slate-500 font-medium">Sensational:</span> <span>{selectedCase.sensational ? "Yes" : "No"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Details & Suspects</h4>
+                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
+                    <span className="text-slate-500 font-medium">Modus:</span> <span className="break-words leading-relaxed">{selectedCase.modus || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Suspect Motive:</span> <span className="break-words leading-relaxed">{selectedCase.suspectMotive || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Sub-Motive:</span> <span className="break-words leading-relaxed">{selectedCase.suspectSubMotive || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">No. of Suspects:</span> <span>{selectedCase.suspectCount ?? "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Suspect Arrested:</span> <span>{selectedCase.suspectArrested !== undefined ? (selectedCase.suspectArrested ? "Yes" : "No") : "N/A"}</span>
+                    <span className="text-slate-500 font-medium">No. of Victims:</span> <span>{selectedCase.victimCount ?? "N/A"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Management</h4>
+                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
+                    <span className="text-slate-500 font-medium">Investigator:</span> <span>{selectedCase.investigator || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Head Investigator:</span> <span>{selectedCase.headInves || "N/A"}</span>
+                    <span className="text-slate-500 font-medium">Threat Group:</span> <span>{selectedCase.threatGrp ? "Yes" : "No"}</span>
+                    <span className="text-slate-500 font-medium">Group Affiliation:</span> <span>{selectedCase.grpAffiliation || "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
