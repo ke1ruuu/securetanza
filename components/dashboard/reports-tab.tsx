@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Archive, Check, CheckCircle2, Download, Loader2 } from "lucide-react";
+import { AlertCircle, Archive, Check, CheckCircle2, Download, Eye, Loader2, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMapContext } from "@/context/MapContext";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useCrimeMatrix } from "@/hooks/useCrimeMatrix";
@@ -50,6 +51,8 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const { user } = useAuth();
   const { selectedYear, timeRange } = useMapContext();
   const [loading, setLoading] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [step, setStep] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [archiving, setArchiving] = useState(false);
@@ -139,6 +142,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
         trends: analyticsData.trends,
       },
       totalCrimes,
+      generatedBy: user?.fullName || user?.accountNumber || 'System',
     });
   };
 
@@ -172,6 +176,32 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
     } finally {
       setArchiving(false);
       setStep("");
+    }
+  };
+
+  const handlePreviewReport = async () => {
+    setPreviewing(true);
+    setError(null);
+    setArchived(null);
+
+    try {
+      const pdfBlob = await buildReportBlob();
+      setStep("Opening");
+      const url = URL.createObjectURL(pdfBlob);
+      setPreviewUrl(url);
+    } catch (err) {
+      console.error('Error previewing report:', err);
+      setError(err instanceof Error ? err.message : 'Failed to preview the report. Please try again.');
+    } finally {
+      setPreviewing(false);
+      setStep("");
+    }
+  };
+
+  const closePreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
     }
   };
 
@@ -351,9 +381,16 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
         <div className="lg:sticky lg:top-0 lg:self-start">
           <Card data-tour="reports-export-panel" className="gap-0 rounded-xl border border-slate-200 bg-white p-5 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
             {/* Cover preview — always paper, because that is what gets produced */}
-            <div data-tour="reports-preview" className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-900/10 dark:shadow-lg dark:shadow-black/40">
-              <div className="h-[3px] bg-[#0f172a]" />
-              <div className="flex aspect-[1/1.24] flex-col px-4 pb-3 pt-5">
+            <button
+              type="button"
+              data-tour="reports-preview"
+              onClick={handlePreviewReport}
+              disabled={selectedCount === 0 || loading || archiving || previewing || waitingForData}
+              className="group relative w-full text-left overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-900/10 transition-all hover:ring-[#0EA5E9] focus:outline-none focus:ring-2 focus:ring-[#0EA5E9] disabled:opacity-50 disabled:pointer-events-none dark:shadow-lg dark:shadow-black/40 dark:hover:ring-[#0EA5E9]"
+            >
+              <div className="transition-all duration-300 group-hover:blur-[1.5px] group-hover:opacity-75">
+                <div className="h-[3px] bg-[#0f172a]" />
+                <div className="flex aspect-[1/1.24] flex-col px-4 pb-3 pt-5">
                 <p className="text-[6px] font-bold uppercase tracking-[0.2em] text-[#0369a1]">
                   Crime analytics case study
                 </p>
@@ -391,7 +428,31 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                   ))}
                 </dl>
               </div>
-            </div>
+              </div>
+
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:bg-black/40">
+                {previewing ? (
+                  <>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/40 backdrop-blur-md text-slate-900 shadow-sm ring-1 ring-black/5 dark:bg-white/10 dark:text-white dark:ring-white/10">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    </div>
+                    <span className="mt-2 text-xs font-semibold text-slate-900 drop-shadow-sm dark:text-white">
+                      {step || "Preparing"}...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/40 backdrop-blur-md text-slate-900 shadow-sm ring-1 ring-black/5 transition-transform group-hover:scale-110 dark:bg-white/10 dark:text-white dark:ring-white/10">
+                      <Eye className="h-5 w-5" />
+                    </div>
+                    <span className="mt-2 text-xs font-semibold text-slate-900 drop-shadow-sm dark:text-white">
+                      Preview Report
+                    </span>
+                  </>
+                )}
+              </div>
+            </button>
 
             <dl className="mt-5 space-y-0 text-xs">
               {[
@@ -413,7 +474,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
             <Button
               data-tour="reports-export"
               onClick={handleExportReport}
-              disabled={selectedCount === 0 || loading || archiving || waitingForData}
+              disabled={selectedCount === 0 || loading || archiving || previewing || waitingForData}
               className="mt-5 h-11 w-full text-sm font-semibold"
             >
               {loading ? (
@@ -438,7 +499,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
             <Button
               variant="outline"
               onClick={handleArchiveReport}
-              disabled={selectedCount === 0 || loading || archiving || waitingForData}
+              disabled={selectedCount === 0 || loading || archiving || previewing || waitingForData}
               className="mt-2 h-11 w-full text-sm font-semibold"
             >
               {archiving ? (
@@ -479,6 +540,27 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
           </Card>
         </div>
       </div>
+
+      <Dialog open={!!previewUrl} onOpenChange={(open) => !open && closePreview()}>
+        <DialogContent showCloseButton={false} className="max-w-none sm:max-w-none w-screen h-[100dvh] flex flex-col p-0 gap-0 overflow-hidden rounded-none border-0">
+          <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-[#0f172a] border-b border-slate-200 dark:border-white/[0.06] shrink-0">
+            <DialogTitle className="text-lg font-bold">Report Preview</DialogTitle>
+            <Button variant="ghost" onClick={closePreview}>
+              <X className="h-5 w-5 mr-2" />
+              Close Preview
+            </Button>
+          </div>
+          <div className="flex-1 min-h-0 bg-slate-100 dark:bg-black">
+            {previewUrl && (
+              <iframe
+                src={previewUrl}
+                className="w-full h-full border-0"
+                title="Report Preview"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
