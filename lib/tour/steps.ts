@@ -81,9 +81,9 @@ export const publicMapSteps: DriveStep[] = [
 		element: '[data-tour="map-legend"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Threat Level Classifications",
+			title: "Crime Type Legend",
 			description:
-				"Understand color-coded municipal risk levels: Secure (Emerald), Low (Sky Blue), Moderate (Amber), High (Orange), and Critical (Crimson).",
+				"Each offense category is color-coded with its recorded incident count. Click a crime type to isolate it on the map and reveal the barangay-by-barangay breakdown.",
 			side: "left",
 			align: "start",
 		},
@@ -214,9 +214,9 @@ export const officerMapSteps: DriveStep[] = [
 		element: '[data-tour="map-legend"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Dynamic Threat Thresholds",
+			title: "Crime Type Legend",
 			description:
-				"Monitor active threat classifications from Secure (green) to Critical (red) based on recorded incident counts.",
+				"Review incident volume per offense classification. Selecting a crime type filters the map and opens a panel listing the affected barangays and their counts.",
 			side: "left",
 			align: "start",
 		},
@@ -416,9 +416,9 @@ export const mapSteps: DriveStep[] = [
 		element: '[data-tour="map-legend"]',
 		skipMissingElement: true,
 		popover: {
-			title: "Threat Levels & Timeline",
+			title: "Crime Types & Timeline",
 			description:
-				"Track color-coded risk levels from Low to Critical, and use time controls to scrub through historical incident data.",
+				"Track incident counts per crime type, click one for its barangay breakdown, and use the time controls to scrub through historical data.",
 			side: "left",
 			align: "start",
 		},

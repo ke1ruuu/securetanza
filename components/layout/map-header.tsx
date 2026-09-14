@@ -70,7 +70,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
   // Determine if a nav item is active
   const isNavItemActive = (item: typeof navItems[0]) => {
     if (item.id === "map") {
-      return pathname === "/map";
+      return pathname === "/" || pathname === "/map";
     }
     // For dashboard pages, check if pathname matches
     return pathname === item.path;
@@ -130,7 +130,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
         <nav data-tour="main-nav" className="hidden lg:flex items-center gap-1 h-full absolute left-1/2 -translate-x-1/2">
           {filteredNavItems.map((item) => {
             const isActive = isNavItemActive(item);
-            const href = item.id === "map" ? "/map" : buildDashboardUrl(item.path!);
+            const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
 
             return (
               <Link
@@ -223,7 +223,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           <nav className="px-4 py-3 space-y-1">
             {filteredNavItems.map((item) => {
               const isActive = isNavItemActive(item);
-              const href = item.id === "map" ? "/map" : buildDashboardUrl(item.path!);
+              const href = item.id === "map" ? "/" : buildDashboardUrl(item.path!);
 
               return (
                 <Link

@@ -217,14 +217,20 @@ model NotificationRule {
 // Authentication and Authorization Models
 
 model User {
-  id                 Int      @id @default(autoincrement())
-  accountNumber      String   @unique @map("account_number") // Unique account number
-  fullName           String   @map("full_name")
-  passwordHash       String   @map("password_hash")
-  mustChangePassword Boolean  @default(false) @map("must_change_password")
-  defaultLandingPage String   @default("dashboard") @map("default_landing_page")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                 Int     @id @default(autoincrement())
+  accountNumber      String  @unique @map("account_number") // Unique account number
+  fullName           String  @map("full_name")
+  passwordHash       String  @map("password_hash")
+  mustChangePassword Boolean @default(false) @map("must_change_password")
+  defaultLandingPage String  @default("dashboard") @map("default_landing_page")
+
+  // Sign-in lockout. Three consecutive wrong passwords stamp lockedAt; only an
+  // administrator clears it, which also issues a fresh temporary password.
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedAt            DateTime? @map("locked_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   permissions     UserPermission[]
@@ -232,6 +238,30 @@ model User {
 
   @@index([accountNumber])
   @@map("users")
+}
+
+/**
+ * A retained copy of exported data, held in the database rather than on disk so it
+ * survives redeploys and container restarts. Content is the finished file itself —
+ * an .xlsx snapshot of the register, or a generated PDF report.
+ */
+model Backup {
+  id          String   @id @default(cuid())
+  kind        String // "crime_data" | "report" | "scheduled_export"
+  fileName    String   @map("file_name")
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  content     Bytes // the file itself
+  label       String? // human summary, e.g. "All Barangays"
+  barangay    String? // scope, when the snapshot is narrowed
+  periodLabel String?  @map("period_label") // e.g. "Year 2026", "Q1 2026"
+  rowCount    Int?     @map("row_count") // incidents captured, for data snapshots
+  createdBy   String   @map("created_by") // account number, or "system" for cron
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([kind])
+  @@index([createdAt])
+  @@map("backups")
 }
 
 model ExportSchedule {

@@ -471,17 +471,15 @@ export class NotificationEngine {
   ): Promise<void> {
     if (notifications.length === 0) return;
 
-    for (const notif of notifications) {
-      await prisma.notification.create({
-        data: {
-          title: notif.title,
-          message: notif.message,
-          category: notif.category,
-          severity: notif.severity,
-          uploadLogId: uploadLogId || null,
-          metadata: notif.metadata || {},
-        },
-      });
-    }
+    await prisma.notification.createMany({
+      data: notifications.map((notif) => ({
+        title: notif.title,
+        message: notif.message,
+        category: notif.category,
+        severity: notif.severity,
+        uploadLogId: uploadLogId || null,
+        metadata: notif.metadata || {},
+      })),
+    });
   }
 }

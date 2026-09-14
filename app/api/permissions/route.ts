@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/backend/lib/prisma';
+import { PermissionService } from '@/backend/services/permission.service';
 import { getSession } from '@/lib/auth';
 
-// GET /api/permissions - Fetch all permissions (admin only)
+// GET /api/permissions - Fetch all permissions (admin only, Cached)
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
 
-    if (!session || !session.permissions.includes('admin_operational_officer')) {
+    if (!session || (!session.permissions.includes('admin_operational_officer') && !session.permissions.includes('admin'))) {
       return NextResponse.json(
         { error: 'Unauthorized - Admin access required' },
         { status: 403 }
       );
     }
 
-    const permissions = await prisma.permission.findMany({
-      orderBy: {
-        permissionName: 'asc',
-      },
-    });
+    const permissions = await PermissionService.getAllPermissions();
 
     return NextResponse.json({
       success: true,

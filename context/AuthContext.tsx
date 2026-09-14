@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface User {
@@ -30,6 +30,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Track if user was ever loaded in this browser session
+  const userRef = useRef<User | null>(null);
+  userRef.current = user;
+
   const checkSession = useCallback(async () => {
     try {
       const response = await fetch("/api/auth/session", {
@@ -41,47 +45,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        if (data.success && data.user && data.user.permissions?.length > 0) {
+        if (data.success && data.user && Array.isArray(data.user.permissions) && data.user.permissions.length > 0) {
           setUser(data.user);
-          return;
+          return data.user;
         }
       }
 
       // If user session is invalid, account was deleted, or all permissions were revoked
+      const hadPriorSession = userRef.current !== null;
       setUser(null);
 
-      // If currently on a dashboard route, immediately boot user to /login
-      if (typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard")) {
-        router.push("/login");
-        router.refresh();
+      if (typeof window !== "undefined") {
+        const currentPath = window.location.pathname;
+        // If user was logged in previously OR is currently on any protected page:
+        if (hadPriorSession || currentPath.startsWith("/dashboard") || currentPath === "/") {
+          if (currentPath !== "/login") {
+            console.warn("🔒 User access revoked or account removed. Automatically redirecting to auth page...");
+            window.location.replace("/login");
+          }
+        }
       }
+      return null;
     } catch (error) {
       console.error("Session check error:", error);
-      setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
+  // Initial check on mount
   useEffect(() => {
     checkSession();
+  }, [checkSession]);
 
-    // Check session on window focus (e.g. when user switches tabs after an admin made changes)
+  // Check session on window focus and visibility change only when authenticated and not on login page
+  useEffect(() => {
+    if (pathname === "/login") return;
+
     const handleFocus = () => {
-      checkSession();
+      if (userRef.current !== null) {
+        checkSession();
+      }
     };
 
-    // Heartbeat check every 10 seconds to detect deleted or revoked accounts in real-time
-    const interval = setInterval(() => {
-      checkSession();
-    }, 10000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && userRef.current !== null) {
+        checkSession();
+      }
+    };
 
     window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [checkSession, pathname]);
+
+  // Heartbeat check ONLY when user is logged in and not on login page
+  useEffect(() => {
+    if (!user || pathname === "/login") {
+      return;
+    }
+
+    // Heartbeat check every 30 seconds to detect revoked permissions
+    const interval = setInterval(() => {
+      checkSession();
+    }, 30000);
+
     return () => {
       clearInterval(interval);
-      window.removeEventListener("focus", handleFocus);
     };
-  }, [checkSession]);
+  }, [user, pathname, checkSession]);
 
   // Idle timeout (auto logout if not used for 15 minutes)
   useEffect(() => {
@@ -138,6 +175,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.refresh();
     } catch (error) {
       console.error("Logout error:", error);
+      setUser(null);
+      window.location.replace("/login");
     }
   };
 

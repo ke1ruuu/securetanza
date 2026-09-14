@@ -65,7 +65,7 @@ export default function RealTimeClock({ onFilterToggle, isFilterActive }: RealTi
 							{formatTime(time)}
 						</span>
 						<span
-							className="text-[10px] font-medium text-slate-500 dark:text-slate-300 leading-tight"
+							className="text-[11.5px] font-medium text-slate-500 dark:text-slate-300 leading-tight"
 							style={{ fontFamily: "var(--font-inter)" }}>
 							{formatDay(time)}, {formatDate(time)}
 						</span>

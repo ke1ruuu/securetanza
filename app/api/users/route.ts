@@ -72,6 +72,8 @@ export async function GET(request: NextRequest) {
       })),
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      lockedAt: user.lockedAt,
+      failedLoginAttempts: user.failedLoginAttempts,
     }));
 
     return NextResponse.json({
@@ -121,16 +123,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Assign permissions
-    await Promise.all(validatedData.permissionIds.map(pid => 
-      prisma.userPermission.create({
-        data: {
-          userId: user.id,
-          permissionId: pid,
-          assignedBy: session.userId,
-        },
-      })
-    ));
+    // Assign permissions in bulk
+    await prisma.userPermission.createMany({
+      data: validatedData.permissionIds.map(pid => ({
+        userId: user.id,
+        permissionId: pid,
+        assignedBy: session.userId,
+      })),
+    });
 
     // Audit log
     await prisma.auditLog.create({

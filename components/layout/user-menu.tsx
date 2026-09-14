@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { LogOut, User as UserIcon, Shield, Settings, BookOpen, Compass } from "lucide-react";
+import { LogOut, User as UserIcon, Shield, Settings, BookOpen, Compass, Activity } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useTour } from "@/context/TourContext";
@@ -127,16 +127,28 @@ export default function UserMenu() {
             {/* Menu Items */}
             <div className={`p-2 border-b space-y-1 ${"border-slate-200 dark:border-white/10"}`}>
               {(user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) && (
-                <Link
-                  href="/dashboard/config"
-                  onClick={() => setShowMenu(false)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 no-underline ${
-                    "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
-                  }`}
-                >
-                  <Settings className="h-4 w-4" />
-                  System Settings
-                </Link>
+                <>
+                  <Link
+                    href="/dashboard/performance"
+                    onClick={() => setShowMenu(false)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 no-underline ${
+                      "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    <Activity className="h-4 w-4 text-[#0EA5E9]" />
+                    Process Monitor
+                  </Link>
+                  <Link
+                    href="/dashboard/config"
+                    onClick={() => setShowMenu(false)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 no-underline ${
+                      "text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/[0.06]"
+                    }`}
+                  >
+                    <Settings className="h-4 w-4" />
+                    System Settings
+                  </Link>
+                </>
               )}
               <Link
                 href="/docs"

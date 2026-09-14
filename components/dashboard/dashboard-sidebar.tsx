@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { 
   LayoutDashboard, 
   Shield, 
@@ -8,10 +9,12 @@ import {
   ClipboardList, 
   UserCheck, 
   Settings, 
-  LogOut 
+  LogOut,
+  Activity
 } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
   activeTab: string;
@@ -21,6 +24,8 @@ interface SidebarProps {
 
 export default function DashboardSidebar({ activeTab, setActiveTab, onExit }: SidebarProps) {
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const isAdmin = user && (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin"));
   
   const menuItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -63,7 +68,20 @@ export default function DashboardSidebar({ activeTab, setActiveTab, onExit }: Si
         </nav>
       </div>
 
-      <div className="mt-auto p-8 space-y-4">
+      <div className="mt-auto p-8 space-y-3">
+        {isAdmin && (
+          <Link
+            href="/dashboard/performance"
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-black uppercase tracking-widest transition-all ${
+              theme === "dark"
+                ? "text-[#0EA5E9] hover:bg-white/5 hover:text-white"
+                : "text-[#0EA5E9] hover:bg-sky-50 hover:text-sky-700"
+            }`}
+          >
+            <Activity className="h-4 w-4 text-[#0EA5E9]" />
+            Process Monitor
+          </Link>
+        )}
         <button 
           onClick={() => setActiveTab("config")}
           className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-black uppercase tracking-widest transition-all ${

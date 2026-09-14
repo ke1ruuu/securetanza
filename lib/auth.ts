@@ -92,78 +92,133 @@ export async function createSession(user: User): Promise<string> {
 	return sessionId;
 }
 
-import { prisma } from "@/backend/lib/prisma";
+import { prisma } from '@/backend/lib/prisma';
+import { cacheService, CacheKeys, TTL } from '@/backend/cache';
+
+interface CachedUserValidation {
+  fullName: string;
+  permissions: string[];
+  mustChangePassword: boolean;
+  defaultLandingPage: string;
+  accountNumber: string;
+}
+
+export function invalidateSessionCache(userId?: number): void {
+  if (userId) {
+    cacheService.delete(CacheKeys.auth.userSession(userId)).catch(() => {});
+  } else {
+    cacheService.deleteByPattern(CacheKeys.auth.pattern()).catch(() => {});
+  }
+}
+
+export async function getSessionCacheStats() {
+  const stats = await cacheService.getStats();
+  return {
+    size: stats.activeKeys,
+    maxSize: 5000,
+    ttlMs: TTL.USER_SESSION * 1000,
+    hitRatio: stats.hitRatio,
+    queriesSaved: stats.dbQueriesSaved,
+  };
+}
 
 /**
- * Get the current session with real-time database validation
+ * Get the current session with real-time database validation (cached with single-flight stampede protection)
  */
 export async function getSession(validateWithDb: boolean = true): Promise<SessionPayload | null> {
-	const cookieStore = await cookies();
-	const token = cookieStore.get("session")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session')?.value;
 
-	if (!token) {
-		return null;
-	}
+  if (!token) {
+    return null;
+  }
 
-	const payload = await verifyToken(token);
-	if (!payload) {
-		return null;
-	}
+  const payload = await verifyToken(token);
+  if (!payload) {
+    return null;
+  }
 
-	if (validateWithDb) {
-		try {
-			// Check database to ensure user still exists and access has not been revoked
-			const user = await prisma.user.findUnique({
-				where: { id: payload.userId },
-				include: {
-					permissions: {
-						include: {
-							permission: true,
-						},
-					},
-				},
-			});
+  if (validateWithDb) {
+    try {
+      const cacheKey = CacheKeys.auth.userSession(payload.userId);
 
-			// If user was removed or account number doesn't match, revoke immediately
-			if (!user || user.accountNumber !== payload.accountNumber) {
-				try {
-					cookieStore.delete("session");
-				} catch {}
-				return null;
-			}
+      const userData = await cacheService.getOrSet<CachedUserValidation | null>(
+        cacheKey,
+        TTL.USER_SESSION,
+        async () => {
+          // Query database to ensure user still exists and access has not been revoked
+          const user = await prisma.user.findUnique({
+            where: { id: payload.userId },
+            include: {
+              permissions: {
+                include: {
+                  permission: true,
+                },
+              },
+            },
+          });
 
-			// Sync active permissions directly from database in real-time
-			const activePermissions = user.permissions.map((p) => p.permission.permissionName);
+          // If user was removed or account number doesn't match, revoke immediately
+          if (!user || user.accountNumber !== payload.accountNumber) {
+            return null;
+          }
 
-			// If user has all permissions revoked (0 permissions), revoke session
-			if (activePermissions.length === 0) {
-				try {
-					cookieStore.delete("session");
-				} catch {}
-				return null;
-			}
+          // Sync active permissions directly from database
+          const activePermissions = user.permissions.map(p => p.permission.permissionName);
 
-			return {
-				...payload,
-				fullName: user.fullName,
-				permissions: activePermissions,
-				mustChangePassword: user.mustChangePassword,
-			};
-		} catch (error) {
-			console.error("Error validating session with database:", error);
-			return null;
-		}
-	}
+          // If user has all permissions revoked (0 permissions), revoke session
+          if (activePermissions.length === 0) {
+            return null;
+          }
 
-	return payload;
+          return {
+            fullName: user.fullName,
+            permissions: activePermissions,
+            mustChangePassword: user.mustChangePassword,
+            defaultLandingPage: user.defaultLandingPage,
+            accountNumber: user.accountNumber,
+          };
+        }
+      );
+
+      // If user was invalid or revoked in DB, delete cookie and reject
+      if (!userData || userData.accountNumber !== payload.accountNumber || userData.permissions.length === 0) {
+        try {
+          cookieStore.delete('session');
+        } catch {}
+        await cacheService.delete(cacheKey);
+        return null;
+      }
+
+      return {
+        ...payload,
+        fullName: userData.fullName,
+        permissions: userData.permissions,
+        mustChangePassword: userData.mustChangePassword,
+        defaultLandingPage: userData.defaultLandingPage,
+      };
+    } catch (error) {
+      console.error('Error validating session with database:', error);
+      return null;
+    }
+  }
+
+  return payload;
 }
 
 /**
  * Delete the session cookie
  */
 export async function deleteSession(): Promise<void> {
-	const cookieStore = await cookies();
-	cookieStore.delete("session");
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session')?.value;
+  if (token) {
+    const payload = await verifyToken(token);
+    if (payload?.userId) {
+      invalidateSessionCache(payload.userId);
+    }
+  }
+  cookieStore.delete('session');
 }
 
 /**

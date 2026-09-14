@@ -4,6 +4,9 @@ import * as XLSX from 'xlsx'
 import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper'
 import { NotificationEngine, BatchRecordItem } from '@/backend/lib/notification-engine'
 import { getSession } from '@/lib/auth'
+import { cacheService, CacheKeys } from '@/backend/cache'
+import { generateCrimeFingerprint, findExistingCrimeFingerprints } from '@/backend/lib/crime-deduplication'
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/components/upload/upload-meta'
 
 // POST /api/crimes/upload - Upload Excel/CSV file with crime data
 export async function POST(request: NextRequest) {
@@ -35,6 +38,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // The dialog checks this too, but the route is the boundary that actually holds:
+    // the whole workbook is read into memory below, so an oversized file is refused
+    // before a single byte is parsed.
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `File is over the ${MAX_UPLOAD_LABEL} limit. Split the workbook by year or by station and import each part.`,
+        },
+        { status: 413 }
+      )
+    }
+
     // Read Excel/CSV file
     const arrayBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(arrayBuffer, { type: 'array' })
@@ -50,15 +66,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`📊 Processing ${jsonData.length} rows from ${file.name}`)
 
-    // Process and insert data
+    // Process and insert data with two-tier deduplication
     const results = {
       total: jsonData.length,
       inserted: 0,
       skipped: 0,
+      duplicatesSkipped: 0,
       errors: [] as string[],
     }
 
     const insertedBatchRecords: BatchRecordItem[] = []
+    const seenInFileFingerprints = new Set<string>()
+    const candidateRows: Array<{ rowIndex: number; data: any; fingerprint: string }> = []
+    const validRowsToInsert: any[] = []
 
     for (let i = 0; i < jsonData.length; i++) {
       const row = jsonData[i]
@@ -110,90 +130,176 @@ export async function POST(request: NextRequest) {
         const latitude = normalizedRow.lat ? parseFloat(normalizedRow.lat) : null
         const longitude = normalizedRow.lng ? parseFloat(normalizedRow.lng) : null
 
-        // Insert into database
-        const createdIncident = await prisma.crimeIncident.create({
-          data: {
-            blotterNo: normalizedRow.blotter_no || null,
-            dateEncoded: dateEncoded,
-            pro: normalizedRow.police_regional_office || null,
-            ppo: normalizedRow.police_provincial_office || null,
-            stn: normalizedRow.station || null,
-            pcp: normalizedRow.police_community_precinct || null,
-            region: normalizedRow.region || null,
-            province: normalizedRow.province || null,
-            municipal: normalizedRow.municipality || null,
-            barangay: barangayName,
-            street: normalizedRow.street || null,
-            typeOfPlace: normalizedRow.type_of_place || null,
-            dateReported,
-            timeReported,
-            dateCommitted,
-            timeCommitted,
-            incidentType: normalizedRow.incident_type,
-            isCrime,
-            modeReporting: normalizedRow.mode_reporting || null,
-            stageOfFelony: normalizedRow.stage_of_felony || null,
-            offense: normalizedRow.offense || null,
-            offenseType: normalizedRow.offense_type || null,
-            section: normalizedRow.section || null,
-            modus: normalizedRow.modus || null,
-            suspectMotive: normalizedRow.suspect_motive || null,
-            suspectSubMotive: normalizedRow.suspect_sub_motive || null,
-            heinous,
-            sensational,
-            threatGrp,
-            grpAffiliation: normalizedRow.grp_affiliation || null,
-            incidentTypeThreatGrp: normalizedRow.incident_type_threat_grp || null,
-            mrs: normalizedRow.mrs || null,
-            suspectIsEGO,
-            suspectEGOPosition: normalizedRow.suspect_ego_position || null,
-            suspectEGOClass: normalizedRow.suspect_ego_class || null,
-            suspectCount,
-            victimIsEGO,
-            victimEGOPosition: normalizedRow.victim_ego_position || null,
-            victimEGOClass: normalizedRow.victim_ego_class || null,
-            victimCount,
-            caseStatus: normalizedRow.case_status || null,
-            investigator: normalizedRow.investigator || null,
-            headInves: normalizedRow.head_investigator || null,
-            latitude,
-            longitude,
-          },
-        })
+        const candidateData = {
+          blotterNo: normalizedRow.blotter_no ? String(normalizedRow.blotter_no).trim() : null,
+          dateEncoded,
+          pro: normalizedRow.police_regional_office || null,
+          ppo: normalizedRow.police_provincial_office || null,
+          stn: normalizedRow.station || null,
+          pcp: normalizedRow.police_community_precinct || null,
+          region: normalizedRow.region || null,
+          province: normalizedRow.province || null,
+          municipal: normalizedRow.municipality || null,
+          barangay: barangayName,
+          street: normalizedRow.street || null,
+          typeOfPlace: normalizedRow.type_of_place || null,
+          dateReported,
+          timeReported,
+          dateCommitted,
+          timeCommitted,
+          incidentType: normalizedRow.incident_type,
+          isCrime,
+          modeReporting: normalizedRow.mode_reporting || null,
+          stageOfFelony: normalizedRow.stage_of_felony || null,
+          offense: normalizedRow.offense || null,
+          offenseType: normalizedRow.offense_type || null,
+          section: normalizedRow.section || null,
+          modus: normalizedRow.modus || null,
+          suspectMotive: normalizedRow.suspect_motive || null,
+          suspectSubMotive: normalizedRow.suspect_sub_motive || null,
+          heinous,
+          sensational,
+          threatGrp,
+          grpAffiliation: normalizedRow.grp_affiliation || null,
+          incidentTypeThreatGrp: normalizedRow.incident_type_threat_grp || null,
+          mrs: normalizedRow.mrs || null,
+          suspectIsEGO,
+          suspectEGOPosition: normalizedRow.suspect_ego_position || null,
+          suspectEGOClass: normalizedRow.suspect_ego_class || null,
+          suspectCount,
+          victimIsEGO,
+          victimEGOPosition: normalizedRow.victim_ego_position || null,
+          victimEGOClass: normalizedRow.victim_ego_class || null,
+          victimCount,
+          caseStatus: normalizedRow.case_status || null,
+          investigator: normalizedRow.investigator || null,
+          headInves: normalizedRow.head_investigator || null,
+          latitude,
+          longitude,
+        }
 
-        insertedBatchRecords.push({
-          id: createdIncident.id,
-          barangay: createdIncident.barangay,
-          incidentType: createdIncident.incidentType,
-          dateCommitted: createdIncident.dateCommitted,
-          timeCommitted: createdIncident.timeCommitted,
-          isCrime: createdIncident.isCrime,
-          heinous: createdIncident.heinous,
-          sensational: createdIncident.sensational,
-          threatGrp: createdIncident.threatGrp,
-          suspectIsEGO: createdIncident.suspectIsEGO,
-          victimIsEGO: createdIncident.victimIsEGO,
-          offense: createdIncident.offense,
-          modus: createdIncident.modus,
-        })
+        // Tier 1: In-File Deduplication
+        const fingerprint = generateCrimeFingerprint(candidateData)
+        if (seenInFileFingerprints.has(fingerprint)) {
+          results.skipped++
+          results.duplicatesSkipped++
+          results.errors.push(`Row ${i + 2}: Duplicate record within uploaded file (skipped)`)
+          continue
+        }
 
-        results.inserted++
+        seenInFileFingerprints.add(fingerprint)
+        candidateRows.push({ rowIndex: i + 2, data: candidateData, fingerprint })
       } catch (error) {
         results.skipped++
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         results.errors.push(`Row ${i + 2}: ${errorMessage}`)
-        console.error(`Error processing row ${i + 2}:`, error)
       }
     }
 
-    console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped`)
+    // Tier 2: In-Database Deduplication
+    if (candidateRows.length > 0) {
+      const existingDbFingerprints = await findExistingCrimeFingerprints(
+        candidateRows.map(r => r.data),
+        prisma
+      )
+
+      for (const candidate of candidateRows) {
+        if (existingDbFingerprints.has(candidate.fingerprint)) {
+          results.skipped++
+          results.duplicatesSkipped++
+          results.errors.push(`Row ${candidate.rowIndex}: Record already exists in crime register (duplicate skipped)`)
+        } else {
+          validRowsToInsert.push(candidate.data)
+          // Add to existing set to avoid any collision
+          existingDbFingerprints.add(candidate.fingerprint)
+        }
+      }
+    }
+
+    console.log(`🔍 Deduplication results: ${candidateRows.length} unique in file, ${results.duplicatesSkipped} duplicates rejected, ${validRowsToInsert.length} ready to insert`)
+
+    // Insert valid unique rows in chunked batches (250 rows per batch)
+    const BATCH_SIZE = 250
+    for (let b = 0; b < validRowsToInsert.length; b += BATCH_SIZE) {
+      const chunk = validRowsToInsert.slice(b, b + BATCH_SIZE)
+      try {
+        const createdChunk = await prisma.crimeIncident.createManyAndReturn({
+          data: chunk,
+          select: {
+            id: true,
+            barangay: true,
+            incidentType: true,
+            dateCommitted: true,
+            timeCommitted: true,
+            isCrime: true,
+            heinous: true,
+            sensational: true,
+            threatGrp: true,
+            suspectIsEGO: true,
+            victimIsEGO: true,
+            offense: true,
+            modus: true,
+          },
+        })
+
+        insertedBatchRecords.push(...createdChunk)
+        results.inserted += createdChunk.length
+      } catch (batchError) {
+        console.warn(`[UPLOAD] Chunk insertion failed, falling back to individual inserts for chunk starting at ${b}:`, batchError)
+        for (const row of chunk) {
+          try {
+            const created = await prisma.crimeIncident.create({
+              data: row,
+              select: {
+                id: true,
+                barangay: true,
+                incidentType: true,
+                dateCommitted: true,
+                timeCommitted: true,
+                isCrime: true,
+                heinous: true,
+                sensational: true,
+                threatGrp: true,
+                suspectIsEGO: true,
+                victimIsEGO: true,
+                offense: true,
+                modus: true,
+              },
+            })
+            insertedBatchRecords.push(created)
+            results.inserted++
+          } catch (rowErr) {
+            results.skipped++
+            const errorMessage = rowErr instanceof Error ? rowErr.message : 'Unknown error'
+            results.errors.push(`Chunk fallback error: ${errorMessage}`)
+          }
+        }
+      }
+    }
+
+    console.log(`✅ Upload complete: ${results.inserted} inserted, ${results.skipped} skipped (${results.duplicatesSkipped} duplicates rejected)`)
+
+    // Invalidate cached crime analytics and queries
+    if (results.inserted > 0) {
+      await cacheService.deleteByPattern(CacheKeys.crimes.pattern());
+    }
 
     // 1. Record AuditLog
     const ip = request.headers.get('x-forwarded-for') || (request as any).ip || 'Unknown IP';
+    const auditDetails = results.duplicatesSkipped > 0
+      ? `Imported ${results.inserted} records from ${file.name} (${results.duplicatesSkipped} duplicate(s) rejected)`
+      : `Imported ${results.inserted} records from ${file.name}`;
+
+    const outcome = results.inserted === 0 
+      ? (results.duplicatesSkipped > 0 ? 'duplicate' : 'failed') 
+      : results.skipped > 0 
+      ? 'partial' 
+      : 'success';
+
     const uploadLog = await prisma.auditLog.create({
       data: {
         action: 'Import',
-        details: `Imported ${results.inserted} records from ${file.name}`,
+        details: auditDetails,
         user: session?.fullName || session?.accountNumber || 'Operational Officer',
         resource: 'CrimeData',
         ip: ip,
@@ -201,24 +307,33 @@ export async function POST(request: NextRequest) {
         fileName: file.name,
         fileSize: file.size,
         recordsImported: results.inserted,
-        outcome: results.inserted === 0 ? 'failed' : results.skipped > 0 ? 'partial' : 'success',
+        outcome,
         errorMessage: results.errors.length > 0 ? results.errors.slice(0, 5).join('; ') : null,
       },
     })
 
     // 2. Trigger Post-Ingestion Notification Engine
-    const generatedNotifsCount = await NotificationEngine.evaluateBatch({
-      uploadLogId: uploadLog.id,
-      fileName: file.name,
-      totalRows: jsonData.length,
-      insertedRecords: insertedBatchRecords,
-      skippedRows: results.skipped,
-      errors: results.errors,
-    })
+    let generatedNotifsCount = 0;
+    if (insertedBatchRecords.length > 0) {
+      generatedNotifsCount = await NotificationEngine.evaluateBatch({
+        uploadLogId: uploadLog.id,
+        fileName: file.name,
+        totalRows: jsonData.length,
+        insertedRecords: insertedBatchRecords,
+        skippedRows: results.skipped,
+        errors: results.errors,
+      });
+    }
+
+    const responseMsg = results.inserted > 0
+      ? `Successfully uploaded ${results.inserted} record(s)${results.duplicatesSkipped > 0 ? ` (${results.duplicatesSkipped} duplicate(s) rejected)` : ''}. Generated ${generatedNotifsCount} analytical notification(s).`
+      : results.duplicatesSkipped > 0
+      ? `Upload skipped: All ${results.duplicatesSkipped} record(s) in this file already exist in the crime register.`
+      : `No valid records found to import.`;
 
     return NextResponse.json({
       success: true,
-      message: `Successfully uploaded ${results.inserted} records. Generated ${generatedNotifsCount} analytical notification(s).`,
+      message: responseMsg,
       data: results,
       uploadLogId: uploadLog.id,
       notificationsGenerated: generatedNotifsCount,

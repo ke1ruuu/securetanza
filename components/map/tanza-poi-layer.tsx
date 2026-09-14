@@ -33,7 +33,7 @@ export const TanzaPoliceStation: React.FC = () => {
       >
         <Tooltip direction="top" offset={[0, -5]} opacity={1} permanent={false} className="custom-tooltip">
           <div className="px-1 py-0.5">
-             <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Authority</p>
+             <p className="text-[11.5px] uppercase tracking-widest text-slate-500 font-bold">Authority</p>
              <p className="text-sm font-bold text-slate-800">Tanza Municipal Police Station</p>
           </div>
         </Tooltip>

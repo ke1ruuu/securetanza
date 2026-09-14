@@ -336,13 +336,13 @@ export default function ConfigTab() {
 
               {isAdmin && rulesStatus === "ready" && rules.length > 0 && (
                 <div className="flex items-center gap-4">
-                  <p className="text-[11.5px] tabular-nums text-slate-600 dark:text-slate-400">
+                  <p className="text-[12.5px] tabular-nums text-slate-600 dark:text-slate-400">
                     {rules.filter((r) => r.isEnabled).length} of {rules.length} enabled
                   </p>
                   <button
                     type="button"
                     onClick={fetchRules}
-                    className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
+                    className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
                   >
                     <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                     Reload
@@ -375,7 +375,7 @@ export default function ConfigTab() {
                 <button
                   type="button"
                   onClick={fetchRules}
-                  className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
+                  className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-[12.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
                 >
                   <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                   Try again
@@ -406,7 +406,7 @@ export default function ConfigTab() {
 
                       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
                         <div className="min-w-0">
-                          <p className="flex flex-wrap items-center gap-1.5 text-[10px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400">
+                          <p className="flex flex-wrap items-center gap-1.5 text-[11.5px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400">
                             <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
                             {category.label}
                             <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
@@ -460,7 +460,7 @@ export default function ConfigTab() {
                         <div>
                           <label
                             htmlFor={`${rule.id}-severity`}
-                            className="block text-[10px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400"
+                            className="block text-[11.5px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400"
                           >
                             Severity
                           </label>
@@ -492,7 +492,7 @@ export default function ConfigTab() {
                             <div key={field.key}>
                               <label
                                 htmlFor={inputId}
-                                className="block text-[10px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400"
+                                className="block text-[11.5px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400"
                               >
                                 {field.label}
                                 <span className="ml-1.5 font-normal tracking-normal text-slate-400 normal-case dark:text-slate-500">
@@ -524,7 +524,7 @@ export default function ConfigTab() {
                                   className="w-[4.5rem] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs tabular-nums text-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.1] dark:bg-[#0F172A] dark:text-slate-100"
                                 />
                                 {field.unit && (
-                                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                  <span className="text-[12px] text-slate-500 dark:text-slate-400">
                                     {field.unit}
                                   </span>
                                 )}
@@ -533,7 +533,7 @@ export default function ConfigTab() {
                               {field.hint && (
                                 <p
                                   id={`${inputId}-hint`}
-                                  className="mt-1.5 max-w-[13rem] text-[10.5px] leading-relaxed text-slate-500 dark:text-slate-400"
+                                  className="mt-1.5 max-w-[13rem] text-[11.5px] leading-relaxed text-slate-500 dark:text-slate-400"
                                 >
                                   {field.hint}
                                 </p>
@@ -546,7 +546,7 @@ export default function ConfigTab() {
                       <p
                         role="status"
                         aria-live="polite"
-                        className={`mt-3 min-h-4 text-[11px] font-medium ${
+                        className={`mt-3 min-h-4 text-[12px] font-medium ${
                           row?.isError
                             ? "text-red-700 dark:text-red-400"
                             : "text-slate-500 dark:text-slate-400"
@@ -590,7 +590,7 @@ export default function ConfigTab() {
                 {user?.permissions?.map((p, idx) => (
                   <span
                     key={idx}
-                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
+                    className="px-2.5 py-1 rounded-lg text-[11.5px] font-bold uppercase tracking-wider bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20"
                   >
                     {p.replace(/_/g, " ")}
                   </span>

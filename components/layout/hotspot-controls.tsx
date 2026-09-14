@@ -78,7 +78,7 @@ export default function HotspotControls() {
           >
             <SelectTrigger
               size="sm"
-              className="w-14 h-7 text-[9px] font-black border-none bg-white/5 hover:bg-white/10 text-white uppercase focus-visible:ring-0"
+              className="w-14 h-7 text-[10.5px] font-black border-none bg-white/5 hover:bg-white/10 text-white uppercase focus-visible:ring-0"
             >
               <SelectValue placeholder="Mo" />
             </SelectTrigger>
@@ -87,7 +87,7 @@ export default function HotspotControls() {
                 <SelectItem
                   key={m}
                   value={m}
-                  className="text-[10px] uppercase font-bold focus:bg-indigo-500/20 text-slate-100"
+                  className="text-[11.5px] uppercase font-bold focus:bg-indigo-500/20 text-slate-100"
                 >
                   {m}
                 </SelectItem>
@@ -101,7 +101,7 @@ export default function HotspotControls() {
           >
             <SelectTrigger
               size="sm"
-              className="w-14 h-7 text-[9px] font-black border-none bg-white/5 hover:bg-white/10 text-slate-400 uppercase focus-visible:ring-0"
+              className="w-14 h-7 text-[10.5px] font-black border-none bg-white/5 hover:bg-white/10 text-slate-400 uppercase focus-visible:ring-0"
             >
               <SelectValue placeholder="Yr" />
             </SelectTrigger>
@@ -110,7 +110,7 @@ export default function HotspotControls() {
                 <SelectItem
                   key={y}
                   value={y}
-                  className="text-[10px] font-bold focus:bg-indigo-500/20 text-slate-100"
+                  className="text-[11.5px] font-bold focus:bg-indigo-500/20 text-slate-100"
                 >
                   {y}
                 </SelectItem>

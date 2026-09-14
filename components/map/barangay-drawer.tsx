@@ -114,7 +114,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
                       <div className={`p-1.5 rounded-lg ${theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-50'}`}>
                         <MapPin className={`h-4 w-4 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
                       </div>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`}>
+                      <span className={`text-[11.5px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`}>
                         Crime Statistics
                       </span>
                     </div>
@@ -141,7 +141,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
                 {/* Quick Stats Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                       Total Crimes
                     </p>
                     <div className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
                     </div>
                   </div>
                   <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                       Risk Level
                     </p>
                     <div className="flex items-center gap-2">
@@ -163,7 +163,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
                     </div>
                   </div>
                   <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                       Status
                     </p>
                     <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
                     </div>
                   </div>
                   <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
                       Safety Index
                     </p>
                     <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
 
                 {/* Crime Distribution */}
                 <div className="space-y-4">
-                  <h4 className={`text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
+                  <h4 className={`text-[12px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
                     <AlertTriangle className="h-3.5 w-3.5" />
                     Crime Distribution
                   </h4>
@@ -227,7 +227,7 @@ export default function BarangayDrawer({ open, onOpenChange, barangayName, onMor
 
                 {/* Administrative Info */}
                 <div className="space-y-4">
-                  <h4 className={`text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
+                  <h4 className={`text-[12px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
                     <Users className="h-3.5 w-3.5" />
                     Administrative Info
                   </h4>

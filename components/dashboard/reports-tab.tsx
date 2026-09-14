@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Check, Download, Loader2 } from "lucide-react";
+import { AlertCircle, Archive, Check, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useMapContext } from "@/context/MapContext";
@@ -52,6 +52,8 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
+  const [archived, setArchived] = useState<string | null>(null);
   const [today, setToday] = useState<string | null>(null);
   const analyticsData = useAnalyticsData(barangayName);
   const { matrixData, loading: matrixLoading } = useCrimeMatrix(barangayName);
@@ -113,34 +115,73 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const waitingForData = analyticsData.loading || (needsMatrix && matrixLoading);
   const fileName = today ? `Crime-Report-${locationSlug}-${today}.pdf` : null;
 
+  /** Builds the document. Both the download and the archive start here. */
+  const buildReportBlob = async (): Promise<Blob> => {
+    setStep("Checking data");
+    if (analyticsData.loading) {
+      throw new Error('Analytics data is still loading. Please wait and try again.');
+    }
+    if (analyticsData.error) {
+      throw new Error(`Analytics data error: ${analyticsData.error}`);
+    }
+
+    setStep("Building document");
+    const pdfGenerator = new PDFReportGenerator();
+    return pdfGenerator.generateReport(reportConfig, {
+      barangayName: locationName,
+      timeRange: timeRangeText,
+      analyticsData: {
+        crimesByType: analyticsData.crimesByType,
+        crimesByMonth: analyticsData.crimesByMonth,
+        crimesByBarangay: analyticsData.crimesByBarangay,
+        crimeMatrix: matrixData,
+        timePatterns: analyticsData.timePatterns,
+        trends: analyticsData.trends,
+      },
+      totalCrimes,
+    });
+  };
+
+  /** Keeps the report on the server instead of on whichever machine generated it. */
+  const handleArchiveReport = async () => {
+    setArchiving(true);
+    setError(null);
+    setArchived(null);
+
+    try {
+      const pdfBlob = await buildReportBlob();
+
+      setStep("Archiving");
+      const body = new FormData();
+      const name = `Crime-Report-${locationSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
+      body.append("file", new File([pdfBlob], name, { type: "application/pdf" }));
+      body.append("label", isGeneralDashboard ? "All barangays" : `Brgy. ${locationName}`);
+      if (!isGeneralDashboard) body.append("barangay", locationName);
+      body.append("periodLabel", timeRangeText);
+
+      const res = await fetch("/api/backups", { method: "POST", body });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Could not archive the report.");
+      }
+
+      setArchived(`Saved to Backups as ${data.data.fileName}`);
+    } catch (err) {
+      console.error('Error archiving report:', err);
+      setError(err instanceof Error ? err.message : 'Failed to archive the report. Please try again.');
+    } finally {
+      setArchiving(false);
+      setStep("");
+    }
+  };
+
   const handleExportReport = async () => {
     setLoading(true);
     setError(null);
+    setArchived(null);
 
     try {
-      setStep("Checking data");
-      if (analyticsData.loading) {
-        throw new Error('Analytics data is still loading. Please wait and try again.');
-      }
-      if (analyticsData.error) {
-        throw new Error(`Analytics data error: ${analyticsData.error}`);
-      }
-
-      setStep("Building document");
-      const pdfGenerator = new PDFReportGenerator();
-      const pdfBlob = await pdfGenerator.generateReport(reportConfig, {
-        barangayName: locationName,
-        timeRange: timeRangeText,
-        analyticsData: {
-          crimesByType: analyticsData.crimesByType,
-          crimesByMonth: analyticsData.crimesByMonth,
-          crimesByBarangay: analyticsData.crimesByBarangay,
-          crimeMatrix: matrixData,
-          timePatterns: analyticsData.timePatterns,
-          trends: analyticsData.trends,
-        },
-        totalCrimes,
-      });
+      const pdfBlob = await buildReportBlob();
 
       setStep("Saving");
       const url = URL.createObjectURL(pdfBlob);
@@ -197,7 +238,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
         </div>
 
         <dl className="text-right">
-          <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+          <dt className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
             Period
           </dt>
           <dd className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
@@ -372,7 +413,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
             <Button
               data-tour="reports-export"
               onClick={handleExportReport}
-              disabled={selectedCount === 0 || loading || waitingForData}
+              disabled={selectedCount === 0 || loading || archiving || waitingForData}
               className="mt-5 h-11 w-full text-sm font-semibold"
             >
               {loading ? (
@@ -393,6 +434,26 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
               )}
             </Button>
 
+            {/* Same document, kept on the server instead of this machine */}
+            <Button
+              variant="outline"
+              onClick={handleArchiveReport}
+              disabled={selectedCount === 0 || loading || archiving || waitingForData}
+              className="mt-2 h-11 w-full text-sm font-semibold"
+            >
+              {archiving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {step || "Archiving"}
+                </>
+              ) : (
+                <>
+                  <Archive className="h-4 w-4" />
+                  Save to Backups
+                </>
+              )}
+            </Button>
+
             {error ? (
               <p
                 role="alert"
@@ -400,6 +461,11 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
               >
                 <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
                 <span>{error}</span>
+              </p>
+            ) : archived ? (
+              <p className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="mt-px h-3.5 w-3.5 shrink-0" />
+                <span>{archived} — retrieve it from Settings → Backups.</span>
               </p>
             ) : selectedCount === 0 && !waitingForData ? (
               <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-500">

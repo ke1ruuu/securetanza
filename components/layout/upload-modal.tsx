@@ -14,6 +14,8 @@ import {
   checkColumns,
   columnCheckSummary,
   formatFileSize,
+  MAX_UPLOAD_BYTES,
+  MAX_UPLOAD_LABEL,
   normaliseHeader,
   uploadStatusMeta,
   type ColumnCheck,
@@ -25,8 +27,6 @@ interface UploadModalProps {
   /** Supplied by callers that refresh their own data; without it the page reloads once an entry is filed. */
   onUploaded?: () => void;
 }
-
-const MAX_BYTES = 10 * 1024 * 1024;
 
 /** idle → reading → staged → importing → done. One value, so two states can never both be true. */
 type Phase = "idle" | "reading" | "staged" | "importing" | "done";
@@ -41,19 +41,20 @@ interface Receipt {
   total: number;
   inserted: number;
   skipped: number;
+  duplicatesSkipped?: number;
   errors: string[];
   findings: number;
 }
 
-const MICRO = "text-[10px] font-medium tracking-[0.09em] uppercase text-slate-500 dark:text-slate-400";
-const SECTION = "text-[10px] font-semibold tracking-[0.11em] uppercase text-slate-500 dark:text-slate-400";
+const MICRO = "text-[11.5px] font-medium tracking-[0.09em] uppercase text-slate-500 dark:text-slate-400";
+const SECTION = "text-[11.5px] font-semibold tracking-[0.11em] uppercase text-slate-500 dark:text-slate-400";
 const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4e86fd]/50 dark:focus-visible:ring-[#0EA5E9]/50";
 const GHOST =
-  "cursor-pointer rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]";
+  "cursor-pointer rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]";
 const PRIMARY =
-  "flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#4e86fd] px-3.5 py-1.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#3d74e8] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd]";
-const MONO_LIST = "mt-1.5 font-mono text-[11px] leading-relaxed break-words";
+  "flex cursor-pointer items-center gap-1.5 rounded-lg bg-[#4e86fd] px-3.5 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#3d74e8] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd]";
+const MONO_LIST = "mt-1.5 font-mono text-[12px] leading-relaxed break-words";
 
 /** Key/value line, borrowed verbatim from the notification centre's findings list. */
 function LedgerRow({
@@ -67,9 +68,9 @@ function LedgerRow({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-b border-slate-200/80 py-2 last:border-b-0 dark:border-white/[0.06]">
-      <dt className="text-[11.5px] text-slate-500 dark:text-slate-400">{label}</dt>
+      <dt className="text-[12.5px] text-slate-500 dark:text-slate-400">{label}</dt>
       <dd
-        className={`text-right text-[11.5px] font-semibold tabular-nums ${
+        className={`text-right text-[12.5px] font-semibold tabular-nums ${
           tone ?? "text-slate-900 dark:text-slate-100"
         }`}
       >
@@ -161,10 +162,10 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
         return;
       }
 
-      if (candidate.size > MAX_BYTES) {
+      if (candidate.size > MAX_UPLOAD_BYTES) {
         clearFile();
         setError(
-          `${formatFileSize(candidate.size)} is over the 10 MB limit. Split the workbook by year or by station and import each part.`
+          `${formatFileSize(candidate.size)} is over the ${MAX_UPLOAD_LABEL} limit. Split the workbook by year or by station and import each part.`
         );
         return;
       }
@@ -234,6 +235,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
         total: Number(data.total ?? sheet?.rowCount ?? 0),
         inserted: Number(data.inserted ?? 0),
         skipped: Number(data.skipped ?? 0),
+        duplicatesSkipped: Number(data.duplicatesSkipped ?? 0),
         errors: Array.isArray(data.errors) ? data.errors : [],
         findings: Number(payload.notificationsGenerated ?? 0),
       });
@@ -350,7 +352,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     Drop an Excel workbook here, or click to browse
                   </span>
                   <span className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    .xlsx or .xls, up to 10 MB. The first sheet is read.
+                    .xlsx or .xls, up to {MAX_UPLOAD_LABEL}. The first sheet is read.
                   </span>
                 </button>
 
@@ -377,7 +379,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     <button
                       type="button"
                       onClick={clearFile}
-                      className={`shrink-0 cursor-pointer rounded text-[11.5px] font-medium text-[#2b62d8] underline-offset-2 hover:underline dark:text-[#38BDF8] ${FOCUS}`}
+                      className={`shrink-0 cursor-pointer rounded text-[12.5px] font-medium text-[#2b62d8] underline-offset-2 hover:underline dark:text-[#38BDF8] ${FOCUS}`}
                     >
                       {phase === "done" ? "Import another file" : "Choose another file"}
                     </button>
@@ -510,11 +512,13 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
 
                 <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                   {receipt.inserted === 0
-                    ? "No rows could be written. Every row was missing a barangay, a date or an incident type."
+                    ? receipt.duplicatesSkipped && receipt.duplicatesSkipped > 0
+                      ? `No rows written. All ${receipt.duplicatesSkipped.toLocaleString("en-US")} rows are duplicates already recorded in the register.`
+                      : "No rows could be written. Every row was missing a barangay, a date or an incident type."
                     : receipt.skipped > 0
                       ? `${receipt.skipped.toLocaleString("en-US")} row${
                           receipt.skipped === 1 ? " was" : "s were"
-                        } left out because required values were blank. The rest are in the register.`
+                        } left out (${receipt.duplicatesSkipped && receipt.duplicatesSkipped > 0 ? `${receipt.duplicatesSkipped} duplicate${receipt.duplicatesSkipped === 1 ? "" : "s"}` : "missing required values"}). The rest are in the register.`
                       : "Every row in the workbook was written to the register."}
                 </p>
 
@@ -524,6 +528,13 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     label="Records imported"
                     value={receipt.inserted.toLocaleString("en-US")}
                   />
+                  {receipt.duplicatesSkipped !== undefined && receipt.duplicatesSkipped > 0 && (
+                    <LedgerRow
+                      label="Duplicates rejected"
+                      value={receipt.duplicatesSkipped.toLocaleString("en-US")}
+                      tone="text-amber-600 dark:text-amber-400"
+                    />
+                  )}
                   <LedgerRow
                     label="Rows skipped"
                     value={receipt.skipped.toLocaleString("en-US")}
@@ -546,14 +557,14 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                       {receipt.errors.slice(0, 3).map((message, i) => (
                         <li
                           key={i}
-                          className="font-mono text-[11px] leading-relaxed break-words text-slate-500 dark:text-slate-400"
+                          className="font-mono text-[12px] leading-relaxed break-words text-slate-500 dark:text-slate-400"
                         >
                           {message}
                         </li>
                       ))}
                     </ul>
                     {receipt.errors.length > 3 && (
-                      <p className="mt-1.5 text-[11px] text-slate-400 dark:text-slate-500">
+                      <p className="mt-1.5 text-[12px] text-slate-400 dark:text-slate-500">
                         {(receipt.errors.length - 3).toLocaleString("en-US")} more are kept on the
                         register entry.
                       </p>
@@ -584,7 +595,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
             <p
               role="status"
               aria-live="polite"
-              className="min-h-4 text-[11px] tabular-nums text-slate-500 dark:text-slate-400"
+              className="min-h-4 text-[12px] tabular-nums text-slate-500 dark:text-slate-400"
             >
               {statusLine}
             </p>

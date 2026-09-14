@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/backend/lib/prisma';
+import { ConfigService } from '@/backend/services/config.service';
 import { getSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -9,9 +9,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const schedule = await prisma.exportSchedule.findFirst({
-      where: { userId: session.userId },
-    });
+    const schedule = await ConfigService.getExportSchedule(session.userId);
 
     return NextResponse.json({ schedule });
   } catch (error) {
@@ -30,32 +28,14 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
     const { enabled, frequency, dayOfWeek, dayOfMonth, monthlyOn, deliveryMode } = data;
 
-    // Validate if necessary, but we'll trust the frontend types for now.
-    
-    // Upsert the schedule
-    const schedule = await prisma.exportSchedule.findFirst({
-      where: { userId: session.userId },
+    const updatedSchedule = await ConfigService.saveExportSchedule(session.userId, {
+      enabled,
+      frequency,
+      dayOfWeek,
+      dayOfMonth,
+      monthlyOn,
+      deliveryMode,
     });
-
-    let updatedSchedule;
-    if (schedule) {
-      updatedSchedule = await prisma.exportSchedule.update({
-        where: { id: schedule.id },
-        data: { enabled, frequency, dayOfWeek, dayOfMonth, monthlyOn, deliveryMode },
-      });
-    } else {
-      updatedSchedule = await prisma.exportSchedule.create({
-        data: {
-          userId: session.userId,
-          enabled,
-          frequency,
-          dayOfWeek,
-          dayOfMonth,
-          monthlyOn,
-          deliveryMode,
-        },
-      });
-    }
 
     return NextResponse.json({ success: true, schedule: updatedSchedule });
   } catch (error) {

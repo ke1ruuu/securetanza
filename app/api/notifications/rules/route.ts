@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/backend/lib/prisma';
+import { NextResponse } from 'next/server';
+import { ConfigService } from '@/backend/services/config.service';
 import { getSession } from '@/lib/auth';
 
-// GET /api/notifications/rules - Fetch all notification rules (Admin only)
+// GET /api/notifications/rules - Fetch all notification rules (Admin only, Cached)
 export async function GET() {
   try {
     const session = await getSession();
@@ -18,9 +18,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden: Admin privilege required' }, { status: 403 });
     }
 
-    const rules = await prisma.notificationRule.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
+    const rules = await ConfigService.getNotificationRules();
 
     return NextResponse.json({
       success: true,

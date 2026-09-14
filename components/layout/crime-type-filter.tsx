@@ -60,7 +60,7 @@ export default function CrimeTypeFilter() {
 
 				{/* Header */}
 				<div className="p-3 border-b border-slate-100 dark:border-white/[0.04]">
-					<div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">Crime Types</div>
+					<div className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">Crime Types</div>
 				</div>
 
 				{/* List */}
@@ -104,7 +104,7 @@ export default function CrimeTypeFilter() {
 
 									{/* Count badge */}
 									<div
-										className={`min-w-[32px] h-[20px] px-2 rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-colors ${
+										className={`min-w-[32px] h-[20px] px-2 rounded-md flex items-center justify-center text-[12px] font-bold tabular-nums transition-colors ${
 											isSelected ? "text-white" : "text-white dark:text-white/90"
 										}`}
 										style={{

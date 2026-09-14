@@ -25,9 +25,9 @@ interface UploadLog {
   uploadedAt: string;
 }
 
-const SECTION = "text-[10px] font-semibold tracking-[0.11em] uppercase text-slate-500 dark:text-slate-400";
+const SECTION = "text-[11.5px] font-semibold tracking-[0.11em] uppercase text-slate-500 dark:text-slate-400";
 const TH = `pb-2 align-bottom ${SECTION}`;
-const CELL = "py-3 align-top text-[11.5px] text-slate-500 dark:text-slate-400";
+const CELL = "py-3 align-top text-[12.5px] text-slate-500 dark:text-slate-400";
 const SKELETON = "h-2 rounded-full bg-slate-100 dark:bg-white/[0.07]";
 const FOCUS =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4e86fd]/50 dark:focus-visible:ring-[#0EA5E9]/50";
@@ -53,8 +53,10 @@ function UploadLogsContent() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace("/login");
+    if (!authLoading) {
+      if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
+        router.replace("/login");
+      }
     }
   }, [authLoading, user, router]);
 
@@ -133,21 +135,7 @@ function UploadLogsContent() {
   }
 
   if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
-    return (
-      <div className="flex flex-col h-screen bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-white">
-        <MapHeader isVisible={true} />
-        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6">
-            <Lock className="h-8 w-8 text-red-500" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-          <p className="text-slate-500 max-w-md mb-8">
-            You do not have the necessary administrative permissions to view the Upload Register.
-            Please contact your system administrator for authorization.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -182,7 +170,7 @@ function UploadLogsContent() {
                   <span className={`${SKELETON} w-20 animate-pulse`} />
                 </span>
               ) : (
-                <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] text-slate-500 tabular-nums dark:text-slate-400">
+                <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[12px] text-slate-500 tabular-nums dark:text-slate-400">
                   <span className="font-medium text-slate-700 dark:text-slate-200">
                     {total.toLocaleString("en-US")} {total === 1 ? "entry" : "entries"}
                   </span>
@@ -221,7 +209,7 @@ function UploadLogsContent() {
                 type="button"
                 onClick={loadLogs}
                 disabled={loading}
-                className={`ml-auto flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05] ${FOCUS}`}
+                className={`ml-auto flex cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05] ${FOCUS}`}
               >
                 <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
                 Refresh
@@ -239,7 +227,7 @@ function UploadLogsContent() {
                 <button
                   type="button"
                   onClick={loadLogs}
-                  className={`mt-3 cursor-pointer rounded-lg bg-[#4e86fd] px-3.5 py-1.5 text-[11.5px] font-semibold text-white transition-colors hover:bg-[#3d74e8] dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd] ${FOCUS}`}
+                  className={`mt-3 cursor-pointer rounded-lg bg-[#4e86fd] px-3.5 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-[#3d74e8] dark:bg-[#0EA5E9] dark:hover:bg-[#0b8fcd] ${FOCUS}`}
                 >
                   Try again
                 </button>
@@ -318,7 +306,7 @@ function UploadLogsContent() {
                               </span>
 
                               {/* Narrow screens have no columns to read, so the same facts flow inline. */}
-                              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] tabular-nums md:hidden">
+                              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] tabular-nums md:hidden">
                                 <span className={`font-semibold ${status.text}`}>{status.label}</span>
                                 <Separator />
                                 <span>
@@ -329,7 +317,7 @@ function UploadLogsContent() {
                                 <span>{relativeTime(log.uploadedAt)}</span>
                               </span>
 
-                              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[11px] text-slate-400 tabular-nums dark:text-slate-500">
+                              <span className="mt-1 flex flex-wrap items-center gap-x-1.5 text-[12px] text-slate-400 tabular-nums dark:text-slate-500">
                                 <span>{log.fileSize ? formatFileSize(log.fileSize) : "—"}</span>
                                 {log.uploadedBy && (
                                   <span className="lg:hidden">
@@ -341,7 +329,7 @@ function UploadLogsContent() {
                               {log.errorMessage && (
                                 <span
                                   title={log.errorMessage}
-                                  className="mt-1.5 line-clamp-2 block text-[11px] leading-relaxed text-slate-500 dark:text-slate-400"
+                                  className="mt-1.5 line-clamp-2 block text-[12px] leading-relaxed text-slate-500 dark:text-slate-400"
                                 >
                                   {log.errorMessage}
                                 </span>
@@ -386,7 +374,7 @@ export default function UploadLogsPage() {
       <MapProvider>
         <Suspense
           fallback={
-            <div className="flex h-screen items-center justify-center bg-[#f1f5f9] text-[11px] tracking-[0.09em] text-slate-500 uppercase dark:bg-[#0f172a] dark:text-slate-400">
+            <div className="flex h-screen items-center justify-center bg-[#f1f5f9] text-[12px] tracking-[0.09em] text-slate-500 uppercase dark:bg-[#0f172a] dark:text-slate-400">
               Loading register
             </div>
           }

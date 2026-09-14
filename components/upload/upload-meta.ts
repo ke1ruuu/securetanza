@@ -5,6 +5,13 @@
  * never colour on its own.
  */
 
+/**
+ * Largest workbook the register accepts, enforced on both sides of the wire:
+ * the dialog refuses it before reading, the route refuses it before parsing.
+ */
+export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+export const MAX_UPLOAD_LABEL = "50 MB";
+
 /** Columns the crime register accepts. Mirrors the scalar fields read by backend/api/crimes/upload/route.ts. */
 export const EXPECTED_COLUMNS = [
   "blotter_no",
