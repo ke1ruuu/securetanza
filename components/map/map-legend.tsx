@@ -90,7 +90,7 @@ export default function MapLegend() {
 						}`}>
 						{/* Range Badge */}
 						<div
-							className={`min-w-[32px] h-[22px] px-1.5 rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums transition-all ${
+							className={`min-w-[32px] h-[22px] px-1.5 rounded-md flex items-center justify-center text-[12px] font-bold tabular-nums transition-all ${
 								isActive ? "text-white shadow-lg" : "text-white dark:text-white/90"
 							}`}
 							style={{
@@ -101,7 +101,7 @@ export default function MapLegend() {
 						</div>
 						{/* Label */}
 						<span
-							className={`text-[8px] font-bold uppercase tracking-[0.12em] whitespace-nowrap transition-colors ${
+							className={`text-[10.5px] font-bold uppercase tracking-[0.12em] whitespace-nowrap transition-colors ${
 								isActive
 									? "text-slate-900 dark:text-white"
 									: "text-slate-600 dark:text-slate-500 group-hover:text-slate-800 dark:group-hover:text-slate-300"

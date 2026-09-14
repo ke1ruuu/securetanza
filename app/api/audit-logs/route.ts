@@ -16,8 +16,23 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
     const action = searchParams.get('action');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
-    const where = action ? { action } : {};
+    const where: { action?: string; createdAt?: { gte?: Date; lte?: Date } } = {};
+
+    if (action) where.action = action;
+
+    // The client sends local start-of-day / end-of-day instants, so the range it
+    // asks for is the range the officer sees in their own timezone.
+    if (startDate || endDate) {
+      const range: { gte?: Date; lte?: Date } = {};
+      const from = startDate ? new Date(startDate) : null;
+      const to = endDate ? new Date(endDate) : null;
+      if (from && !isNaN(from.getTime())) range.gte = from;
+      if (to && !isNaN(to.getTime())) range.lte = to;
+      if (range.gte || range.lte) where.createdAt = range;
+    }
 
     const [logs, total] = await Promise.all([
       prisma.auditLog.findMany({

@@ -4,11 +4,11 @@ config({ path: '.env.local' });
 config({ path: '.env' });
 
 import cron from 'node-cron';
-import * as xlsx from 'xlsx';
 import * as fs from 'fs/promises';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { prisma, disconnectPrisma } from '../lib/prisma';
+import { BackupService, XLSX_MIME } from '../services/backup.service';
 
 console.log('🕒 Starting Scheduled Data Exports background worker...');
 
@@ -17,7 +17,10 @@ const RETENTION_DAYS = 14;
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 /**
- * Clean up export files older than RETENTION_DAYS to prevent disk bloating
+ * Clean up export files older than RETENTION_DAYS to prevent disk bloating.
+ *
+ * Scheduled exports are archived in the database now, so this only drains what the
+ * previous on-disk implementation left behind.
  */
 async function cleanOldExports(): Promise<void> {
   try {
@@ -43,12 +46,32 @@ async function cleanOldExports(): Promise<void> {
   }
 }
 
+/**
+ * Age out scheduled snapshots from the archive. Backups an officer made by hand are
+ * left alone — they were kept deliberately, and only they can decide to drop one.
+ */
+async function pruneScheduledBackups(): Promise<void> {
+  try {
+    const cutoff = new Date(Date.now() - RETENTION_MS);
+    const { count } = await prisma.backup.deleteMany({
+      where: { kind: 'scheduled_export', createdAt: { lt: cutoff } },
+    });
+    if (count > 0) {
+      console.log(`[CLEANUP] Removed ${count} expired scheduled backup(s)`);
+    }
+  } catch (error) {
+    console.error('[CLEANUP] Error pruning scheduled backups:', error);
+  }
+}
+
 // Initial cleanup on worker boot
 cleanOldExports();
+pruneScheduledBackups();
 
 // Schedule daily cleanup at 03:00 AM
 const cleanupTask = cron.schedule('0 3 * * *', () => {
   cleanOldExports();
+  pruneScheduledBackups();
 });
 
 let isRunning = false;
@@ -77,11 +100,6 @@ const task = cron.schedule('* * * * *', async () => {
       return;
     }
 
-    // Ensure exports directory exists asynchronously
-    if (!existsSync(EXPORTS_DIR)) {
-      await fs.mkdir(EXPORTS_DIR, { recursive: true });
-    }
-
     for (const schedule of schedules) {
       let shouldRun = false;
       const targetTime = schedule.timeOfDay || '00:00';
@@ -106,44 +124,25 @@ const task = cron.schedule('* * * * *', async () => {
       try {
         console.log(`[CRON] Generating export for user ${schedule.user.accountNumber} (Frequency: ${schedule.frequency})`);
 
-        // Fetch recent incident summary data for export
-        const incidents = await prisma.crimeIncident.findMany({
-          take: 500,
-          orderBy: { dateCommitted: 'desc' },
-          select: {
-            barangay: true,
-            incidentType: true,
-            dateCommitted: true,
-            timeCommitted: true,
-            caseStatus: true,
-            isCrime: true,
-          },
+        // The same snapshot the Backups tab produces: the full cleaned register plus
+        // the aggregates, kept in the database so it outlives this container.
+        const snapshot = await BackupService.buildCrimeDataWorkbook();
+        const stamp = new Date().toISOString().split('T')[0];
+
+        const backup = await BackupService.create({
+          kind: 'scheduled_export',
+          fileName: `Scheduled-Export-${stamp}-${schedule.user.accountNumber}.xlsx`,
+          mimeType: XLSX_MIME,
+          content: snapshot.buffer,
+          label: `${schedule.frequency} export`,
+          periodLabel: snapshot.periodLabel,
+          rowCount: snapshot.rowCount,
+          createdBy: schedule.user.accountNumber,
         });
 
-        const data = incidents.length > 0
-          ? incidents.map((inc) => ({
-              Barangay: inc.barangay,
-              Incident: inc.incidentType,
-              Date: inc.dateCommitted.toISOString().split('T')[0],
-              Time: inc.timeCommitted,
-              Status: inc.caseStatus || 'Unspecified',
-              Crime: inc.isCrime ? 'Yes' : 'No',
-            }))
-          : [
-              { Incident: 'No incidents found', Date: new Date().toISOString() },
-            ];
-
-        const ws = xlsx.utils.json_to_sheet(data);
-        const wb = xlsx.utils.book_new();
-        xlsx.utils.book_append_sheet(wb, ws, 'Incidents');
-
-        const filename = `export_${schedule.userId}_${Date.now()}.xlsx`;
-        const filepath = path.join(EXPORTS_DIR, filename);
-
-        // Asynchronous non-blocking file write
-        const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
-        await fs.writeFile(filepath, buffer);
-        console.log(`[CRON] Saved export to ${filepath}`);
+        console.log(
+          `[CRON] Archived export ${backup.fileName} (${snapshot.rowCount} incidents, ${backup.sizeBytes} bytes)`
+        );
 
         if (schedule.deliveryMode === 'auto') {
           // Notify user
@@ -152,8 +151,8 @@ const task = cron.schedule('* * * * *', async () => {
               category: 'SYSTEM',
               severity: 'INFO',
               title: 'Scheduled Export Ready',
-              message: `Your scheduled ${schedule.frequency} data export is ready.`,
-              metadata: { link: `/exports/${filename}`, userId: schedule.userId },
+              message: `Your scheduled ${schedule.frequency} data export is ready in Settings → Backups (${snapshot.rowCount} incidents).`,
+              metadata: { link: `/api/backups/${backup.id}`, backupId: backup.id, userId: schedule.userId },
               isRead: false,
             },
           });

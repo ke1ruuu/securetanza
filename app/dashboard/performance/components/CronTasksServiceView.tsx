@@ -127,7 +127,7 @@ export default function CronTasksServiceView({
               Every 1m
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Schedule: <code className="text-slate-300 font-mono">{background.cronSchedule}</code>
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function CronTasksServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">/ {background.totalSchedules} total</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Recurring municipal crime report dispatches.
           </p>
         </div>
@@ -159,8 +159,8 @@ export default function CronTasksServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">MB</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
-            {background.exportFilesOnDisk} generated files in <code className="text-slate-300 font-mono">exports/</code>
+          <p className="text-[12px] text-slate-400 mt-2">
+            {background.exportFilesOnDisk} retained files in the <code className="text-slate-300 font-mono">backups</code> archive
           </p>
         </div>
 
@@ -174,7 +174,7 @@ export default function CronTasksServiceView({
               {background.retentionPolicyDays} Days
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Daily automated pruning at 03:00 AM.
           </p>
         </div>
@@ -253,7 +253,7 @@ export default function CronTasksServiceView({
                     </td>
                     <td className="py-3">
                       <span
-                        className={`px-2 py-0.5 text-[10px] font-medium rounded border ${
+                        className={`px-2 py-0.5 text-[11.5px] font-medium rounded border ${
                           item.outcome === "success"
                             ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                             : item.outcome === "partial"
@@ -301,7 +301,7 @@ export default function CronTasksServiceView({
                     <td className="py-3 text-white font-sans font-medium">{item.details || "Scheduled export"}</td>
                     <td className="py-3 text-slate-400">{item.user || "System"}</td>
                     <td className="py-3">
-                      <span className="px-2 py-0.5 text-[10px] font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="px-2 py-0.5 text-[11.5px] font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                         {item.outcome || "success"}
                       </span>
                     </td>

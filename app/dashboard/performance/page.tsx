@@ -318,7 +318,7 @@ function PerformanceDashboardContent() {
                 SecureTanza
               </h1>
             </div>
-            <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+            <p className="text-[12px] font-mono text-slate-400 mt-0.5">
               Backend Service Monitor
             </p>
           </div>
@@ -334,7 +334,7 @@ function PerformanceDashboardContent() {
 
         {/* Services Navigation List */}
         <div className="p-3 flex-1 overflow-y-auto">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-wider text-slate-500 px-3 py-2">
+          <div className="text-[11.5px] font-mono font-semibold uppercase tracking-wider text-slate-500 px-3 py-2">
             Backend Services
           </div>
 
@@ -364,7 +364,7 @@ function PerformanceDashboardContent() {
                   </div>
 
                   <span
-                    className={`text-[10px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${
+                    className={`text-[11.5px] font-mono px-1.5 py-0.5 rounded border shrink-0 ${
                       isSelected
                         ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border-[#0EA5E9]/30"
                         : "bg-slate-900 text-slate-500 border-slate-800"
@@ -392,7 +392,7 @@ function PerformanceDashboardContent() {
             </button>
           </div>
 
-          <div className="grid grid-cols-4 gap-1 text-[11px] font-mono">
+          <div className="grid grid-cols-4 gap-1 text-[12px] font-mono">
             {[
               { label: "Off", val: 0 },
               { label: "5s", val: 5000 },

@@ -6,6 +6,7 @@ import { NotificationEngine, BatchRecordItem } from '@/backend/lib/notification-
 import { getSession } from '@/lib/auth'
 import { cacheService, CacheKeys } from '@/backend/cache'
 import { generateCrimeFingerprint, findExistingCrimeFingerprints } from '@/backend/lib/crime-deduplication'
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/components/upload/upload-meta'
 
 // POST /api/crimes/upload - Upload Excel/CSV file with crime data
 export async function POST(request: NextRequest) {
@@ -34,6 +35,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Invalid file type. Please upload an Excel (.xlsx, .xls) or CSV file.' },
         { status: 400 }
+      )
+    }
+
+    // The dialog checks this too, but the route is the boundary that actually holds:
+    // the whole workbook is read into memory below, so an oversized file is refused
+    // before a single byte is parsed.
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `File is over the ${MAX_UPLOAD_LABEL} limit. Split the workbook by year or by station and import each part.`,
+        },
+        { status: 413 }
       )
     }
 

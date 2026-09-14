@@ -389,7 +389,7 @@ export default function UnifiedFilterBar() {
             <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-[#0EA5E9] via-[#06B6D4] to-transparent" />
             
             <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-white/[0.06]">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">
+              <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400">
                 Incident Classification
               </span>
               {selectedCrimeType && (
@@ -450,7 +450,7 @@ export default function UnifiedFilterBar() {
                         <span className="truncate">{item.type}</span>
                       </div>
                       <div
-                        className="min-w-[28px] h-5 px-1.5 rounded-md flex items-center justify-center text-[11px] font-bold tabular-nums text-white shrink-0"
+                        className="min-w-[28px] h-5 px-1.5 rounded-md flex items-center justify-center text-[12px] font-bold tabular-nums text-white shrink-0"
                         style={{ backgroundColor: color, opacity: isSelected ? 1 : 0.85 }}
                       >
                         {item.count}
@@ -514,7 +514,7 @@ export default function UnifiedFilterBar() {
               {/* Step 1: Select Year */}
               {!currentYear ? (
                 <div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-3">
+                  <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-3">
                     Select Target Year
                   </div>
                   <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -561,7 +561,7 @@ export default function UnifiedFilterBar() {
 
                   {/* Period Mode Tabs */}
                   <div className="mb-4">
-                    <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
+                    <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">
                       Filter Period
                     </div>
                     <div className="flex gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/50 dark:border-white/[0.04]">
@@ -719,7 +719,7 @@ export default function UnifiedFilterBar() {
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span className="hidden md:inline">Reset</span>
-            <span className="w-4 h-4 rounded-full bg-red-500/20 group-hover:bg-white/20 text-[10px] flex items-center justify-center">
+            <span className="w-4 h-4 rounded-full bg-red-500/20 group-hover:bg-white/20 text-[11.5px] flex items-center justify-center">
               {activeFiltersCount}
             </span>
           </button>

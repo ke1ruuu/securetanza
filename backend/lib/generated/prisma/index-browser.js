@@ -236,8 +236,25 @@ exports.Prisma.UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   mustChangePassword: 'mustChangePassword',
   defaultLandingPage: 'defaultLandingPage',
+  failedLoginAttempts: 'failedLoginAttempts',
+  lockedAt: 'lockedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BackupScalarFieldEnum = {
+  id: 'id',
+  kind: 'kind',
+  fileName: 'fileName',
+  mimeType: 'mimeType',
+  sizeBytes: 'sizeBytes',
+  content: 'content',
+  label: 'label',
+  barangay: 'barangay',
+  periodLabel: 'periodLabel',
+  rowCount: 'rowCount',
+  createdBy: 'createdBy',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.ExportScheduleScalarFieldEnum = {
@@ -324,6 +341,7 @@ exports.Prisma.ModelName = {
   Notification: 'Notification',
   NotificationRule: 'NotificationRule',
   User: 'User',
+  Backup: 'Backup',
   ExportSchedule: 'ExportSchedule',
   Permission: 'Permission',
   UserPermission: 'UserPermission'

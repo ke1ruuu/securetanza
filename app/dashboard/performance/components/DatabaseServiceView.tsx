@@ -133,7 +133,7 @@ export default function DatabaseServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">ms</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             SELECT 1 ping execution time to database server.
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function DatabaseServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">/ {maxSlots} slots</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             {activeSlots} active client, {idleSlots} idle in pool.
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function DatabaseServiceView({
               {pool.saturationPercent}%
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             {pool.waitingCount} queued requests waiting for client.
           </p>
         </div>
@@ -179,7 +179,7 @@ export default function DatabaseServiceView({
               {database.totalRecords.toLocaleString()}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Across 5 primary relational tables.
           </p>
         </div>
@@ -294,8 +294,8 @@ export default function DatabaseServiceView({
                     : "bg-slate-900/50 border-slate-800 text-slate-600"
                 }`}
               >
-                <div className="text-[11px] font-mono font-medium">Slot {i + 1}</div>
-                <div className="text-[10px] uppercase font-mono mt-1 opacity-80">{state}</div>
+                <div className="text-[12px] font-mono font-medium">Slot {i + 1}</div>
+                <div className="text-[11.5px] uppercase font-mono mt-1 opacity-80">{state}</div>
               </div>
             );
           })}
@@ -327,7 +327,7 @@ export default function DatabaseServiceView({
                     </code>
                     <span className="text-xs text-slate-400">({tbl.label})</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{tbl.description}</p>
+                  <p className="text-[12px] text-slate-500 mt-0.5">{tbl.description}</p>
                 </div>
 
                 <div className="flex items-center gap-6 shrink-0 font-mono text-xs">

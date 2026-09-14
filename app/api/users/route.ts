@@ -72,6 +72,8 @@ export async function GET(request: NextRequest) {
       })),
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      lockedAt: user.lockedAt,
+      failedLoginAttempts: user.failedLoginAttempts,
     }));
 
     return NextResponse.json({

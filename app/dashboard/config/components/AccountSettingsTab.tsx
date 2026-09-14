@@ -299,7 +299,7 @@ export default function AccountSettingsTab() {
 														{label}
 													</div>
 													{isActive && (
-														<span className="text-[10px] font-black uppercase tracking-wide bg-[#0EA5E9] text-white px-1.5 py-0.5 rounded-full">
+														<span className="text-[11.5px] font-black uppercase tracking-wide bg-[#0EA5E9] text-white px-1.5 py-0.5 rounded-full">
 															Active
 														</span>
 													)}
@@ -356,7 +356,7 @@ export default function AccountSettingsTab() {
 													{label}
 												</div>
 												{isActive && (
-													<span className="text-[10px] font-black uppercase tracking-wide bg-[#0EA5E9] text-white px-1.5 py-0.5 rounded-full">
+													<span className="text-[11.5px] font-black uppercase tracking-wide bg-[#0EA5E9] text-white px-1.5 py-0.5 rounded-full">
 														Active
 													</span>
 												)}

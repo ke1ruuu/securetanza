@@ -88,7 +88,7 @@ export default function HourClock({ hour, size = 76, accent = "#0EA5E9", showMer
 			{/* AM/PM badge */}
 			{showMeridiem && (
 				<span
-					className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06]"
+					className="absolute left-1/2 -translate-x-1/2 rounded-full px-1.5 py-[1px] text-[10.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-white/[0.06]"
 					style={{ bottom: size * 0.13 }}>
 					{isPM ? "PM" : "AM"}
 				</span>

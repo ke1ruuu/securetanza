@@ -65,9 +65,10 @@ export default function TimeSelector() {
   const selectYear = (year: number) => {
     setCurrentYear(year);
     setSelectedYear(year);
-    // Clear previous selections when changing year
-    const newTimeRange = { mode: filterMode, selections: [] };
-    setTimeRange(newTimeRange);
+    // The whole year, until a quarter/month/day narrows it. Recording the year as a
+    // selection is what turns it into an actual date range downstream.
+    setFilterMode('year');
+    setTimeRange({ mode: 'year', selections: [{ year }] });
   };
 
   const toggleQuarterSelect = (quarter: number) => {
@@ -179,7 +180,7 @@ export default function TimeSelector() {
   if (!mounted) {
     return (
       <div className="pointer-events-auto relative">
-        <div className="h-12 w-12 rounded-xl bg-white/90 dark:bg-[#0F172A]/70 border border-slate-200 dark:border-white/[0.08]" />
+        <div className="h-11 w-[168px] rounded-xl bg-white border border-slate-200 dark:bg-white/[0.04] dark:border-white/[0.08]" />
       </div>
     );
   }
@@ -191,8 +192,10 @@ export default function TimeSelector() {
       {/* ── Trigger Button ── */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 h-12 pl-4 pr-5 rounded-xl bg-white/90 dark:bg-[#0F172A]/70 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] hover:border-slate-300 dark:hover:border-[#0EA5E9]/20 hover:bg-white dark:hover:bg-[#0F172A]/90 transition-all duration-300 cursor-pointer group shadow-sm dark:shadow-none ${
-          hasActiveSelection ? "border-[#0EA5E9]/40 dark:border-[#0EA5E9]/30" : ""
+        className={`flex items-center gap-3 h-11 pl-4 pr-3 rounded-xl border transition-all duration-300 cursor-pointer group bg-white hover:border-blue-400 hover:shadow-sm dark:bg-white/[0.04] dark:hover:bg-white/[0.06] dark:hover:border-[#0EA5E9]/30 ${
+          hasActiveSelection
+            ? "border-[#0EA5E9]/40 dark:border-[#0EA5E9]/30"
+            : "border-slate-200 dark:border-white/[0.08]"
         }`}
         title={mounted ? getDisplayText() : "Select Time Range"}
       >
@@ -237,7 +240,7 @@ export default function TimeSelector() {
           {/* Step 1: Select Year */}
           {!currentYear ? (
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-3">
+              <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-3">
                 Select Year
               </div>
               <div className="space-y-2 max-h-[350px] overflow-y-auto custom-scrollbar">
@@ -284,7 +287,7 @@ export default function TimeSelector() {
 
               {/* Step 2: Filter Mode Tabs */}
               <div className="mb-4">
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-2">
+                <div className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-2">
                   Select Period
                 </div>
                 <div className="flex gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200/50 dark:border-white/[0.04]">
@@ -310,6 +313,18 @@ export default function TimeSelector() {
 
               {/* Content based on filter mode */}
               <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                {/* Whole year — no period tab is active yet */}
+                {filterMode === 'year' && (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 px-4 py-5 text-center dark:border-white/[0.08] dark:bg-white/[0.02]">
+                    <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                      Showing all of {currentYear}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      Pick a period above to narrow it to a half, quarter, month, or day.
+                    </div>
+                  </div>
+                )}
+
                 {/* Quarter Mode */}
                 {filterMode === 'quarter' && (
                   <div className="grid grid-cols-4 gap-2">

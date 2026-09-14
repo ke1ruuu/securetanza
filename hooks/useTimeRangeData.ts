@@ -11,11 +11,23 @@ export interface DateRange {
  * Converts multiple time selections into an array of date ranges for API queries
  */
 export function useTimeRangeData(): DateRange[] {
-  const { timeRange } = useMapContext();
-  
+  const { timeRange, selectedYear } = useMapContext();
+
   return useMemo(() => {
-    return getDateRangesFromTimeRange(timeRange);
-  }, [timeRange]);
+    const ranges = getDateRangesFromTimeRange(timeRange);
+    if (ranges.length > 0 || selectedYear === null) return ranges;
+
+    // A year picked without a quarter/month/day still means the whole year. Without
+    // this, consumers that read only date ranges (analytics, the crime matrix, the
+    // report) see an empty list, skip their fetch, and keep showing the previous
+    // period's numbers.
+    return [
+      {
+        start: new Date(selectedYear, 0, 1),
+        end: new Date(selectedYear, 11, 31, 23, 59, 59, 999),
+      },
+    ];
+  }, [timeRange, selectedYear]);
 }
 
 /**

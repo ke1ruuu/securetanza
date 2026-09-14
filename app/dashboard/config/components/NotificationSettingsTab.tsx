@@ -288,7 +288,7 @@ export default function NotificationSettingsTab() {
                               <h4 className="font-semibold text-sm text-slate-900 dark:text-white">
                                 {rule.name}
                               </h4>
-                              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
+                              <span className="text-[11.5px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300">
                                 {rule.ruleKey}
                               </span>
                             </div>
@@ -312,7 +312,7 @@ export default function NotificationSettingsTab() {
                       {/* Parameter Controls */}
                       <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-100 dark:border-white/5">
                         <div>
-                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
+                          <Label className="text-[11.5px] font-bold uppercase tracking-wider text-slate-500 block mb-1">
                             Severity Level
                           </Label>
                           <Select
@@ -343,7 +343,7 @@ export default function NotificationSettingsTab() {
 
                           return (
                             <div key={field.key} className="space-y-1">
-                              <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                              <Label className="text-[11.5px] font-bold uppercase tracking-wider text-slate-500 block">
                                 {field.label}
                                 <span className="ml-1 text-slate-400 normal-case font-normal">
                                   ({field.min}–{field.max}

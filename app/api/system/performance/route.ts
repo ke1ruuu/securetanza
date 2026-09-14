@@ -85,15 +85,17 @@ export async function GET(request: NextRequest) {
       }),
     ]);
 
-    // 6. Exports directory disk usage
+    // 6. Retained backup archive. Exports moved from the exports/ directory into the
+    // database, so the leftover files on disk are counted alongside the archive rather
+    // than reported on their own.
     const exportsDir = path.join(process.cwd(), 'exports');
-    let exportFileCount = 0;
+    let legacyFileCount = 0;
     let exportStorageBytes = 0;
 
     if (existsSync(exportsDir)) {
       try {
         const files = await fs.readdir(exportsDir);
-        exportFileCount = files.filter(f => f.endsWith('.xlsx')).length;
+        legacyFileCount = files.filter(f => f.endsWith('.xlsx')).length;
         for (const f of files) {
           if (f.endsWith('.xlsx')) {
             const stat = await fs.stat(path.join(exportsDir, f));
@@ -104,6 +106,14 @@ export async function GET(request: NextRequest) {
         console.error('Error reading exports directory:', err);
       }
     }
+
+    const backupAggregate = await prisma.backup.aggregate({
+      _count: { _all: true },
+      _sum: { sizeBytes: true },
+    });
+    const exportFileCount = legacyFileCount + backupAggregate._count._all;
+    exportStorageBytes += backupAggregate._sum.sizeBytes ?? 0;
+
     const exportStorageMB = Math.round((exportStorageBytes / 1024 / 1024) * 100) / 100;
 
     // 7. Comprehensive Server-Side Caching Layer Telemetry

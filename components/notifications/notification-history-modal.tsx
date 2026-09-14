@@ -299,7 +299,7 @@ export default function NotificationHistoryModal({
                     setViewMode(tab.key);
                     setPage(1);
                   }}
-                  className={`relative shrink-0 cursor-pointer py-2.5 text-[11px] font-medium tracking-[0.08em] whitespace-nowrap uppercase transition-colors ${
+                  className={`relative shrink-0 cursor-pointer py-2.5 text-[12px] font-medium tracking-[0.08em] whitespace-nowrap uppercase transition-colors ${
                     active
                       ? "text-slate-900 dark:text-white"
                       : "text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
@@ -320,7 +320,7 @@ export default function NotificationHistoryModal({
             })}
           </div>
 
-          <p className="hidden shrink-0 text-[11px] tabular-nums text-slate-400 sm:block dark:text-slate-500">
+          <p className="hidden shrink-0 text-[12px] tabular-nums text-slate-400 sm:block dark:text-slate-500">
             {total === 0 ? "No results" : `${firstRow}–${lastRow} of ${total}`}
           </p>
         </div>
@@ -348,7 +348,7 @@ export default function NotificationHistoryModal({
           <div className="flex items-center gap-1.5">
             <label
               htmlFor="notification-category"
-              className="text-[10px] font-medium tracking-[0.09em] text-slate-400 uppercase dark:text-slate-500"
+              className="text-[11.5px] font-medium tracking-[0.09em] text-slate-400 uppercase dark:text-slate-500"
             >
               Category
             </label>
@@ -372,7 +372,7 @@ export default function NotificationHistoryModal({
           <div className="flex items-center gap-1.5">
             <label
               htmlFor="notification-severity"
-              className="text-[10px] font-medium tracking-[0.09em] text-slate-400 uppercase dark:text-slate-500"
+              className="text-[11.5px] font-medium tracking-[0.09em] text-slate-400 uppercase dark:text-slate-500"
             >
               Severity
             </label>
@@ -509,7 +509,7 @@ export default function NotificationHistoryModal({
                           }`}
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <span className="flex min-w-0 items-center gap-1.5 text-[10px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400">
+                            <span className="flex min-w-0 items-center gap-1.5 text-[11.5px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400">
                               <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
                               <span className="truncate">{cat.label}</span>
                               <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
@@ -531,7 +531,7 @@ export default function NotificationHistoryModal({
                               <time
                                 dateTime={isoTime(item.createdAt)}
                                 title={absoluteTime(item.createdAt)}
-                                className="mr-1 text-[11px] tabular-nums text-slate-400 dark:text-slate-500"
+                                className="mr-1 text-[12px] tabular-nums text-slate-400 dark:text-slate-500"
                               >
                                 {relativeTime(item.createdAt)}
                               </time>
@@ -619,7 +619,7 @@ export default function NotificationHistoryModal({
                           </p>
 
                           {(item.uploadLog?.fileName || barangay) && (
-                            <p className="mt-1.5 truncate text-[11px] text-slate-400 dark:text-slate-500">
+                            <p className="mt-1.5 truncate text-[12px] text-slate-400 dark:text-slate-500">
                               {[item.uploadLog?.fileName, barangay].filter(Boolean).join("  ·  ")}
                             </p>
                           )}
@@ -629,21 +629,21 @@ export default function NotificationHistoryModal({
                               onClick={(e) => e.stopPropagation()}
                               className="mt-2.5 flex flex-wrap items-center gap-3 border-t border-slate-200 pt-2.5 dark:border-white/[0.08]"
                             >
-                              <p className="text-[11.5px] text-slate-600 dark:text-slate-300">
+                              <p className="text-[12.5px] text-slate-600 dark:text-slate-300">
                                 Delete this notification permanently?
                               </p>
                               <div className="flex items-center gap-2">
                                 <button
                                   type="button"
                                   onClick={() => deleteNotification(item.id)}
-                                  className="cursor-pointer rounded-md bg-red-600 px-2.5 py-1 text-[11.5px] font-semibold text-white transition-colors hover:bg-red-700"
+                                  className="cursor-pointer rounded-md bg-red-600 px-2.5 py-1 text-[12.5px] font-semibold text-white transition-colors hover:bg-red-700"
                                 >
                                   Delete
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => setConfirmDeleteId(null)}
-                                  className="cursor-pointer text-[11.5px] font-medium text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
+                                  className="cursor-pointer text-[12.5px] font-medium text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
                                 >
                                   Keep
                                 </button>
@@ -663,7 +663,7 @@ export default function NotificationHistoryModal({
                 aria-label="Notification pages"
                 className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 px-5 py-3 dark:border-white/[0.06]"
               >
-                <p className="text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+                <p className="text-[12px] tabular-nums text-slate-500 dark:text-slate-400">
                   Page {page} of {pageCount}
                 </p>
                 <div className="flex items-center gap-2">
@@ -671,7 +671,7 @@ export default function NotificationHistoryModal({
                     type="button"
                     disabled={page === 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
+                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
                     Previous
@@ -680,7 +680,7 @@ export default function NotificationHistoryModal({
                     type="button"
                     disabled={page >= pageCount}
                     onClick={() => setPage((p) => p + 1)}
-                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
+                    className="flex cursor-pointer items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[12.5px] font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/[0.1] dark:text-slate-200 dark:hover:bg-white/[0.05]"
                   >
                     Next
                     <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
@@ -702,7 +702,7 @@ export default function NotificationHistoryModal({
                 <button
                   type="button"
                   onClick={() => setMobilePane("list")}
-                  className="mb-4 flex cursor-pointer items-center gap-1 text-[11.5px] font-medium text-[#2b62d8] md:hidden dark:text-[#38BDF8]"
+                  className="mb-4 flex cursor-pointer items-center gap-1 text-[12.5px] font-medium text-[#2b62d8] md:hidden dark:text-[#38BDF8]"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
                   All notifications
@@ -721,7 +721,7 @@ export default function NotificationHistoryModal({
                   return (
                     <>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="flex items-center gap-1.5 text-[10px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400">
+                        <p className="flex items-center gap-1.5 text-[11.5px] font-medium tracking-[0.09em] text-slate-500 uppercase dark:text-slate-400">
                           <Icon className="h-3 w-3" aria-hidden="true" />
                           {cat.label}
                           <span aria-hidden="true" className="text-slate-300 dark:text-slate-600">
@@ -733,7 +733,7 @@ export default function NotificationHistoryModal({
                         <button
                           type="button"
                           onClick={() => toggleArchiveStatus(selected.id, !!selected.isArchived)}
-                          className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10"
+                          className="flex items-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[12px] font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10"
                         >
                           {selected.isArchived ? (
                             <>
@@ -753,7 +753,7 @@ export default function NotificationHistoryModal({
 
                       <time
                         dateTime={isoTime(selected.createdAt)}
-                        className="mt-1.5 block text-[11px] tabular-nums text-slate-400 dark:text-slate-500"
+                        className="mt-1.5 block text-[12px] tabular-nums text-slate-400 dark:text-slate-500"
                       >
                         {absoluteTime(selected.createdAt)}
                         {selected.isArchived && (selected.archivedAt || selected.readAt)
@@ -767,7 +767,7 @@ export default function NotificationHistoryModal({
 
                       {findings.length > 0 && (
                         <section className="mt-6">
-                          <h4 className="text-[10px] font-semibold tracking-[0.11em] text-slate-500 uppercase dark:text-slate-400">
+                          <h4 className="text-[11.5px] font-semibold tracking-[0.11em] text-slate-500 uppercase dark:text-slate-400">
                             Analytical Findings & Parameters
                           </h4>
                           <dl className="mt-2">
@@ -776,10 +776,10 @@ export default function NotificationHistoryModal({
                                 key={label}
                                 className="flex items-baseline justify-between gap-4 border-b border-slate-200/80 py-2 last:border-b-0 dark:border-white/[0.06]"
                               >
-                                <dt className="text-[11.5px] text-slate-500 dark:text-slate-400">
+                                <dt className="text-[12.5px] text-slate-500 dark:text-slate-400">
                                   {label}
                                 </dt>
-                                <dd className="text-right text-[11.5px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                                <dd className="text-right text-[12.5px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                                   {value}
                                 </dd>
                               </div>
@@ -790,31 +790,31 @@ export default function NotificationHistoryModal({
 
                       {selected.uploadLog && (
                         <section className="mt-6">
-                          <h4 className="text-[10px] font-semibold tracking-[0.11em] text-slate-500 uppercase dark:text-slate-400">
+                          <h4 className="text-[11.5px] font-semibold tracking-[0.11em] text-slate-500 uppercase dark:text-slate-400">
                             Source Dataset
                           </h4>
                           <dl className="mt-2">
                             <div className="flex items-baseline justify-between gap-4 border-b border-slate-200/80 py-2 dark:border-white/[0.06]">
-                              <dt className="shrink-0 text-[11.5px] text-slate-500 dark:text-slate-400">
+                              <dt className="shrink-0 text-[12.5px] text-slate-500 dark:text-slate-400">
                                 File Name
                               </dt>
-                              <dd className="truncate text-right text-[11.5px] font-semibold text-slate-900 dark:text-slate-100">
+                              <dd className="truncate text-right text-[12.5px] font-semibold text-slate-900 dark:text-slate-100">
                                 {selected.uploadLog.fileName}
                               </dd>
                             </div>
                             <div className="flex items-baseline justify-between gap-4 border-b border-slate-200/80 py-2 dark:border-white/[0.06]">
-                              <dt className="text-[11.5px] text-slate-500 dark:text-slate-400">
+                              <dt className="text-[12.5px] text-slate-500 dark:text-slate-400">
                                 Records Ingested
                               </dt>
-                              <dd className="text-right text-[11.5px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                              <dd className="text-right text-[12.5px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                                 {selected.uploadLog.recordsImported.toLocaleString("en-US")}
                               </dd>
                             </div>
                             <div className="flex items-baseline justify-between gap-4 py-2">
-                              <dt className="text-[11.5px] text-slate-500 dark:text-slate-400">
+                              <dt className="text-[12.5px] text-slate-500 dark:text-slate-400">
                                 Ingestion Time
                               </dt>
-                              <dd className="text-right text-[11.5px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                              <dd className="text-right text-[12.5px] font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                                 {absoluteTime(selected.uploadLog.uploadedAt)}
                               </dd>
                             </div>

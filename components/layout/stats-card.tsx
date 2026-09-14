@@ -16,7 +16,7 @@ export default function StatsCard({ label, value, accent = "#818cf8" }: StatsCar
       <CardContent className="p-4 flex flex-col items-center">
         <div className="flex items-center gap-1.5 mb-1.5 opacity-60">
           <Activity className="h-3 w-3" style={{ color: accent }} />
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{label}</span>
+          <span className="text-[11.5px] font-bold text-slate-400 uppercase tracking-widest leading-none">{label}</span>
         </div>
         <span className="text-2xl font-black text-white" style={{ textShadow: `0 0 20px ${accent}40` }}>{value}</span>
       </CardContent>

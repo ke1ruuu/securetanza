@@ -115,7 +115,7 @@ export default function ProcessMemoryServiceView({ metrics, history }: Props) {
             <span className="text-xs font-mono text-slate-400">MB</span>
           </div>
           <div className="mt-3">
-            <div className="flex justify-between text-[11px] font-mono text-slate-400 mb-1">
+            <div className="flex justify-between text-[12px] font-mono text-slate-400 mb-1">
               <span>{memory.heapUsagePercent}% of Heap Total</span>
               <span>{memory.heapTotalMB} MB Total</span>
             </div>
@@ -139,7 +139,7 @@ export default function ProcessMemoryServiceView({ metrics, history }: Props) {
             </span>
             <span className="text-xs font-mono text-slate-400">MB</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Total physical RAM held by the Node.js process.
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function ProcessMemoryServiceView({ metrics, history }: Props) {
             </span>
             <span className="text-xs font-mono text-slate-400">MB</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-mono">
+          <p className="text-[12px] text-slate-400 mt-2 font-mono">
             ArrayBuffers: {memory.arrayBuffersMB} MB (C++ bindings).
           </p>
         </div>
@@ -170,7 +170,7 @@ export default function ProcessMemoryServiceView({ metrics, history }: Props) {
               {isHealthy ? "No Leak Detected" : "Under Observation"}
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Heap allocations within standard garbage collection limits.
           </p>
         </div>
@@ -283,9 +283,9 @@ export default function ProcessMemoryServiceView({ metrics, history }: Props) {
             >
               <div>
                 <span className="text-xs font-medium text-white block">{item.title}</span>
-                <span className="text-[11px] text-slate-400 block mt-0.5">{item.description}</span>
+                <span className="text-[12px] text-slate-400 block mt-0.5">{item.description}</span>
               </div>
-              <span className="px-2 py-0.5 text-[10px] font-mono font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 self-start sm:self-auto shrink-0">
+              <span className="px-2 py-0.5 text-[11.5px] font-mono font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 self-start sm:self-auto shrink-0">
                 {item.status}
               </span>
             </div>

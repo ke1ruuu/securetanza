@@ -188,7 +188,7 @@ export default function LatestDataIndicator() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
+              <span className="text-[12px] font-bold uppercase tracking-[0.12em] text-slate-500 dark:text-slate-400">
                 Latest Incident Feed
               </span>
             </div>
@@ -235,7 +235,7 @@ export default function LatestDataIndicator() {
                     </div>
 
                     {incident.caseStatus && (
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#0EA5E9]/10 text-[#0284C7] dark:text-[#38BDF8] border border-[#0EA5E9]/20">
+                      <span className="px-2 py-0.5 rounded-md text-[11.5px] font-semibold bg-[#0EA5E9]/10 text-[#0284C7] dark:text-[#38BDF8] border border-[#0EA5E9]/20">
                         {incident.caseStatus}
                       </span>
                     )}
@@ -254,7 +254,7 @@ export default function LatestDataIndicator() {
                   </div>
 
                   {/* Date details */}
-                  <div className="pt-2 border-t border-slate-200/60 dark:border-white/[0.04] text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                  <div className="pt-2 border-t border-slate-200/60 dark:border-white/[0.04] text-[12px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
                     <span>Committed:</span>
                     <span className="font-medium text-slate-700 dark:text-slate-200 tabular-nums">
                       {new Date(incident.dateCommitted).toLocaleDateString("en-US", {
@@ -274,7 +274,7 @@ export default function LatestDataIndicator() {
                       setIsExpanded(false);
                       router.push("/dashboard/cases");
                     }}
-                    className="w-full p-2.5 rounded-xl bg-slate-50/80 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between text-[11px] transition-all cursor-pointer group text-left shadow-sm"
+                    className="w-full p-2.5 rounded-xl bg-slate-50/80 dark:bg-white/[0.03] hover:bg-slate-100 dark:hover:bg-white/[0.07] border border-slate-200/80 dark:border-white/[0.06] flex items-center justify-between text-[12px] transition-all cursor-pointer group text-left shadow-sm"
                     title="Click to view raw data table in Cases"
                   >
                     <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300 truncate pr-2">
@@ -285,13 +285,13 @@ export default function LatestDataIndicator() {
                         <span className="font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-[#0EA5E9] transition-colors">
                           {data.lastUpload.fileName || "Excel Dataset"}
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[11.5px] text-slate-400">
                           {data.lastUpload.recordsImported ? `${data.lastUpload.recordsImported.toLocaleString()} records • ` : ""}Click to view raw data
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1 text-slate-400 group-hover:text-[#0EA5E9] shrink-0">
-                      <span className="text-[10px]">
+                      <span className="text-[11.5px]">
                         {formatTimeAgo(data.lastUpload.createdAt)}
                       </span>
                       <ArrowUpRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -338,14 +338,14 @@ export default function LatestDataIndicator() {
         {/* Incident Message Info */}
         <div className="flex flex-col text-left">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+            <span className="text-[11.5px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
               Latest Incident
             </span>
             {incident && (
-              <span className="text-[10px] text-slate-400 dark:text-slate-500">•</span>
+              <span className="text-[11.5px] text-slate-400 dark:text-slate-500">•</span>
             )}
             {incident && (
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-[11.5px] font-medium text-emerald-600 dark:text-emerald-400">
                 {formatTimeAgo(incident.dateCommitted, incident.timeCommitted)}
               </span>
             )}

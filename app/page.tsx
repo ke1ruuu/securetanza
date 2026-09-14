@@ -14,7 +14,7 @@ import LatestDataIndicator from "@/components/layout/latest-data-indicator";
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
 import RightSidebarControls from "@/components/layout/right-sidebar-controls";
-import MapLegend from "@/components/map/map-legend";
+import CrimeLegend from "@/components/map/crime-legend";
 
 const TanzaMap = dynamic(() => import("../components/map/tanza-map-root"), {
 	ssr: false,
@@ -106,7 +106,7 @@ function HomeContent() {
 
 					{/* Hour-by-hour timeline sits at the foot of the rail, just above the clock toggle */}
 					{isFilterActive && (
-						<div className="mt-auto flex min-h-0 flex-col w-[280px] sm:w-[296px] max-w-[calc(100vw-24px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
+						<div className="mt-auto flex min-h-0 flex-col w-[324px] sm:w-[348px] max-w-[calc(100vw-24px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
 							<TimeFilter
 								key="time-filter-active"
 								onFilterChange={handleFilterChange}
@@ -124,7 +124,7 @@ function HomeContent() {
 					className={`absolute right-3 sm:right-4 lg:right-6 transition-all duration-500 ease-in-out ${
 						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
 					}`}>
-					<MapLegend />
+					<CrimeLegend />
 				</div>
 
 				{/* Bottom Right: Latest Data Indicator beside Zoom Controls */}

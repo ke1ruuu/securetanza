@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
 	CheckCircle2,
@@ -24,6 +24,7 @@ import {
 	ChevronsLeft,
 	ChevronsRight,
 	Search,
+	CalendarDays,
 } from "lucide-react";
 import {
 	Pagination,
@@ -78,6 +79,21 @@ interface UnifiedLog {
 /* ─────────────────────── Constants ─────────────────────── */
 
 const AUDIT_FILTERS: AuditFilter[] = ["All", "Auth", "Import", "Read", "Export", "Settings"];
+
+/** Quick ranges offered beside the two date fields. `days` counts back from today, inclusive. */
+const DATE_PRESETS: { key: string; label: string; days: number | null }[] = [
+	{ key: "today", label: "Today", days: 1 },
+	{ key: "7d", label: "7 days", days: 7 },
+	{ key: "30d", label: "30 days", days: 30 },
+	{ key: "all", label: "All time", days: null },
+];
+
+/** Date as the `<input type="date">` value in the viewer's own timezone. */
+function toInputDate(date: Date) {
+	const month = String(date.getMonth() + 1).padStart(2, "0");
+	const day = String(date.getDate()).padStart(2, "0");
+	return `${date.getFullYear()}-${month}-${day}`;
+}
 
 const ACTION_META: Record<ActionType, { color: string; icon: React.ReactNode; label: string }> = {
 	Auth:     { color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",  icon: <KeyRound        className="h-3 w-3" />, label: "Auth"     },
@@ -151,7 +167,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 						{React.cloneElement(meta.icon as React.ReactElement<{ className?: string }>, { className: "h-3.5 w-3.5" })}
 					</div>
 					<div>
-						<div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-0.5">Audit Trail</div>
+						<div className="text-[11.5px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 leading-none mb-0.5">Audit Trail</div>
 						<div className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{log.action} Event</div>
 					</div>
 				</div>
@@ -176,7 +192,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 
 				{log.resource && (
 					<div className="pt-1">
-						<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Resource</p>
+						<p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">Resource</p>
 						<code className="text-xs font-mono text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded">
 							{log.resource}
 						</code>
@@ -187,7 +203,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 					<div className="pt-1 border-t border-slate-100 dark:border-white/5 space-y-1.5">
 						{log.fileName && (
 							<>
-								<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Import Details</p>
+								<p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Import Details</p>
 								<div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
 									<AuditField icon={<FileSpreadsheet className="h-3 w-3" />} label="File"    value={log.fileName} />
 									{log.fileSize      !== undefined && <AuditField icon={<Database    className="h-3 w-3" />} label="Size"    value={formatFileSize(log.fileSize)} />}
@@ -197,7 +213,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 						)}
 						{log.errorMessage && (
 							<div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-lg p-2">
-								<p className="text-[10px] font-semibold uppercase tracking-wider text-red-500 mb-0.5">Error</p>
+								<p className="text-[11.5px] font-semibold uppercase tracking-wider text-red-500 mb-0.5">Error</p>
 								<p className="text-xs text-red-700 dark:text-red-400 leading-snug">{log.errorMessage}</p>
 							</div>
 						)}
@@ -207,8 +223,8 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 
 			{/* Footer */}
 			<div className="px-4 py-2 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-				<span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{log.id.toString()}</span>
-				<span className="text-[10px] text-slate-400 dark:text-slate-500">Click row for details</span>
+				<span className="text-[11.5px] text-slate-400 dark:text-slate-500 font-mono">#{log.id.toString()}</span>
+				<span className="text-[11.5px] text-slate-400 dark:text-slate-500">Click row for details</span>
 			</div>
 		</div>
 	);
@@ -217,7 +233,7 @@ function AuditCard({ log, pinned, onClose, style }: AuditCardProps) {
 function AuditField({ icon, label, value, mono }: { icon: React.ReactNode; label: string; value: React.ReactNode; mono?: boolean }) {
 	return (
 		<div>
-			<p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5 flex items-center gap-1">
+			<p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5 flex items-center gap-1">
 				{icon}{label}
 			</p>
 			<p className={`text-xs text-slate-700 dark:text-slate-300 truncate ${mono ? "font-mono" : ""}`}>
@@ -251,7 +267,7 @@ function LogRow({ log, onHover, onClick }: RowProps) {
 		>
 			<td className="px-5 py-3.5 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">{log.user}</td>
 			<td className="px-5 py-3.5">
-				<span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${meta.color}`}>
+				<span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] font-bold ${meta.color}`}>
 					{React.cloneElement(meta.icon as React.ReactElement<{ className?: string }>, { className: "h-3 w-3" })}
 					{meta.label}
 				</span>
@@ -285,6 +301,9 @@ export default function AuditLogsTab() {
 	const [totalLogs,   setTotalLogs]   = useState(0);
 	const [activeFilter, setActiveFilter] = useState<AuditFilter>("All");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [dateFrom, setDateFrom] = useState("");
+	const [dateTo, setDateTo] = useState("");
+	const [activePreset, setActivePreset] = useState<string>("all");
 
 	const [currentPage, setCurrentPage] = useState(1);
 	const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -310,11 +329,17 @@ export default function AuditLogsTab() {
 	}, []);
 
 	/* ── API ── */
-	const loadLogs = async () => {
+	// The range is filtered in the query rather than in the page, so a narrow window
+	// reaches past the 500 most recent events instead of only searching within them.
+	const loadLogs = useCallback(async () => {
 		setLogsLoading(true);
 		try {
+			const params = new URLSearchParams({ limit: "500" });
+			if (dateFrom) params.set("startDate", new Date(`${dateFrom}T00:00:00`).toISOString());
+			if (dateTo) params.set("endDate", new Date(`${dateTo}T23:59:59.999`).toISOString());
+
 			// Fetch audit logs
-			const auditRes = await fetch("/api/audit-logs?limit=500");
+			const auditRes = await fetch(`/api/audit-logs?${params.toString()}`);
 			if (!auditRes.ok) return;
 			const auditData = await auditRes.json();
 			if (auditData.success) {
@@ -327,9 +352,33 @@ export default function AuditLogsTab() {
 			}
 		} catch (e) { console.error("Error loading logs:", e); }
 		finally { setLogsLoading(false); }
+	}, [dateFrom, dateTo]);
+
+	useEffect(() => { loadLogs(); }, [loadLogs]);
+
+	const applyPreset = (preset: { key: string; days: number | null }) => {
+		if (preset.days === null) {
+			setDateFrom("");
+			setDateTo("");
+		} else {
+			const to = new Date();
+			const from = new Date();
+			from.setDate(from.getDate() - (preset.days - 1));
+			setDateFrom(toInputDate(from));
+			setDateTo(toInputDate(to));
+		}
+		setActivePreset(preset.key);
+		setCurrentPage(1);
 	};
 
-	useEffect(() => { loadLogs(); }, []);
+	const setRangeEdge = (edge: "from" | "to", value: string) => {
+		if (edge === "from") setDateFrom(value);
+		else setDateTo(value);
+		setActivePreset("custom");
+		setCurrentPage(1);
+	};
+
+	const hasDateRange = Boolean(dateFrom || dateTo);
 
 	/* ── Derived stats ── */
 	const importLogs = unifiedLogs.filter((l) => l.action === "Import");
@@ -441,7 +490,7 @@ export default function AuditLogsTab() {
 							<div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${bg}`}>{icon}</div>
 							<div>
 								<div className="text-xl font-bold text-slate-900 dark:text-white">{value}</div>
-								<div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">{label}</div>
+								<div className="text-[12px] font-semibold uppercase tracking-wider text-slate-400 mt-0.5">{label}</div>
 							</div>
 						</div>
 					))}
@@ -501,6 +550,53 @@ export default function AuditLogsTab() {
 						</div>
 					</div>
 
+					{/* Date range */}
+					<div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+						<div className="flex items-center gap-2 flex-wrap">
+							<CalendarDays className="h-4 w-4 text-slate-400 flex-shrink-0" />
+							<Input
+								type="date"
+								aria-label="From date"
+								value={dateFrom}
+								max={dateTo || undefined}
+								onChange={(e) => setRangeEdge("from", e.target.value)}
+								className="h-9 w-[152px] text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10"
+							/>
+							<span className="text-sm text-slate-400 dark:text-slate-500">to</span>
+							<Input
+								type="date"
+								aria-label="To date"
+								value={dateTo}
+								min={dateFrom || undefined}
+								onChange={(e) => setRangeEdge("to", e.target.value)}
+								className="h-9 w-[152px] text-sm bg-white dark:bg-slate-900 border-slate-200 dark:border-white/10"
+							/>
+							{hasDateRange && (
+								<button
+									onClick={() => applyPreset({ key: "all", days: null })}
+									className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-sm font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+								>
+									<X className="h-3.5 w-3.5" /> Clear
+								</button>
+							)}
+						</div>
+						<div className="flex gap-1.5 flex-wrap">
+							{DATE_PRESETS.map((preset) => (
+								<button
+									key={preset.key}
+									onClick={() => applyPreset(preset)}
+									className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+										activePreset === preset.key
+											? "bg-[#0EA5E9]/10 text-[#0284C7] dark:text-[#38BDF8]"
+											: "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+									}`}
+								>
+									{preset.label}
+								</button>
+							))}
+						</div>
+					</div>
+
 					{/* Table */}
 					<div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm">
 						<div className="overflow-x-auto">
@@ -517,8 +613,8 @@ export default function AuditLogsTab() {
 								<tbody className="divide-y divide-slate-100 dark:divide-white/5">
 									{paginatedLogs.length === 0 ? (
 										<tr>
-											<td colSpan={6} className="px-6 py-10 text-center text-sm text-slate-400">
-												No {activeFilter} events found.
+											<td colSpan={7} className="px-6 py-10 text-center text-sm text-slate-400">
+												No {activeFilter} events found{hasDateRange ? " in this date range" : ""}.
 											</td>
 										</tr>
 									) : paginatedLogs.map((log) => (

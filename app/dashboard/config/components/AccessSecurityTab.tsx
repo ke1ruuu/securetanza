@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { UserPlus, AlertCircle, CheckCircle2, Edit, Trash2, RefreshCw, Copy, X, Eye, EyeOff } from "lucide-react";
+import { UserPlus, AlertCircle, CheckCircle2, Edit, Trash2, RefreshCw, Copy, X, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,9 @@ interface User {
 	permissions: Permission[];
 	createdAt: string;
 	updatedAt: string;
+	/** Set when three consecutive failed sign-ins locked the account. */
+	lockedAt: string | null;
+	failedLoginAttempts: number;
 }
 
 interface AvailablePermission {
@@ -46,8 +49,11 @@ export default function AccessSecurityTab() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isCopied, setIsCopied] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
-	const [newAccount, setNewAccount] = useState<{fullName: string, accountNumber: string, tempPassword?: string} | null>(null);
+	const [newAccount, setNewAccount] = useState<{kind: "created" | "unlocked", fullName: string, accountNumber: string, tempPassword?: string} | null>(null);
 	
+	const [userToUnlock, setUserToUnlock] = useState<User | null>(null);
+	const [isUnlocking, setIsUnlocking] = useState(false);
+
 	const [userToDelete, setUserToDelete] = useState<User | null>(null);
 	const [deleteConfirmation, setDeleteConfirmation] = useState("");
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -125,7 +131,7 @@ export default function AccessSecurityTab() {
 				setShowCreateModal(false);
 				setFormData({ fullName: "", permissionIds: [] });
 				fetchUsers();
-				setNewAccount(data.data);
+				setNewAccount({ ...data.data, kind: "created" });
 			} else setMgmtError(data.error || "Failed to authorize user");
 		} catch {
 			setMgmtError("Failed to authorize user");
@@ -203,6 +209,28 @@ export default function AccessSecurityTab() {
 			setMgmtError("Failed to revoke access");
 		} finally {
 			setIsDeleting(false);
+		}
+	};
+
+	const executeUnlock = async (user: User) => {
+		if (isUnlocking) return;
+		setIsUnlocking(true);
+		setMgmtError("");
+		setMgmtSuccess("");
+		try {
+			const response = await fetch(`/api/users/${user.id}/unlock`, { method: "POST" });
+			const data = await response.json();
+			if (response.ok && data.success) {
+				setUserToUnlock(null);
+				setIsCopied(false);
+				setShowPassword(false);
+				fetchUsers();
+				setNewAccount({ ...data.data, kind: "unlocked" });
+			} else setMgmtError(data.error || "Failed to unlock account");
+		} catch {
+			setMgmtError("Failed to unlock account");
+		} finally {
+			setIsUnlocking(false);
 		}
 	};
 
@@ -296,13 +324,24 @@ export default function AccessSecurityTab() {
 										paginatedUsers.map((user) => (
 											<tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors group">
 												<td className="px-6 py-4 text-slate-500 text-sm font-mono">{user.accountNumber}</td>
-												<td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{user.fullName}</td>
+												<td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
+													<div className="flex items-center gap-2">
+														<span>{user.fullName}</span>
+														{user.lockedAt && (
+															<span
+																title={`Locked ${new Date(user.lockedAt).toLocaleString()} after ${user.failedLoginAttempts} failed sign-in attempts`}
+																className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold uppercase tracking-tight bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20">
+																<Lock className="h-3 w-3" /> Locked
+															</span>
+														)}
+													</div>
+												</td>
 												<td className="px-6 py-4">
 													<div className="flex flex-wrap gap-1">
 														{user.permissions.map((p, idx) => (
 															<span
 																key={idx}
-																className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-tight ${
+																className={`px-2 py-0.5 rounded-lg text-[10.5px] font-black uppercase tracking-tight ${
 																	p.name.includes("admin")
 																		? theme === 'dark' ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" : "bg-amber-50 text-amber-600 border border-amber-200"
 																		: theme === 'dark' ? "bg-[#0EA5E9]/10 text-[#0EA5E9] border border-[#0EA5E9]/20" : "bg-sky-50 text-[#0284C7] border border-sky-200"
@@ -311,12 +350,20 @@ export default function AccessSecurityTab() {
 															</span>
 														))}
 														{user.permissions.length === 0 && (
-															<span className="text-[10px] text-slate-600 italic">No Roles</span>
+															<span className="text-[11.5px] text-slate-600 italic">No Roles</span>
 														)}
 													</div>
 												</td>
 												<td className="px-6 py-4 text-right">
 													<div className="flex justify-end gap-1 transition-opacity">
+														{user.lockedAt && (
+															<button
+																onClick={() => setUserToUnlock(user)}
+																title="Unlock account and issue a temporary password"
+																className="p-2 rounded-lg transition-all text-amber-500 hover:text-amber-600 hover:bg-amber-500/10">
+																<Unlock className="h-4 w-4" />
+															</button>
+														)}
 														<button
 															onClick={() => openEditModal(user)}
 															disabled={user.id === currentUser?.id}
@@ -381,7 +428,7 @@ export default function AccessSecurityTab() {
 									<div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
 										<CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
 									</div>
-									<h2 className="text-xl font-bold text-slate-900 dark:text-white">Account Created</h2>
+									<h2 className="text-xl font-bold text-slate-900 dark:text-white">{newAccount.kind === "unlocked" ? "Account Unlocked" : "Account Created"}</h2>
 								</div>
 								<button onClick={() => setNewAccount(null)} className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
 									<X className="w-5 h-5" />
@@ -390,15 +437,15 @@ export default function AccessSecurityTab() {
 
 							<div className="space-y-4 mb-8 bg-slate-50 dark:bg-slate-800/30 p-4 rounded-xl border border-slate-100 dark:border-white/5">
 								<div className="flex items-center gap-3">
-									<span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Full Name:</span>
+									<span className="text-[12px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Full Name:</span>
 									<span className="text-sm font-medium text-slate-900 dark:text-white">{newAccount.fullName}</span>
 								</div>
 								<div className="flex items-center gap-3">
-									<span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Account Number:</span>
+									<span className="text-[12px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Account Number:</span>
 									<span className="text-sm font-medium text-blue-600 dark:text-blue-400">{newAccount.accountNumber}</span>
 								</div>
 								<div className="flex items-center gap-3">
-									<span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Temporary Password:</span>
+									<span className="text-[12px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 w-44 whitespace-nowrap">Temporary Password:</span>
 									<div className="flex items-center gap-2">
 										<span className="text-sm font-medium text-slate-900 dark:text-white min-w-[100px]">
 											{showPassword ? newAccount.tempPassword : "••••••••••"}
@@ -411,12 +458,16 @@ export default function AccessSecurityTab() {
 										</button>
 									</div>
 								</div>
-								<p className="text-xs text-slate-500 dark:text-slate-400 italic pt-2 border-t border-slate-200 dark:border-white/10 mt-4">Please sign in and change your password.</p>
+								<p className="text-xs text-slate-500 dark:text-slate-400 italic pt-2 border-t border-slate-200 dark:border-white/10 mt-4">
+										{newAccount.kind === "unlocked"
+											? "The previous password no longer works. Hand these over — the officer must set a new password on their next sign-in."
+											: "Please sign in and change your password."}
+									</p>
 							</div>
 
 							<Button
 								onClick={() => {
-									navigator.clipboard.writeText(`Secure Tanza Account Created\nFull Name: ${newAccount.fullName}\nAccount Number: ${newAccount.accountNumber}\nTemporary Password: ${newAccount.tempPassword}\n\nPlease sign in and change your password.`);
+									navigator.clipboard.writeText(`Secure Tanza Account ${newAccount.kind === "unlocked" ? "Unlocked" : "Created"}\nFull Name: ${newAccount.fullName}\nAccount Number: ${newAccount.accountNumber}\nTemporary Password: ${newAccount.tempPassword}\n\nPlease sign in and change your password.`);
 									setIsCopied(true);
 								}}
 								className={`w-full h-11 rounded-xl font-semibold gap-2 transition-all duration-300 ${isCopied ? "bg-emerald-500 hover:bg-emerald-600 text-white" : "bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"}`}>
@@ -492,7 +543,7 @@ export default function AccessSecurityTab() {
 																	: "bg-transparent border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 hover:border-slate-400 dark:hover:border-white/20"
 															}`}>
 															<div className="flex flex-col gap-0.5">
-																<span className={`text-[11px] font-bold uppercase tracking-tight ${isSelected ? "text-white dark:text-slate-900" : "text-slate-600 dark:text-slate-400"}`}>
+																<span className={`text-[12px] font-bold uppercase tracking-tight ${isSelected ? "text-white dark:text-slate-900" : "text-slate-600 dark:text-slate-400"}`}>
 																	{p.permissionName.replace(/_/g, " ")}
 																</span>
 															</div>
@@ -503,7 +554,7 @@ export default function AccessSecurityTab() {
 															</div>
 														</button>
 														{p.description && (
-															<div className="absolute left-1/2 -bottom-2 translate-y-full -translate-x-1/2 w-48 p-2.5 bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[11px] rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[110] shadow-xl pointer-events-none text-center">
+															<div className="absolute left-1/2 -bottom-2 translate-y-full -translate-x-1/2 w-48 p-2.5 bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-[12px] rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[110] shadow-xl pointer-events-none text-center">
 																<div className="absolute -top-1 left-1/2 -translate-x-1/2 border-x-4 border-x-transparent border-b-4 border-b-slate-800 dark:border-b-white"></div>
 																{p.description}
 															</div>
@@ -537,6 +588,50 @@ export default function AccessSecurityTab() {
 							</form>
 						</div>
 					)}
+				</div>,
+				document.body
+			)}
+
+			{userToUnlock && createPortal(
+				<div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+					<div className="bg-white dark:bg-slate-900 p-8 rounded-3xl max-w-md w-full border border-slate-200 dark:border-white/10 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden">
+						<div className="absolute -top-24 -right-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+						<div className="flex items-center gap-3 mb-6">
+							<div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center">
+								<Unlock className="w-6 h-6 text-amber-600 dark:text-amber-500" />
+							</div>
+							<div>
+								<h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Unlock Account</h3>
+								<p className="text-sm font-medium text-amber-600 dark:text-amber-400">{userToUnlock.accountNumber}</p>
+							</div>
+						</div>
+
+						<p className="text-slate-600 dark:text-slate-400 mb-6 text-sm leading-relaxed">
+							<span className="font-semibold text-slate-900 dark:text-white">{userToUnlock.fullName}</span> was locked out
+							after {userToUnlock.failedLoginAttempts} failed sign-in attempts. Unlocking replaces their password with a new
+							temporary one — the old password stops working, and they must set a new password on their next sign-in.
+						</p>
+
+						<div className="flex gap-3">
+							<Button
+								variant="outline"
+								onClick={() => setUserToUnlock(null)}
+								className="flex-1 h-12 rounded-xl font-semibold border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-slate-800"
+							>
+								Cancel
+							</Button>
+							<Button
+								disabled={isUnlocking}
+								onClick={() => executeUnlock(userToUnlock)}
+								className="flex-1 h-12 font-semibold rounded-xl bg-amber-500 hover:bg-amber-600 text-white transition-all disabled:opacity-50"
+							>
+								{isUnlocking ? (
+									<div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+								) : "Unlock & Issue Password"}
+							</Button>
+						</div>
+					</div>
 				</div>,
 				document.body
 			)}

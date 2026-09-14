@@ -130,7 +130,7 @@ export default function AuthCacheServiceView({
             <button
               onClick={() => handleClear("crimes")}
               disabled={isClearingCache}
-              className="px-2.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white rounded transition-colors cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1 text-[12px] font-mono text-slate-400 hover:text-white rounded transition-colors cursor-pointer disabled:opacity-50"
               title="Invalidate crime analytics and queries"
             >
               Purge Crimes
@@ -138,7 +138,7 @@ export default function AuthCacheServiceView({
             <button
               onClick={() => handleClear("geo")}
               disabled={isClearingCache}
-              className="px-2.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white rounded transition-colors cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1 text-[12px] font-mono text-slate-400 hover:text-white rounded transition-colors cursor-pointer disabled:opacity-50"
               title="Invalidate barangay reference data"
             >
               Purge Geo
@@ -146,7 +146,7 @@ export default function AuthCacheServiceView({
             <button
               onClick={() => handleClear("auth")}
               disabled={isClearingCache}
-              className="px-2.5 py-1 text-[11px] font-mono text-slate-400 hover:text-white rounded transition-colors cursor-pointer disabled:opacity-50"
+              className="px-2.5 py-1 text-[12px] font-mono text-slate-400 hover:text-white rounded transition-colors cursor-pointer disabled:opacity-50"
               title="Invalidate active user sessions"
             >
               Purge Auth
@@ -154,7 +154,7 @@ export default function AuthCacheServiceView({
             <button
               onClick={() => handleClear("all")}
               disabled={isClearingCache}
-              className="px-3 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded text-[11px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 ml-1"
+              className="px-3 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded text-[12px] font-medium flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 ml-1"
             >
               <Trash2 className="h-3 w-3" />
               {isClearingCache && activeScope === "all" ? "Flushing..." : "Flush All"}
@@ -199,7 +199,7 @@ export default function AuthCacheServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">queries</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Round-trips prevented across PostgreSQL/PgBouncer pool.
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function AuthCacheServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">coalesced</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             Concurrent requests collapsed into single DB executions.
           </p>
         </div>
@@ -233,7 +233,7 @@ export default function AuthCacheServiceView({
             </span>
             <span className="text-xs font-mono text-slate-400">faster response</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">
+          <p className="text-[12px] text-slate-400 mt-2">
             ~0.3ms cache hit vs {dbLatencyMs}ms database query.
           </p>
         </div>
@@ -295,7 +295,7 @@ export default function AuthCacheServiceView({
             <div className="p-3 bg-slate-900/60 rounded border border-slate-800/80 flex items-center justify-between">
               <div>
                 <span className="text-white font-semibold block">Crimes Analytics & Stats</span>
-                <span className="text-slate-500 text-[11px]">app:crimes:* (TTL: 30s–60s)</span>
+                <span className="text-slate-500 text-[12px]">app:crimes:* (TTL: 30s–60s)</span>
               </div>
               <span className="px-2 py-0.5 rounded bg-slate-800 text-[#0EA5E9] font-medium">
                 {cache?.namespaces?.crimes ?? 0} keys
@@ -305,7 +305,7 @@ export default function AuthCacheServiceView({
             <div className="p-3 bg-slate-900/60 rounded border border-slate-800/80 flex items-center justify-between">
               <div>
                 <span className="text-white font-semibold block">Geospatial Reference (Barangays)</span>
-                <span className="text-slate-500 text-[11px]">app:geo:* (TTL: 1 hour)</span>
+                <span className="text-slate-500 text-[12px]">app:geo:* (TTL: 1 hour)</span>
               </div>
               <span className="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 font-medium">
                 {cache?.namespaces?.geo ?? 0} keys
@@ -315,7 +315,7 @@ export default function AuthCacheServiceView({
             <div className="p-3 bg-slate-900/60 rounded border border-slate-800/80 flex items-center justify-between">
               <div>
                 <span className="text-white font-semibold block">Auth Sessions & Permissions</span>
-                <span className="text-slate-500 text-[11px]">app:auth:* (TTL: 30s)</span>
+                <span className="text-slate-500 text-[12px]">app:auth:* (TTL: 30s)</span>
               </div>
               <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-400 font-medium">
                 {cache?.namespaces?.auth ?? sessionCache.activeEntries} keys
@@ -325,7 +325,7 @@ export default function AuthCacheServiceView({
             <div className="p-3 bg-slate-900/60 rounded border border-slate-800/80 flex items-center justify-between">
               <div>
                 <span className="text-white font-semibold block">Configuration & Intelligence Rules</span>
-                <span className="text-slate-500 text-[11px]">app:config:* (TTL: 10 min)</span>
+                <span className="text-slate-500 text-[12px]">app:config:* (TTL: 10 min)</span>
               </div>
               <span className="px-2 py-0.5 rounded bg-slate-800 text-amber-400 font-medium">
                 {cache?.namespaces?.config ?? 0} keys
@@ -340,7 +340,7 @@ export default function AuthCacheServiceView({
             <h3 className="text-sm font-semibold text-white">
               Real-Time Cache Event Stream
             </h3>
-            <span className="text-[10px] font-mono text-slate-500 uppercase">
+            <span className="text-[11.5px] font-mono text-slate-500 uppercase">
               Last {recentEvents.length} Events
             </span>
           </div>
@@ -369,15 +369,15 @@ export default function AuthCacheServiceView({
                     className="p-2 bg-slate-900/60 rounded border border-slate-800/80 flex items-center justify-between gap-2"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <span className={`px-1.5 py-0.5 text-[9px] rounded border font-semibold ${badgeColor}`}>
+                      <span className={`px-1.5 py-0.5 text-[10.5px] rounded border font-semibold ${badgeColor}`}>
                         {evt.type}
                       </span>
-                      <span className="text-slate-300 truncate text-[11px]" title={evt.key}>
+                      <span className="text-slate-300 truncate text-[12px]" title={evt.key}>
                         {evt.key}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0 text-slate-500 text-[10px]">
+                    <div className="flex items-center gap-2 shrink-0 text-slate-500 text-[11.5px]">
                       {evt.latencyMs !== undefined && (
                         <span>{evt.latencyMs}ms</span>
                       )}
@@ -409,7 +409,7 @@ export default function AuthCacheServiceView({
                 key={i}
                 className="p-2 bg-slate-900/60 rounded border border-slate-800/70 text-xs font-mono text-slate-300 truncate flex items-center justify-between gap-2"
               >
-                <span className="truncate text-[11px]" title={key}>{key}</span>
+                <span className="truncate text-[12px]" title={key}>{key}</span>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
               </div>
             ))}
@@ -427,11 +427,11 @@ export default function AuthCacheServiceView({
           <div className="p-3 bg-slate-900/40 rounded-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="font-semibold text-white block">Read-Through with Single-Flight Stampede Guard</span>
-              <span className="text-slate-400 text-[11px] block mt-0.5">
+              <span className="text-slate-400 text-[12px] block mt-0.5">
                 <code className="text-slate-300 font-mono">cacheService.getOrSet(key, ttl, loader)</code> coalesces concurrent callers on a cache miss into a single ongoing Promise, preventing database saturation.
               </span>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-purple-400 border border-purple-500/20 shrink-0">
+            <span className="text-[11.5px] font-mono px-2 py-0.5 rounded bg-slate-800 text-purple-400 border border-purple-500/20 shrink-0">
               Zero-Thundering-Herd
             </span>
           </div>
@@ -439,11 +439,11 @@ export default function AuthCacheServiceView({
           <div className="p-3 bg-slate-900/40 rounded-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="font-semibold text-white block">Excel Ingestion & Mutation-Driven Purging</span>
-              <span className="text-slate-400 text-[11px] block mt-0.5">
+              <span className="text-slate-400 text-[12px] block mt-0.5">
                 Uploading blotters, creating incidents, or modifying records immediately dispatches <code className="text-slate-300 font-mono">deleteByPattern(&quot;app:crimes:*&quot;)</code> so dashboard analytics always reflect current truth.
               </span>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-rose-400 border border-rose-500/20 shrink-0">
+            <span className="text-[11.5px] font-mono px-2 py-0.5 rounded bg-slate-800 text-rose-400 border border-rose-500/20 shrink-0">
               Immediate Purge
             </span>
           </div>
@@ -451,11 +451,11 @@ export default function AuthCacheServiceView({
           <div className="p-3 bg-slate-900/40 rounded-md border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <span className="font-semibold text-white block">Graceful Database Fallback</span>
-              <span className="text-slate-400 text-[11px] block mt-0.5">
+              <span className="text-slate-400 text-[12px] block mt-0.5">
                 If the caching provider throws an exception or experiences degradation, requests bypass the cache seamlessly and query PostgreSQL directly without throwing 500 errors.
               </span>
             </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-500/20 shrink-0">
+            <span className="text-[11.5px] font-mono px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-500/20 shrink-0">
               Fault Tolerant
             </span>
           </div>

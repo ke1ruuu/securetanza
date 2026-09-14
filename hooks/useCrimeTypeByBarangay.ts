@@ -11,6 +11,9 @@ export interface BarangayCrimeTypeCounts {
 export function useCrimeTypeByBarangay() {
   const [crimeTypeCounts, setCrimeTypeCounts] = useState<BarangayCrimeTypeCounts>({});
   const [loading, setLoading] = useState(false);
+  // Distinguishes "no results" from "no fetch has settled yet" so consumers can
+  // keep showing a placeholder instead of a premature empty state.
+  const [hasLoaded, setHasLoaded] = useState(false);
   const {
     selectedCrimeType,
     selectedYear,
@@ -25,6 +28,7 @@ export function useCrimeTypeByBarangay() {
     async function fetchCrimeTypeByBarangay() {
       if (!selectedCrimeType) {
         setCrimeTypeCounts({});
+        setHasLoaded(false);
         return;
       }
 
@@ -101,6 +105,7 @@ export function useCrimeTypeByBarangay() {
         setCrimeTypeCounts({});
       } finally {
         setLoading(false);
+        setHasLoaded(true);
       }
     }
 
@@ -115,5 +120,5 @@ export function useCrimeTypeByBarangay() {
     isTimeFilterActive,
   ]);
 
-  return { crimeTypeCounts, loading };
+  return { crimeTypeCounts, loading, hasLoaded };
 }

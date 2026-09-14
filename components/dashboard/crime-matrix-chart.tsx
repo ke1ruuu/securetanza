@@ -242,7 +242,7 @@ export default function CrimeMatrixChart({
                         {/* Value text (only show if > 0) */}
                         {value > 0 && (
                           <div
-                            className={`absolute inset-0 flex items-center justify-center text-[10px] font-bold ${
+                            className={`absolute inset-0 flex items-center justify-center text-[11.5px] font-bold ${
                               value > maxValue * 0.5
                                 ? "text-white"
                                 : theme === "dark"
