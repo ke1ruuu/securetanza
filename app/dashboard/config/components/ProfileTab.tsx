@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Hash, LogOut, CheckCircle2, Key, Eye, EyeOff } from "lucide-react";
+import { Hash, LogOut, CheckCircle2, Key, Eye, EyeOff, Timer } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function ProfileTab() {
-	const { user, logout } = useAuth();
+	const { user, logout, refreshSession } = useAuth();
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,6 +18,8 @@ export default function ProfileTab() {
 	const [showNew, setShowNew] = useState(false);
 	const [showConfirm, setShowConfirm] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [autoLogoutTimer, setAutoLogoutTimer] = useState<number | "">(user?.autoLogoutTimer ?? 15);
+	const [savingTimer, setSavingTimer] = useState(false);
 	// const [twoFA, setTwoFA] = useState(false); // Temporarily disabled
 
 	const requirements = [
@@ -76,6 +78,27 @@ export default function ProfileTab() {
 			toast.error(error.message);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const handleUpdateTimer = async (timerValue: number) => {
+		setSavingTimer(true);
+		try {
+			const res = await fetch("/api/users/settings/auto-logout", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ autoLogoutTimer: timerValue }),
+			});
+			if (!res.ok) throw new Error("Failed to update timer");
+			
+			toast.success(`Auto-logout timer set to ${timerValue} minutes`);
+			setAutoLogoutTimer(timerValue);
+			await refreshSession();
+		} catch (error: any) {
+			toast.error(error.message);
+			setAutoLogoutTimer(user?.autoLogoutTimer ?? 15);
+		} finally {
+			setSavingTimer(false);
 		}
 	};
 
@@ -277,6 +300,64 @@ export default function ProfileTab() {
 						</div>
 					</div>
 					*/}
+
+					{/* Auto Logout Timer */}
+					<div className="space-y-4">
+						<div className="space-y-1">
+							<h3 className="text-lg font-bold text-slate-900 dark:text-white">Auto Logout</h3>
+							<p className="text-sm text-slate-500 dark:text-slate-400">
+								Configure how long before you are automatically logged out due to inactivity.
+							</p>
+						</div>
+						<div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
+							<div className="flex flex-col md:flex-row gap-6 md:items-start justify-between">
+								<div className="flex items-start gap-4">
+									<div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+										<Timer className="h-5 w-5 text-orange-500" />
+									</div>
+									<div className="space-y-2 flex-1">
+										<Label className="text-sm font-semibold text-slate-900 dark:text-white">Idle Timeout Duration</Label>
+										<div className="flex flex-wrap gap-2">
+											{[5, 15, 30, 60].map((preset) => (
+												<Button
+													key={preset}
+													type="button"
+													variant={autoLogoutTimer === preset ? "default" : "outline"}
+													className={`h-9 px-3 text-xs ${autoLogoutTimer === preset ? 'bg-orange-500 hover:bg-orange-600 text-white border-orange-500' : 'hover:border-orange-500/50 hover:text-orange-500'}`}
+													onClick={() => handleUpdateTimer(preset)}
+													disabled={savingTimer}
+												>
+													{preset} min
+												</Button>
+											))}
+										</div>
+									</div>
+								</div>
+								
+								<div className="flex items-center gap-2">
+									<Input 
+										type="number" 
+										min={1} 
+										max={1440}
+										placeholder="Custom"
+										value={autoLogoutTimer}
+										onChange={(e) => setAutoLogoutTimer(e.target.value === "" ? "" : parseInt(e.target.value))}
+										onBlur={(e) => {
+											const val = parseInt(e.target.value);
+											if (val && val !== user?.autoLogoutTimer && val >= 1 && val <= 1440) {
+												handleUpdateTimer(val);
+											} else if (!val || val < 1 || val > 1440) {
+												setAutoLogoutTimer(user?.autoLogoutTimer ?? 15);
+											}
+										}}
+										className="w-24 h-9 text-center bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-orange-500"
+										disabled={savingTimer}
+									/>
+									<span className="text-sm text-slate-500">min</span>
+								</div>
+							</div>
+						</div>
+					</div>
 
 					{/* Danger Zone */}
 					<div className="space-y-4">

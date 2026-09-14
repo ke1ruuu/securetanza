@@ -19,6 +19,7 @@ import {
 	Section,
 	btnPrimary,
 } from "../_components/settings-ui";
+import { cn } from "@/lib/utils";
 
 const DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const DAYS_OF_MONTH = Array.from({ length: 28 }, (_, i) => i + 1);
@@ -53,6 +54,7 @@ function DataExports() {
 	const [monthlyOn, setMonthlyOn] = useState("1"); // day of year for annually
 	const [deliveryMode, setDeliveryMode] = useState<"prompt" | "auto">("prompt");
 	const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
 	React.useEffect(() => {
 		fetch("/api/exports/schedule")
@@ -80,6 +82,7 @@ function DataExports() {
 			});
 			if (!res.ok) throw new Error("Failed to save schedule");
 			setSaveState("saved");
+			setHasUnsavedChanges(false);
 			setTimeout(() => setSaveState((s) => (s === "saved" ? "idle" : s)), 3000);
 		} catch (error) {
 			console.error("Error saving schedule:", error);
@@ -101,7 +104,7 @@ function DataExports() {
 						description="Turn on to activate automatic report generation."
 						htmlFor="exports-enabled"
 					>
-						<Switch id="exports-enabled" checked={enabled} onCheckedChange={setEnabled} />
+						<Switch id="exports-enabled" checked={enabled} onCheckedChange={(val) => { setEnabled(val); setHasUnsavedChanges(true); }} />
 					</Row>
 				</Rows>
 
@@ -119,7 +122,7 @@ function DataExports() {
 										key={f}
 										type="button"
 										aria-pressed={frequency === f}
-										onClick={() => setFrequency(f)}
+										onClick={() => { setFrequency(f); setHasUnsavedChanges(true); }}
 										className={`h-9 flex-1 rounded-md border text-[13px] font-medium capitalize transition-colors ${
 											frequency === f
 												? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
@@ -135,7 +138,7 @@ function DataExports() {
 						{frequency === "weekly" && (
 							<Field label="Generate every" htmlFor="day-of-week">
 								<div className="max-w-[380px]">
-									<Select value={dayOfWeek} onValueChange={setDayOfWeek}>
+									<Select value={dayOfWeek} onValueChange={(val) => { setDayOfWeek(val); setHasUnsavedChanges(true); }}>
 										<SelectTrigger
 											id="day-of-week"
 											className="h-9 border-slate-200 bg-white text-[14px] dark:border-white/[0.12] dark:bg-white/[0.03]"
@@ -157,7 +160,7 @@ function DataExports() {
 						{frequency === "monthly" && (
 							<Field label="Generate on day" htmlFor="day-of-month">
 								<div className="max-w-[380px]">
-									<Select value={dayOfMonth} onValueChange={setDayOfMonth}>
+									<Select value={dayOfMonth} onValueChange={(val) => { setDayOfMonth(val); setHasUnsavedChanges(true); }}>
 										<SelectTrigger
 											id="day-of-month"
 											className="h-9 border-slate-200 bg-white text-[14px] dark:border-white/[0.12] dark:bg-white/[0.03]"
@@ -196,7 +199,7 @@ function DataExports() {
 										type="button"
 										role="radio"
 										aria-checked={deliveryMode === mode.id}
-										onClick={() => setDeliveryMode(mode.id)}
+										onClick={() => { setDeliveryMode(mode.id as any); setHasUnsavedChanges(true); }}
 										className="flex w-full items-start gap-3 py-3.5 text-left"
 									>
 										<span
@@ -226,21 +229,25 @@ function DataExports() {
 					</div>
 
 				</fieldset>
-
-				{/* Outside the fieldset: turning scheduling off is itself a change
-				    that has to be savable. */}
-				<div className="flex items-center justify-end gap-3 pt-6">
-					<SaveState state={saveState} labels={{ saved: "Configuration saved" }} />
-					<button
-						type="button"
-						onClick={handleSave}
-						disabled={saveState === "saving"}
-						className={btnPrimary}
-					>
-						Save Configuration
-					</button>
-				</div>
 			</Section>
+
+			{hasUnsavedChanges && (
+				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+					<div className="flex items-center gap-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full py-2 pl-6 pr-2">
+						<span className="text-[14px] font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
+							Unsaved changes
+						</span>
+						<button
+							type="button"
+							onClick={handleSave}
+							disabled={saveState === "saving"}
+							className={cn(btnPrimary, "rounded-full h-9 px-6 shadow-sm text-[13.5px] font-semibold")}
+						>
+							{saveState === "saving" ? "Saving..." : "Save Changes"}
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

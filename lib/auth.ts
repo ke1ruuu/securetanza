@@ -14,6 +14,7 @@ export interface User {
 	permissions: string[];
 	mustChangePassword?: boolean;
 	defaultLandingPage?: string;
+	autoLogoutTimer?: number;
 }
 
 export interface SessionPayload {
@@ -24,6 +25,7 @@ export interface SessionPayload {
 	permissions: string[];
 	mustChangePassword: boolean;
 	defaultLandingPage: string;
+	autoLogoutTimer: number;
 	expiresAt: Date;
 }
 
@@ -79,6 +81,7 @@ export async function createSession(user: User): Promise<string> {
 		permissions: user.permissions,
 		mustChangePassword: user.mustChangePassword ?? false,
 		defaultLandingPage: user.defaultLandingPage ?? "dashboard",
+		autoLogoutTimer: user.autoLogoutTimer ?? 15,
 	});
 
 	const cookieStore = await cookies();
@@ -100,6 +103,7 @@ interface CachedUserValidation {
   permissions: string[];
   mustChangePassword: boolean;
   defaultLandingPage: string;
+  autoLogoutTimer: number;
   accountNumber: string;
 }
 
@@ -176,6 +180,7 @@ export async function getSession(validateWithDb: boolean = true): Promise<Sessio
             permissions: activePermissions,
             mustChangePassword: user.mustChangePassword,
             defaultLandingPage: user.defaultLandingPage,
+            autoLogoutTimer: user.autoLogoutTimer,
             accountNumber: user.accountNumber,
           };
         }
@@ -196,6 +201,7 @@ export async function getSession(validateWithDb: boolean = true): Promise<Sessio
         permissions: userData.permissions,
         mustChangePassword: userData.mustChangePassword,
         defaultLandingPage: userData.defaultLandingPage,
+        autoLogoutTimer: userData.autoLogoutTimer,
       };
     } catch (error) {
       console.error('Error validating session with database:', error);

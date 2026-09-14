@@ -8048,11 +8048,13 @@ export namespace Prisma {
 
   export type UserAvgAggregateOutputType = {
     id: number | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
   }
 
   export type UserSumAggregateOutputType = {
     id: number | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
   }
 
@@ -8063,6 +8065,7 @@ export namespace Prisma {
     passwordHash: string | null
     mustChangePassword: boolean | null
     defaultLandingPage: string | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
     lockedAt: Date | null
     createdAt: Date | null
@@ -8076,6 +8079,7 @@ export namespace Prisma {
     passwordHash: string | null
     mustChangePassword: boolean | null
     defaultLandingPage: string | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
     lockedAt: Date | null
     createdAt: Date | null
@@ -8089,6 +8093,7 @@ export namespace Prisma {
     passwordHash: number
     mustChangePassword: number
     defaultLandingPage: number
+    autoLogoutTimer: number
     failedLoginAttempts: number
     lockedAt: number
     createdAt: number
@@ -8099,11 +8104,13 @@ export namespace Prisma {
 
   export type UserAvgAggregateInputType = {
     id?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
   }
 
   export type UserSumAggregateInputType = {
     id?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
   }
 
@@ -8114,6 +8121,7 @@ export namespace Prisma {
     passwordHash?: true
     mustChangePassword?: true
     defaultLandingPage?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
     lockedAt?: true
     createdAt?: true
@@ -8127,6 +8135,7 @@ export namespace Prisma {
     passwordHash?: true
     mustChangePassword?: true
     defaultLandingPage?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
     lockedAt?: true
     createdAt?: true
@@ -8140,6 +8149,7 @@ export namespace Prisma {
     passwordHash?: true
     mustChangePassword?: true
     defaultLandingPage?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
     lockedAt?: true
     createdAt?: true
@@ -8240,6 +8250,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword: boolean
     defaultLandingPage: string
+    autoLogoutTimer: number
     failedLoginAttempts: number
     lockedAt: Date | null
     createdAt: Date
@@ -8272,6 +8283,7 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
@@ -8288,6 +8300,7 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
@@ -8301,6 +8314,7 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
@@ -8314,13 +8328,14 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "defaultLandingPage" | "failedLoginAttempts" | "lockedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "defaultLandingPage" | "autoLogoutTimer" | "failedLoginAttempts" | "lockedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     permissions?: boolean | User$permissionsArgs<ExtArgs>
     exportSchedules?: boolean | User$exportSchedulesArgs<ExtArgs>
@@ -8342,6 +8357,7 @@ export namespace Prisma {
       passwordHash: string
       mustChangePassword: boolean
       defaultLandingPage: string
+      autoLogoutTimer: number
       failedLoginAttempts: number
       lockedAt: Date | null
       createdAt: Date
@@ -8777,6 +8793,7 @@ export namespace Prisma {
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly mustChangePassword: FieldRef<"User", 'Boolean'>
     readonly defaultLandingPage: FieldRef<"User", 'String'>
+    readonly autoLogoutTimer: FieldRef<"User", 'Int'>
     readonly failedLoginAttempts: FieldRef<"User", 'Int'>
     readonly lockedAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
@@ -13872,6 +13889,7 @@ export namespace Prisma {
     passwordHash: 'passwordHash',
     mustChangePassword: 'mustChangePassword',
     defaultLandingPage: 'defaultLandingPage',
+    autoLogoutTimer: 'autoLogoutTimer',
     failedLoginAttempts: 'failedLoginAttempts',
     lockedAt: 'lockedAt',
     createdAt: 'createdAt',
@@ -14753,6 +14771,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
     defaultLandingPage?: StringFilter<"User"> | string
+    autoLogoutTimer?: IntFilter<"User"> | number
     failedLoginAttempts?: IntFilter<"User"> | number
     lockedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -14768,6 +14787,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -14786,6 +14806,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
     defaultLandingPage?: StringFilter<"User"> | string
+    autoLogoutTimer?: IntFilter<"User"> | number
     failedLoginAttempts?: IntFilter<"User"> | number
     lockedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -14801,6 +14822,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -14822,6 +14844,7 @@ export namespace Prisma {
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     mustChangePassword?: BoolWithAggregatesFilter<"User"> | boolean
     defaultLandingPage?: StringWithAggregatesFilter<"User"> | string
+    autoLogoutTimer?: IntWithAggregatesFilter<"User"> | number
     failedLoginAttempts?: IntWithAggregatesFilter<"User"> | number
     lockedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -15879,6 +15902,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -15894,6 +15918,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -15908,6 +15933,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15923,6 +15949,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15938,6 +15965,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -15950,6 +15978,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15963,6 +15992,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17027,6 +17057,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrder
     createdAt?: SortOrder
@@ -17035,6 +17066,7 @@ export namespace Prisma {
 
   export type UserAvgOrderByAggregateInput = {
     id?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
   }
 
@@ -17045,6 +17077,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrder
     createdAt?: SortOrder
@@ -17058,6 +17091,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrder
     createdAt?: SortOrder
@@ -17066,6 +17100,7 @@ export namespace Prisma {
 
   export type UserSumOrderByAggregateInput = {
     id?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
   }
 
@@ -18194,6 +18229,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18208,6 +18244,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18237,6 +18274,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18251,6 +18289,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18302,6 +18341,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18316,6 +18356,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18361,6 +18402,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18375,6 +18417,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

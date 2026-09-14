@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 import {
 	Select,
 	SelectContent,
@@ -131,11 +132,11 @@ function NotificationSettings() {
 	const [general, setGeneral] = useState({ uploads: true, heinous: true, sensational: true });
 	const [defaultDateRange, setDefaultDateRange] = useState("last30");
 	const [generalState, setGeneralState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
 	const [rules, setRules] = useState<NotificationRule[]>([]);
 	const [rulesStatus, setRulesStatus] = useState<"initial" | "ready" | "error">("initial");
 	const [savingRuleId, setSavingRuleId] = useState<string | null>(null);
-	const [rowState, setRowState] = useState<Record<string, { msg: string; isError?: boolean }>>({});
 	const [drafts, setDrafts] = useState<Record<string, string>>({});
 
 	const fetchRules = useCallback(async () => {
@@ -164,7 +165,6 @@ function NotificationSettings() {
 
 		setRules((prev) => prev.map((r) => (r.id === ruleId ? { ...r, ...updates } : r)));
 		setSavingRuleId(ruleId);
-		setRowState((prev) => ({ ...prev, [ruleId]: { msg: "Saving changes..." } }));
 
 		try {
 			const res = await fetch(`/api/notifications/rules/${ruleId}`, {
@@ -177,21 +177,10 @@ function NotificationSettings() {
 			if (!data.success) throw new Error(data.error || "Update was rejected");
 
 			setRules((prev) => prev.map((r) => (r.id === ruleId ? { ...r, ...data.data } : r)));
-			setRowState((prev) => ({ ...prev, [ruleId]: { msg: "Saved" } }));
-			setTimeout(() => {
-				setRowState((prev) => {
-					if (prev[ruleId]?.msg !== "Saved") return prev;
-					const next = { ...prev };
-					delete next[ruleId];
-					return next;
-				});
-			}, 2500);
+			toast.success("Rule updated successfully");
 		} catch (err) {
 			setRules((prev) => prev.map((r) => (r.id === ruleId ? previous : r)));
-			setRowState((prev) => ({
-				...prev,
-				[ruleId]: { msg: err instanceof Error ? err.message : "Update failed", isError: true },
-			}));
+			toast.error(err instanceof Error ? err.message : "Update failed");
 		} finally {
 			setSavingRuleId(null);
 		}
@@ -210,15 +199,11 @@ function NotificationSettings() {
 		if (Number.isNaN(parsed) || parsed === current) return;
 
 		if (parsed < field.min || parsed > field.max) {
-			setRowState((prev) => ({
-				...prev,
-				[rule.id]: {
-					msg: `${field.label} must be between ${field.min} and ${field.max}${
-						field.unit ? ` ${field.unit}` : ""
-					}. Kept ${current}.`,
-					isError: true,
-				},
-			}));
+			toast.error(
+				`${field.label} must be between ${field.min} and ${field.max}${
+					field.unit ? ` ${field.unit}` : ""
+				}. Kept ${current}.`
+			);
 			return;
 		}
 
@@ -229,6 +214,7 @@ function NotificationSettings() {
 		setGeneralState("saving");
 		setTimeout(() => {
 			setGeneralState("saved");
+			setHasUnsavedChanges(false);
 			setTimeout(() => setGeneralState((s) => (s === "saved" ? "idle" : s)), 3000);
 		}, 300);
 	};
@@ -236,18 +222,10 @@ function NotificationSettings() {
 	const activeRules = rules.filter((r) => r.isEnabled).length;
 
 	return (
-		<div className="max-w-[860px] space-y-12">
+		<div className="max-w-[860px] space-y-12 pb-12">
 			<PageHeader
 				title="Notification & Alert Engine"
 				description="Configure post-ingestion analytical triggers, mathematical detection thresholds, and in-app alerts."
-				actions={
-					<>
-						<SaveState state={generalState} labels={{ saved: "Preferences saved" }} />
-						<button onClick={handleSaveGeneral} className={btnPrimary}>
-							Save Preferences
-						</button>
-					</>
-				}
 			/>
 
 			<Section
@@ -282,7 +260,6 @@ function NotificationSettings() {
 					<Rows>
 						{rules.map((rule) => {
 							const fields = RULE_PARAMS[rule.ruleKey] ?? [];
-							const row = rowState[rule.id];
 							const isSaving = savingRuleId === rule.id;
 
 							return (
@@ -385,19 +362,6 @@ function NotificationSettings() {
 												</div>
 											);
 										})}
-
-										{row?.msg && (
-											<p
-												aria-live="polite"
-												className={`pb-1.5 text-[12.5px] ${
-													row.isError
-														? "text-red-600 dark:text-red-400"
-														: "text-emerald-600 dark:text-emerald-400"
-												}`}
-											>
-												{row.msg}
-											</p>
-										)}
 									</div>
 								</div>
 							);
@@ -421,7 +385,10 @@ function NotificationSettings() {
 							<Switch
 								id={`alert-${alert.key}`}
 								checked={general[alert.key]}
-								onCheckedChange={(val) => setGeneral((prev) => ({ ...prev, [alert.key]: val }))}
+								onCheckedChange={(val) => {
+									setGeneral((prev) => ({ ...prev, [alert.key]: val }));
+									setHasUnsavedChanges(true);
+								}}
 							/>
 						</Row>
 					))}
@@ -435,7 +402,13 @@ function NotificationSettings() {
 				<div className="border-t border-slate-200 pt-5 dark:border-white/[0.07]">
 					<Field label="Initial Date Filter Range" htmlFor="default-range">
 						<div className="max-w-[380px]">
-							<Select value={defaultDateRange} onValueChange={setDefaultDateRange}>
+							<Select 
+								value={defaultDateRange} 
+								onValueChange={(val) => {
+									setDefaultDateRange(val);
+									setHasUnsavedChanges(true);
+								}}
+							>
 								<SelectTrigger
 									id="default-range"
 									className="h-9 border-slate-200 bg-white text-[14px] dark:border-white/[0.12] dark:bg-white/[0.03]"
@@ -455,6 +428,23 @@ function NotificationSettings() {
 					</Field>
 				</div>
 			</Section>
+
+			{hasUnsavedChanges && (
+				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+					<div className="flex items-center gap-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full py-2 pl-6 pr-2">
+						<span className="text-[14px] font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
+							Unsaved changes
+						</span>
+						<button
+							onClick={handleSaveGeneral}
+							disabled={generalState === "saving"}
+							className={cn(btnPrimary, "rounded-full h-9 px-6 shadow-sm text-[13.5px] font-semibold")}
+						>
+							{generalState === "saving" ? "Saving..." : "Save Changes"}
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

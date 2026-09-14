@@ -10,6 +10,7 @@ interface User {
   permissions: string[];
   mustChangePassword?: boolean;
   defaultLandingPage?: string;
+  autoLogoutTimer?: number;
 }
 
 interface AuthContextType {
@@ -120,10 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, pathname, checkSession]);
 
-  // Idle timeout (auto logout if not used for 15 minutes)
+  // Idle timeout (auto logout if not used for configured minutes)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes 
+    const IDLE_TIMEOUT_MS = (user?.autoLogoutTimer ?? 15) * 60 * 1000; 
 
     const handleIdleLogout = async () => {
       try {
@@ -150,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(timeoutId);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, []);
+  }, [user?.autoLogoutTimer]);
 
   // Tab-Session Enforcer (Logout on tab close / new tab isolation)
   useEffect(() => {

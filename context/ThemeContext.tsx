@@ -39,6 +39,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 			}
 		};
 
+		const isCurrentlyDark = document.documentElement.classList.contains("dark");
+		const wantsDark = theme === "dark";
+
+		if (isCurrentlyDark === wantsDark) {
+			localStorage.setItem("theme", theme);
+			return;
+		}
+
 		// Use View Transitions API for a smooth crossfade if supported
 		if (!document.startViewTransition) {
 			applyTheme();

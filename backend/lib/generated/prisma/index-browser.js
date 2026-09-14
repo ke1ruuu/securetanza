@@ -236,6 +236,7 @@ exports.Prisma.UserScalarFieldEnum = {
   passwordHash: 'passwordHash',
   mustChangePassword: 'mustChangePassword',
   defaultLandingPage: 'defaultLandingPage',
+  autoLogoutTimer: 'autoLogoutTimer',
   failedLoginAttempts: 'failedLoginAttempts',
   lockedAt: 'lockedAt',
   createdAt: 'createdAt',

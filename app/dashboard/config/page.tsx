@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { CheckCircle2, Eye, EyeOff, LogOut } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, LogOut, Timer } from "lucide-react";
 import { toast } from "sonner";
 import {
 	DataRow,
@@ -18,7 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
-	const { user, logout } = useAuth();
+	const { user, logout, refreshSession } = useAuth();
 	const [currentPassword, setCurrentPassword] = useState("");
 	const [newPassword, setNewPassword] = useState("");
 	const [confirmPassword, setConfirmPassword] = useState("");
@@ -26,6 +26,9 @@ export default function ProfilePage() {
 	const [showNew, setShowNew] = useState(false);
 	const [showConfirm, setShowConfirm] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [autoLogoutTimer, setAutoLogoutTimer] = useState<number | "">(user?.autoLogoutTimer ?? 15);
+	const [savingTimer, setSavingTimer] = useState(false);
+	const [unsavedTimer, setUnsavedTimer] = useState(false);
 
 	const requirements = [
 		{ label: "At least 8 characters", regex: /.{8,}/ },
@@ -50,8 +53,8 @@ export default function ProfilePage() {
 		user?.permissions?.[0]?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ??
 		"Officer";
 
-	const handleChangePassword = async (e: React.FormEvent) => {
-		e.preventDefault();
+	const handleChangePassword = async (e?: React.FormEvent) => {
+		if (e) e.preventDefault();
 
 		if (newPassword === currentPassword) {
 			toast.error("New password cannot be the same as your current password.");
@@ -88,12 +91,37 @@ export default function ProfilePage() {
 		}
 	};
 
+	const handleUpdateTimer = async (timerValue: number) => {
+		setSavingTimer(true);
+		try {
+			const res = await fetch("/api/users/settings/auto-logout", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ autoLogoutTimer: timerValue }),
+			});
+			if (!res.ok) throw new Error("Failed to update timer");
+
+			toast.success(`Auto-logout timer set to ${timerValue} minutes`);
+			setAutoLogoutTimer(timerValue);
+			setUnsavedTimer(false);
+			await refreshSession();
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to update timer");
+			setAutoLogoutTimer(user?.autoLogoutTimer ?? 15);
+		} finally {
+			setSavingTimer(false);
+		}
+	};
+
 	const canSubmit =
 		!loading &&
 		isStrong &&
 		confirmPassword.length > 0 &&
 		newPassword === confirmPassword &&
 		newPassword !== currentPassword;
+
+	const isEditingPassword = currentPassword.length > 0 || newPassword.length > 0 || confirmPassword.length > 0;
+	const hasUnsavedChanges = unsavedTimer || isEditingPassword;
 
 	return (
 		<div className="max-w-[720px] space-y-12">
@@ -123,7 +151,10 @@ export default function ProfilePage() {
 				title="Change Password"
 				description="Update your login credentials. Must be at least 8 characters."
 			>
-				<form onSubmit={handleChangePassword} className="border-t border-slate-200 pt-5 dark:border-white/[0.07]">
+				<form onSubmit={(e) => {
+					e.preventDefault();
+					if (canSubmit) handleChangePassword();
+				}} className="border-t border-slate-200 pt-5 dark:border-white/[0.07]">
 					<div className="max-w-[380px] space-y-5">
 						<Field label="Current password" htmlFor="current-password">
 							<PasswordInput
@@ -202,12 +233,58 @@ export default function ProfilePage() {
 								</p>
 							)}
 						</Field>
-
-						<button type="submit" disabled={!canSubmit} className={btnPrimary}>
-							{loading ? "Updating…" : "Update Password"}
-						</button>
 					</div>
 				</form>
+			</Section>
+
+			<Section
+				title="Auto Logout"
+				description="Configure how long before you are automatically logged out due to inactivity."
+			>
+				<Rows>
+					<Row label="Idle Timeout Duration" description="Choose a preset or enter a custom duration in minutes.">
+						<div className="flex flex-wrap items-center gap-3 mt-3 sm:mt-0">
+							<div className="flex flex-wrap gap-2">
+								{[5, 15, 30, 60].map((preset) => (
+									<button
+										key={preset}
+										type="button"
+										onClick={() => {
+											setUnsavedTimer(false);
+											handleUpdateTimer(preset);
+										}}
+										disabled={savingTimer}
+										className={cn(
+											btnOutline,
+											"h-8 px-3 text-xs",
+											autoLogoutTimer === preset 
+												? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200" 
+												: ""
+										)}
+									>
+										{preset} min
+									</button>
+								))}
+							</div>
+							<div className="flex items-center gap-2">
+								<input 
+									type="number"
+									min={1}
+									max={1440}
+									placeholder="Custom"
+									value={autoLogoutTimer}
+									onChange={(e) => {
+										setAutoLogoutTimer(e.target.value === "" ? "" : parseInt(e.target.value));
+										setUnsavedTimer(true);
+									}}
+									disabled={savingTimer}
+									className={cn(inputBase, "h-8 w-20 text-center px-2")}
+								/>
+								<span className="text-[13px] text-slate-500">min</span>
+							</div>
+						</div>
+					</Row>
+				</Rows>
 			</Section>
 
 			<Section title="Session">
@@ -226,6 +303,39 @@ export default function ProfilePage() {
 					</Row>
 				</Rows>
 			</Section>
+
+			{hasUnsavedChanges && (
+				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+					<div className="flex items-center gap-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full py-2 pl-6 pr-2">
+						<span className="text-[14px] font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
+							Unsaved changes
+						</span>
+						<button
+							onClick={async () => {
+								if (isEditingPassword) {
+									if (!canSubmit) {
+										toast.error("Please complete the password fields correctly to save.");
+										return;
+									}
+									await handleChangePassword();
+								}
+								if (unsavedTimer) {
+									const val = typeof autoLogoutTimer === 'string' ? parseInt(autoLogoutTimer) : autoLogoutTimer;
+									if (val && val >= 1 && val <= 1440) {
+										await handleUpdateTimer(val);
+									} else {
+										toast.error("Invalid timer duration. Must be between 1 and 1440 minutes.");
+									}
+								}
+							}}
+							disabled={savingTimer || loading}
+							className={cn(btnPrimary, "rounded-full h-9 px-6 shadow-sm text-[13.5px] font-semibold")}
+						>
+							{savingTimer || loading ? "Saving..." : "Save Changes"}
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
