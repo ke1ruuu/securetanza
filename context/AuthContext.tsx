@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           "Cache-Control": "no-cache",
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user && Array.isArray(data.user.permissions) && data.user.permissions.length > 0) {
@@ -119,6 +119,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearInterval(interval);
     };
   }, [user, pathname, checkSession]);
+
+  // Idle timeout (auto logout if not used for 15 minutes)
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes 
+
+    const handleIdleLogout = async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+        window.location.href = "/login";
+      } catch (error) {
+        console.error("Idle logout error:", error);
+      }
+    };
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      // Only run idle timeout if we are not already on the login page
+      if (window.location.pathname !== "/login") {
+        timeoutId = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
+      }
+    };
+
+    resetTimer();
+    const events = ["mousemove", "keydown", "scroll", "click", "touchstart"];
+    events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, []);
+
+  // Tab-Session Enforcer (Logout on tab close / new tab isolation)
+  useEffect(() => {
+    if (user && typeof window !== "undefined" && window.location.pathname !== "/login") {
+      const hasTabSession = sessionStorage.getItem("tabSessionActive");
+      
+      if (!hasTabSession) {
+        // This is a new tab or the session was lost (tab closed previously).
+        // We explicitly log out to destroy the persistent cookie session.
+        fetch("/api/auth/logout", { method: "POST" }).finally(() => {
+          window.location.href = "/login";
+        });
+      }
+    }
+  }, [user]);
 
   const logout = async () => {
     try {

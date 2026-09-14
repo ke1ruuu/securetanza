@@ -10,7 +10,7 @@ import * as path from 'path';
 import { prisma, disconnectPrisma } from '../lib/prisma';
 import { BackupService, XLSX_MIME } from '../services/backup.service';
 
-console.log('🕒 Starting Scheduled Data Exports background worker...');
+console.log("🕒 Starting Scheduled Data Exports background worker...");
 
 const EXPORTS_DIR = path.join(process.cwd(), 'exports');
 const RETENTION_DAYS = 14;
