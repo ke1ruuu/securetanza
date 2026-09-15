@@ -1,15 +1,22 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+export type SectionOptions = {
+  enabled: boolean;
+  includeText: boolean;
+  includeCharts: boolean;
+  includeTables: boolean;
+};
+
 export interface ReportConfig {
-  includeExecutiveSummary: boolean;
-  includeOverview: boolean;
-  includeTrends: boolean;
-  includeTimePatterns: boolean;
-  includeCrimeTypes: boolean;
-  includeBarangayComparison: boolean;
-  includeCrimeMatrix: boolean;
-  includeRecommendations: boolean;
+  includeExecutiveSummary: SectionOptions;
+  includeOverview: SectionOptions;
+  includeTrends: SectionOptions;
+  includeTimePatterns: SectionOptions;
+  includeCrimeTypes: SectionOptions;
+  includeBarangayComparison: SectionOptions;
+  includeCrimeMatrix: SectionOptions;
+  includeRecommendations: SectionOptions;
 }
 
 interface AnalyticsData {
@@ -70,8 +77,6 @@ const CONTENT_TOP = 30;
 const CONTENT_BOTTOM = PAGE_H - 24;
 const MEASURE = PAGE_W - MARGIN_X * 2; // 170 — tables, charts, rules
 const TEXT_COL = 126; // ≈ 74 characters at 9.5pt Helvetica
-const RAIL_X = MARGIN_X + TEXT_COL + 10;
-const RAIL_W = MEASURE - TEXT_COL - 10;
 
 /* ── Type scale: size in points, leading in millimetres ───────────────────── */
 const T = {
@@ -263,7 +268,7 @@ export class PDFReportGenerator {
 
     this.y += 3.4;
     this.rule(this.y, RULE, 0.4);
-    this.y += 7;
+    this.y += 8;
   }
 
   private note(text: string) {
@@ -574,7 +579,7 @@ export class PDFReportGenerator {
     this.doc.line(MARGIN_X, ty + 12, MARGIN_X + 42, ty + 12);
 
     // Metadata ledger, foot of the cover
-    const metaTop = PAGE_H - 74;
+    const metaTop = PAGE_H - 64;
     this.rule(metaTop, RULE, 0.4);
 
     const meta: Array<[string, string]> = [
@@ -649,7 +654,9 @@ export class PDFReportGenerator {
 
   /* ── Sections ───────────────────────────────────────────────────────────── */
 
-  private executiveSummary(data: ReportData) {
+  private executiveSummary(data: ReportData, opts: SectionOptions) {
+    if (!opts.includeText) return;
+
     this.section('Executive Summary');
 
     const { trends } = data.analyticsData;
@@ -659,41 +666,16 @@ export class PDFReportGenerator {
         ? 'all barangays of Tanza, Cavite'
         : `Barangay ${data.barangayName}`;
 
-    const railTop = this.y;
-
     this.paragraph(
       `${data.totalCrimes.toLocaleString()} incidents were recorded across ${scope} during ${data.timeRange}. ` +
         `The current threat assessment is ${trends.currentThreatLevel.toLowerCase()}, ` +
         `${
-          trends.trendDirection === 'improved'
-            ? 'down from'
-            : trends.trendDirection === 'worsened'
-            ? 'up from'
-            : 'unchanged against'
+          trends.trendDirection === 'improved' ? 'down from' : trends.trendDirection === 'worsened' ? 'up from' : 'unchanged against'
         } ${trends.previousThreatLevel.toLowerCase()} in the preceding quarter.`,
-      { scale: T.lead, color: INK }
+      { scale: T.lead, color: INK, width: MEASURE }
     );
-
     this.gap(3);
 
-    // Key figures in the side rail, aligned to the lead paragraph.
-    const railFigures: Array<[string, string]> = [
-      ['Incidents', data.totalCrimes.toLocaleString()],
-      ['Cleared', `${trends.resolutionRate}%`],
-      ['Safety index', `${trends.safetyIndex}%`],
-    ];
-    let ry = railTop - 1;
-    this.rule(ry - 4, RULE, 0.4, RAIL_X, RAIL_W);
-    railFigures.forEach(([label, value]) => {
-      this.capsLabel(label, RAIL_X, ry);
-      this.type(T.sub, 'bold');
-      this.ink(INK);
-      this.doc.text(value, RAIL_X, ry + 5.4);
-      ry += 10.5;
-      this.rule(ry - 4.6, HAIR, 0.12, RAIL_X, RAIL_W);
-    });
-
-    this.y = Math.max(this.y, railTop + 28);
     this.subhead('Findings');
 
     const topType = byType[0];
@@ -719,53 +701,74 @@ export class PDFReportGenerator {
     findings.forEach((finding) => this.listItem(finding));
   }
 
-  private situationalOverview(data: ReportData) {
+  private situationalOverview(data: ReportData, opts: SectionOptions) {
+    const byType = sortDesc(data.analyticsData.crimesByType, 'count');
+    const hasData = byType.length > 0;
+    if (hasData && !opts.includeText && !opts.includeCharts && !opts.includeTables) return;
+
     this.section('Situational Overview');
 
-    const byType = sortDesc(data.analyticsData.crimesByType, 'count');
     const { trends } = data.analyticsData;
 
-    this.figureBand([
-      { label: 'Total incidents', value: data.totalCrimes.toLocaleString(), caption: data.timeRange },
-      { label: 'Cleared', value: `${trends.resolutionRate}%`, caption: 'Cases marked cleared' },
-      { label: 'Safety index', value: `${trends.safetyIndex}%`, caption: 'Cleared or solved' },
-    ]);
+    if (opts.includeText) {
+      this.paragraph(
+        `${data.totalCrimes.toLocaleString()} incidents were recorded across the reporting period. ` +
+          `The figures and breakdown below summarise the current situation at a glance.`
+      );
+      this.gap(3);
+    }
+
+    if (opts.includeCharts) {
+      this.figureBand([
+        { label: 'Total incidents', value: data.totalCrimes.toLocaleString(), caption: data.timeRange },
+        { label: 'Cleared', value: `${trends.resolutionRate}%`, caption: 'Cases marked cleared' },
+        { label: 'Safety index', value: `${trends.safetyIndex}%`, caption: 'Cleared or solved' },
+      ]);
+      this.gap(4);
+    }
 
     if (!byType.length) {
       this.emptyNotice('incident data');
       return;
     }
 
-    this.horizontalBars(
-      byType.slice(0, 8).map((crime) => ({
-        label: crime.type.length > 24 ? `${crime.type.slice(0, 23)}…` : crime.type,
-        value: crime.count,
-      })),
-      { caption: 'Leading incident types' }
-    );
+    if (opts.includeCharts) {
+      this.horizontalBars(
+        byType.slice(0, 8).map((crime) => ({
+          label: crime.type.length > 24 ? `${crime.type.slice(0, 23)}…` : crime.type,
+          value: crime.count,
+        })),
+        { caption: 'Leading incident types' }
+      );
+      this.gap(2);
+    }
 
-    const top = byType.slice(0, 10);
-    this.table({
-      head: ['Incident type', 'Cases', 'Share', ''],
-      body: top.map((crime) => [
-        crime.type,
-        crime.count.toLocaleString(),
-        this.share(crime.count, data.totalCrimes),
-        '',
-      ]),
-      columnStyles: {
-        1: { halign: 'right', cellWidth: 20 },
-        2: { halign: 'right', cellWidth: 20 },
-        3: { cellWidth: 40, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
-      },
-      shareColumn: {
-        index: 3,
-        values: top.map((crime) => (data.totalCrimes ? crime.count / data.totalCrimes : 0)),
-      },
-    });
+    if (opts.includeTables) {
+      const top = byType.slice(0, 10);
+      this.table({
+        head: ['Incident type', 'Cases', 'Share', ''],
+        body: top.map((crime) => [
+          crime.type,
+          crime.count.toLocaleString(),
+          this.share(crime.count, data.totalCrimes),
+          '',
+        ]),
+        columnStyles: {
+          1: { halign: 'right', cellWidth: 20 },
+          2: { halign: 'right', cellWidth: 20 },
+          3: { cellWidth: 40, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
+        },
+        shareColumn: {
+          index: 3,
+          values: top.map((crime) => (data.totalCrimes ? crime.count / data.totalCrimes : 0)),
+        },
+      });
+    }
   }
 
-  private trendAnalysis(data: ReportData) {
+  private trendAnalysis(data: ReportData, opts: SectionOptions) {
+    if (!opts.includeText && !opts.includeCharts && !opts.includeTables) return;
+
     this.section('Trend Analysis');
 
     const { trends, crimesByMonth } = data.analyticsData;
@@ -776,47 +779,55 @@ export class PDFReportGenerator {
         ? 'Deteriorating — incidents increased'
         : 'Stable — no material change';
 
-    this.paragraph(
-      `Quarter-on-quarter comparison of recorded incidents and the resulting threat classification. ` +
-        `Change is capped at ±90% so that low-count quarters do not distort the reading.`
-    );
-    this.gap(4);
-
-    this.table({
-      head: ['Period', 'Incidents', 'Threat level'],
-      body: [
-        [trends.currentQuarterLabel || 'Current quarter', trends.currentQuarterCrimes.toLocaleString(), this.titleCase(trends.currentThreatLevel)],
-        [trends.previousQuarterLabel || 'Previous quarter', trends.previousQuarterCrimes.toLocaleString(), this.titleCase(trends.previousThreatLevel)],
-        [
-          'Change',
-          `${trends.monthlyChange > 0 ? '+' : ''}${trends.monthlyChange}%`,
-          direction,
-        ],
-      ],
-      columnStyles: {
-        1: { halign: 'right', cellWidth: 30 },
-        2: { cellWidth: 70, cellPadding: { top: 2, right: 0, bottom: 2, left: 6 } },
-      },
-    });
-
-    const monthly = crimesByMonth.filter((m) => m.month >= 1 && m.month <= 12);
-    if (!monthly.length || monthly.every((m) => m.count === 0)) {
-      this.emptyNotice('monthly activity');
-      return;
+    if (opts.includeText) {
+      this.paragraph(
+        `Quarter-on-quarter comparison of recorded incidents and the resulting threat classification. ` +
+          `Change is capped at ±90% so that low-count quarters do not distort the reading.`
+      );
+      this.gap(4);
     }
 
-    const peakMonth = monthly.reduce((best, m, i) => (m.count > monthly[best].count ? i : best), 0);
-    this.columnChart(
-      monthly.map((m) => ({ label: MONTHS_SHORT[m.month - 1] ?? `M${m.month}`, value: m.count })),
-      { caption: 'Incidents by month', height: 38, highlight: peakMonth }
-    );
+    if (opts.includeTables) {
+      this.table({
+        head: ['Period', 'Incidents', 'Threat level'],
+        body: [
+          [trends.currentQuarterLabel || 'Current quarter', trends.currentQuarterCrimes.toLocaleString(), this.titleCase(trends.currentThreatLevel)],
+          [trends.previousQuarterLabel || 'Previous quarter', trends.previousQuarterCrimes.toLocaleString(), this.titleCase(trends.previousThreatLevel)],
+          [
+            'Change',
+            `${trends.monthlyChange > 0 ? '+' : ''}${trends.monthlyChange}%`,
+            direction,
+          ],
+        ],
+        columnStyles: {
+          1: { halign: 'right', cellWidth: 30 },
+          2: { cellWidth: 70, cellPadding: { top: 2, right: 0, bottom: 2, left: 6 } },
+        },
+      });
+      this.gap(8);
+    }
 
-    this.note(
-      `Highest monthly volume: ${MONTHS_SHORT[monthly[peakMonth].month - 1] ?? '—'} with ${monthly[peakMonth].count} incidents.`
-    );
+    if (opts.includeCharts) {
+      const monthly = crimesByMonth.filter((m) => m.month >= 1 && m.month <= 12);
+      if (!monthly.length || monthly.every((m) => m.count === 0)) {
+        this.emptyNotice('monthly activity');
+      } else {
+        const peakMonth = monthly.reduce((best, m, i) => (m.count > monthly[best].count ? i : best), 0);
+        this.columnChart(
+          monthly.map((m) => ({ label: MONTHS_SHORT[m.month - 1] ?? `M${m.month}`, value: m.count })),
+          { caption: 'Incidents by month', height: 38, highlight: peakMonth }
+        );
+
+        this.note(
+          `Highest monthly volume: ${MONTHS_SHORT[monthly[peakMonth].month - 1] ?? '—'} with ${monthly[peakMonth].count} incidents.`
+        );
+      }
+    }
   }
 
-  private temporalAnalysis(data: ReportData) {
+  private temporalAnalysis(data: ReportData, opts: SectionOptions) {
+    if (!opts.includeText && !opts.includeCharts && !opts.includeTables) return;
+
     this.section('Temporal Analysis');
 
     const { timePatterns } = data.analyticsData;
@@ -824,203 +835,273 @@ export class PDFReportGenerator {
     const total = hours.reduce((a, b) => a + b, 0);
 
     if (!total) {
-      this.paragraph('Distribution of incidents across the 24-hour cycle, derived from the recorded time of commission.');
+      if (opts.includeText) {
+        this.paragraph('Distribution of incidents across the 24-hour cycle, derived from the recorded time of commission.');
+      }
       this.emptyNotice('time-of-day data');
       return;
     }
 
-    this.paragraph(
-      `Distribution of incidents across the 24-hour cycle, derived from the recorded time of commission. ` +
-        `Peak activity falls in the ${hourBand(timePatterns.peakHour)} band with ${hours[timePatterns.peakHour]} incidents.`
-    );
-    this.gap(5);
+    if (opts.includeText) {
+      this.paragraph(
+        `Distribution of incidents across the 24-hour cycle, derived from the recorded time of commission. ` +
+          `Peak activity falls in the ${hourBand(timePatterns.peakHour)} band with ${hours[timePatterns.peakHour]} incidents.`
+      );
+      this.gap(5);
+    }
 
-    this.columnChart(
-      hours.map((count, hour) => ({ label: String(hour).padStart(2, '0'), value: count })),
-      { caption: 'Incidents by hour of day', height: 34, labelEvery: 3, highlight: timePatterns.peakHour }
-    );
+    if (opts.includeCharts) {
+      this.columnChart(
+        hours.map((count, hour) => ({ label: String(hour).padStart(2, '0'), value: count })),
+        { caption: 'Incidents by hour of day', height: 34, labelEvery: 3, highlight: timePatterns.peakHour }
+      );
+      this.gap(8);
+    }
 
-    const bands: Array<[string, string, number]> = [
-      ['Late night', '12 AM – 6 AM', hours.slice(0, 6).reduce((a, b) => a + b, 0)],
-      ['Morning', '6 AM – 12 PM', hours.slice(6, 12).reduce((a, b) => a + b, 0)],
-      ['Afternoon', '12 PM – 6 PM', hours.slice(12, 18).reduce((a, b) => a + b, 0)],
-      ['Evening', '6 PM – 12 AM', hours.slice(18, 24).reduce((a, b) => a + b, 0)],
-    ];
+    if (opts.includeTables) {
+      const bands: Array<[string, string, number]> = [
+        ['Late night', '12 AM – 6 AM', hours.slice(0, 6).reduce((a, b) => a + b, 0)],
+        ['Morning', '6 AM – 12 PM', hours.slice(6, 12).reduce((a, b) => a + b, 0)],
+        ['Afternoon', '12 PM – 6 PM', hours.slice(12, 18).reduce((a, b) => a + b, 0)],
+        ['Evening', '6 PM – 12 AM', hours.slice(18, 24).reduce((a, b) => a + b, 0)],
+      ];
 
-    this.table({
-      head: ['Day part', 'Window', 'Incidents', 'Share', ''],
-      body: bands.map(([name, window, count]) => [name, window, count.toLocaleString(), this.share(count, total), '']),
-      columnStyles: {
-        1: { cellWidth: 34, textColor: [INK_SOFT[0], INK_SOFT[1], INK_SOFT[2]] },
-        2: { halign: 'right', cellWidth: 24 },
-        3: { halign: 'right', cellWidth: 20 },
-        4: { cellWidth: 40, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
-      },
-      shareColumn: { index: 4, values: bands.map(([, , count]) => (total ? count / total : 0)) },
-    });
+      this.table({
+        head: ['Day part', 'Window', 'Incidents', 'Share', ''],
+        body: bands.map(([name, window, count]) => [name, window, count.toLocaleString(), this.share(count, total), '']),
+        columnStyles: {
+          1: { cellWidth: 34, textColor: [INK_SOFT[0], INK_SOFT[1], INK_SOFT[2]] },
+          2: { halign: 'right', cellWidth: 24 },
+          3: { halign: 'right', cellWidth: 20 },
+          4: { cellWidth: 40, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
+        },
+        shareColumn: { index: 4, values: bands.map(([, , count]) => (total ? count / total : 0)) },
+      });
+    }
   }
 
-  private crimeClassification(data: ReportData) {
+  private crimeClassification(data: ReportData, opts: SectionOptions) {
+    const byType = sortDesc(data.analyticsData.crimesByType, 'count');
+    const hasData = byType.length > 0;
+    if (hasData && !opts.includeText && !opts.includeCharts && !opts.includeTables) return;
+
     this.section('Incident Classification');
 
-    const byType = sortDesc(data.analyticsData.crimesByType, 'count');
-    this.paragraph(
-      'Complete breakdown of recorded incidents by offence category, ordered by volume.'
-    );
-    this.gap(4);
+    if (opts.includeText) {
+      this.paragraph(
+        'Complete breakdown of recorded incidents by offence category, ordered by volume.'
+      );
+      this.gap(4);
+    }
 
     if (!byType.length) {
       this.emptyNotice('incident data');
       return;
     }
 
-    this.table({
-      head: ['#', 'Incident type', 'Cases', 'Share', ''],
-      body: byType.map((crime, i) => [
-        String(i + 1).padStart(2, '0'),
-        crime.type,
-        crime.count.toLocaleString(),
-        this.share(crime.count, data.totalCrimes),
-        '',
-      ]),
-      columnStyles: {
-        0: { cellWidth: 11, textColor: [INK_SOFT[0], INK_SOFT[1], INK_SOFT[2]] },
-        2: { halign: 'right', cellWidth: 20 },
-        3: { halign: 'right', cellWidth: 20 },
-        4: { cellWidth: 36, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
-      },
-      shareColumn: {
-        index: 4,
-        values: byType.map((crime) => (data.totalCrimes ? crime.count / data.totalCrimes : 0)),
-      },
-    });
+    if (opts.includeCharts) {
+      this.horizontalBars(
+        byType.slice(0, 8).map((crime) => ({
+          label: crime.type.length > 24 ? `${crime.type.slice(0, 23)}…` : crime.type,
+          value: crime.count,
+        })),
+        { caption: 'Leading incident types' }
+      );
+      this.gap(2);
+    }
+
+    if (opts.includeTables) {
+      this.table({
+        head: ['#', 'Incident type', 'Cases', 'Share', ''],
+        body: byType.map((crime, i) => [
+          String(i + 1).padStart(2, '0'),
+          crime.type,
+          crime.count.toLocaleString(),
+          this.share(crime.count, data.totalCrimes),
+          '',
+        ]),
+        columnStyles: {
+          0: { cellWidth: 11, textColor: [INK_SOFT[0], INK_SOFT[1], INK_SOFT[2]] },
+          2: { halign: 'right', cellWidth: 20 },
+          3: { halign: 'right', cellWidth: 20 },
+          4: { cellWidth: 36, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
+        },
+        shareColumn: {
+          index: 4,
+          values: byType.map((crime) => (data.totalCrimes ? crime.count / data.totalCrimes : 0)),
+        },
+      });
+    }
   }
 
-  private comparativeAnalysis(data: ReportData) {
+  private comparativeAnalysis(data: ReportData, opts: SectionOptions) {
+    const byBarangay = sortDesc(data.analyticsData.crimesByBarangay, 'count');
+    const hasData = byBarangay.length > 0;
+    if (hasData && !opts.includeText && !opts.includeCharts && !opts.includeTables) return;
+
     this.section('Comparative Analysis');
 
-    const byBarangay = sortDesc(data.analyticsData.crimesByBarangay, 'count');
     const scoped = data.barangayName !== 'All Barangays' && data.barangayName !== 'General Dashboard';
     const universe = byBarangay.reduce((sum, b) => sum + b.count, 0);
 
-    this.paragraph(
-      scoped
-        ? `Incident volume for Barangay ${data.barangayName} set against the other barangays of Tanza, Cavite.`
-        : 'Incident volume across the barangays of Tanza, Cavite, ranked by recorded cases.'
-    );
-    this.gap(4);
+    if (opts.includeText) {
+      this.paragraph(
+        scoped
+          ? `Incident volume for Barangay ${data.barangayName} set against the other barangays of Tanza, Cavite.`
+          : 'Incident volume across the barangays of Tanza, Cavite, ranked by recorded cases.'
+      );
+      this.gap(4);
+    }
 
     if (!byBarangay.length) {
       this.emptyNotice('barangay-level data');
       return;
     }
 
-    this.table({
-      head: ['Rank', 'Barangay', 'Cases', 'Share', ''],
-      body: byBarangay.map((item, i) => [
-        String(i + 1).padStart(2, '0'),
-        item.barangay,
-        item.count.toLocaleString(),
-        this.share(item.count, universe),
-        '',
-      ]),
-      columnStyles: {
-        0: { cellWidth: 16, textColor: [INK_SOFT[0], INK_SOFT[1], INK_SOFT[2]] },
-        2: { halign: 'right', cellWidth: 20 },
-        3: { halign: 'right', cellWidth: 20 },
-        4: { cellWidth: 36, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
-      },
-      shareColumn: {
-        index: 4,
-        values: byBarangay.map((item) => (universe ? item.count / universe : 0)),
-      },
-    });
+    if (opts.includeCharts) {
+      this.horizontalBars(
+        byBarangay.slice(0, 8).map((item) => ({
+          label: item.barangay.length > 24 ? `${item.barangay.slice(0, 23)}…` : item.barangay,
+          value: item.count,
+        })),
+        { caption: 'Highest-volume barangays' }
+      );
+      this.gap(2);
+    }
+
+    if (opts.includeTables) {
+      this.table({
+        head: ['Rank', 'Barangay', 'Cases', 'Share', ''],
+        body: byBarangay.map((item, i) => [
+          String(i + 1).padStart(2, '0'),
+          item.barangay,
+          item.count.toLocaleString(),
+          this.share(item.count, universe),
+          '',
+        ]),
+        columnStyles: {
+          0: { cellWidth: 16, textColor: [INK_SOFT[0], INK_SOFT[1], INK_SOFT[2]] },
+          2: { halign: 'right', cellWidth: 20 },
+          3: { halign: 'right', cellWidth: 20 },
+          4: { cellWidth: 36, cellPadding: { top: 2, right: 0, bottom: 2, left: 4 } },
+        },
+        shareColumn: {
+          index: 4,
+          values: byBarangay.map((item) => (universe ? item.count / universe : 0)),
+        },
+      });
+    }
   }
 
-  private incidenceMatrix(data: ReportData) {
+  private incidenceMatrix(data: ReportData, opts: SectionOptions) {
+    const matrix = data.analyticsData.crimeMatrix ?? [];
+    const hasData = matrix.length > 0;
+    if (hasData && !opts.includeText && !opts.includeCharts && !opts.includeTables) return;
+
     this.section('Incidence Matrix', 108);
 
-    const matrix = data.analyticsData.crimeMatrix ?? [];
-    this.paragraph(
-      'Monthly incidence by offence category. Cell shading encodes volume relative to the busiest cell in the matrix; a dash marks a month with no recorded cases.'
-    );
-    this.gap(5);
+    if (opts.includeText) {
+      this.paragraph(
+        'Monthly incidence by offence category. Cell shading encodes volume relative to the busiest cell in the matrix; a dash marks a month with no recorded cases.'
+      );
+      this.gap(5);
+    }
 
     if (!matrix.length) {
       this.emptyNotice('matrix data');
       return;
     }
 
-    this.matrixGrid(matrix.slice(0, 12));
+    if (opts.includeCharts) {
+      this.matrixGrid(matrix.slice(0, 12));
+    }
+
+    if (opts.includeTables) {
+      const totals = matrix
+        .map((row) => ({ crimeType: row.crimeType, total: row.monthlyData.reduce((a, b) => a + b, 0) }))
+        .sort((a, b) => b.total - a.total);
+      this.table({
+        head: ['Incident type', 'Total (12 mo)'],
+        body: totals.map((row) => [row.crimeType, row.total.toLocaleString()]),
+        columnStyles: {
+          1: { halign: 'right', cellWidth: 30 },
+        },
+      });
+    }
   }
 
-  private strategicRecommendations(data: ReportData) {
+  private strategicRecommendations(data: ReportData, opts: SectionOptions) {
+    if (!opts.includeText) return;
+
     this.section('Strategic Recommendations');
 
     const { trends, timePatterns } = data.analyticsData;
     const byType = sortDesc(data.analyticsData.crimesByType, 'count');
     const topType = byType[0];
 
-    this.paragraph(
-      'The following actions follow directly from the findings above. Each is tied to the measurement that prompted it.'
-    );
-
-    this.subhead('1 · Respond to the trend');
-    if (trends.trendDirection === 'worsened') {
+    // Recommendations is purely text-based
+    if (opts.includeText) {
       this.paragraph(
-        `Incidents rose ${Math.abs(trends.monthlyChange)}% against ${trends.previousQuarterLabel}. Treat this as an active escalation.`
+        'The following actions follow directly from the findings above. Each is tied to the measurement that prompted it.'
       );
-      this.listItem('Raise patrol frequency and visibility in the highest-volume barangays identified in the comparative analysis.');
-      this.listItem('Stand up community watch coordination with barangay officials in those areas.');
-      this.listItem('Run a prevention awareness campaign targeted at the leading offence category.');
-    } else if (trends.trendDirection === 'improved') {
+
+      this.subhead('1 · Respond to the trend');
+      if (trends.trendDirection === 'worsened') {
+        this.paragraph(
+          `Incidents rose ${Math.abs(trends.monthlyChange)}% against ${trends.previousQuarterLabel}. Treat this as an active escalation.`
+        );
+        this.listItem('Raise patrol frequency and visibility in the highest-volume barangays identified in the comparative analysis.');
+        this.listItem('Stand up community watch coordination with barangay officials in those areas.');
+        this.listItem('Run a prevention awareness campaign targeted at the leading offence category.');
+      } else if (trends.trendDirection === 'improved') {
+        this.paragraph(
+          `Incidents fell ${Math.abs(trends.monthlyChange)}% against ${trends.previousQuarterLabel}. Protect what is working.`
+        );
+        this.listItem('Hold current patrol schedules and community engagement cadence rather than reallocating away from them.');
+        this.listItem('Document the interventions in force this quarter so they can be replicated in lagging barangays.');
+        this.listItem('Watch neighbouring areas for displacement rather than genuine reduction.');
+      } else {
+        this.paragraph(`Volume is flat against ${trends.previousQuarterLabel}. Shift the emphasis from response to prevention.`);
+        this.listItem('Maintain patrol coverage and reinvest the margin into prevention programmes.');
+        this.listItem('Review whether flat volume reflects stable conditions or under-reporting.');
+      }
+
+      this.subhead('2 · Target the leading offence');
+      if (topType) {
+        this.paragraph(`${topType.type} accounts for ${topType.count} of ${data.totalCrimes.toLocaleString()} recorded cases.`);
+        this.listItem('Assign officers with specific experience in this offence category to the affected areas.');
+        this.listItem('Direct awareness messaging at the population most exposed to it.');
+        this.listItem('Confirm that reporting and response channels for this offence are published and staffed.');
+      } else {
+        this.paragraph('No offence category was recorded in this period, so no targeted strategy can be derived.');
+      }
+
+      this.subhead('3 · Match deployment to the clock');
       this.paragraph(
-        `Incidents fell ${Math.abs(trends.monthlyChange)}% against ${trends.previousQuarterLabel}. Protect what is working.`
+        `Peak activity sits in the ${hourBand(timePatterns.peakHour)} band with ${
+          timePatterns.hourlyDistribution[timePatterns.peakHour] ?? 0
+        } incidents.`
       );
-      this.listItem('Hold current patrol schedules and community engagement cadence rather than reallocating away from them.');
-      this.listItem('Document the interventions in force this quarter so they can be replicated in lagging barangays.');
-      this.listItem('Watch neighbouring areas for displacement rather than genuine reduction.');
-    } else {
-      this.paragraph(`Volume is flat against ${trends.previousQuarterLabel}. Shift the emphasis from response to prevention.`);
-      this.listItem('Maintain patrol coverage and reinvest the margin into prevention programmes.');
-      this.listItem('Review whether flat volume reflects stable conditions or under-reporting.');
+      this.listItem('Weight shift strength toward the peak band instead of distributing it evenly across the day.');
+      this.listItem('Keep mobile units on standby through the peak band for rapid response.');
+      this.listItem('Align barangay tanod schedules to the same window.');
+
+      this.subhead('4 · Close more cases');
+      this.paragraph(`The clearance rate stands at ${trends.resolutionRate}%, with a combined safety index of ${trends.safetyIndex}%.`);
+      if (trends.resolutionRate < 50) {
+        this.listItem('Audit where cases stall between filing and clearance, and staff that step first.');
+        this.listItem('Tighten evidence collection and documentation standards at the point of first response.');
+        this.listItem('Raise the cadence of coordination with the prosecution service on open cases.');
+      } else {
+        this.listItem('Hold the current investigative standard and record the practices behind it.');
+        this.listItem('Circulate those practices to units with lower clearance rates.');
+      }
+
+      this.subhead('5 · Sustain community partnership');
+      this.listItem('Hold a standing barangay forum on incident trends using this report as the shared reference.');
+      this.listItem('Run youth engagement programmes in the barangays carrying the largest share of cases.');
+      this.listItem('Bring local businesses into area security arrangements where commercial premises are affected.');
     }
-
-    this.subhead('2 · Target the leading offence');
-    if (topType) {
-      this.paragraph(`${topType.type} accounts for ${topType.count} of ${data.totalCrimes.toLocaleString()} recorded cases.`);
-      this.listItem('Assign officers with specific experience in this offence category to the affected areas.');
-      this.listItem('Direct awareness messaging at the population most exposed to it.');
-      this.listItem('Confirm that reporting and response channels for this offence are published and staffed.');
-    } else {
-      this.paragraph('No offence category was recorded in this period, so no targeted strategy can be derived.');
-    }
-
-    this.subhead('3 · Match deployment to the clock');
-    this.paragraph(
-      `Peak activity sits in the ${hourBand(timePatterns.peakHour)} band with ${
-        timePatterns.hourlyDistribution[timePatterns.peakHour] ?? 0
-      } incidents.`
-    );
-    this.listItem('Weight shift strength toward the peak band instead of distributing it evenly across the day.');
-    this.listItem('Keep mobile units on standby through the peak band for rapid response.');
-    this.listItem('Align barangay tanod schedules to the same window.');
-
-    this.subhead('4 · Close more cases');
-    this.paragraph(`The clearance rate stands at ${trends.resolutionRate}%, with a combined safety index of ${trends.safetyIndex}%.`);
-    if (trends.resolutionRate < 50) {
-      this.listItem('Audit where cases stall between filing and clearance, and staff that step first.');
-      this.listItem('Tighten evidence collection and documentation standards at the point of first response.');
-      this.listItem('Raise the cadence of coordination with the prosecution service on open cases.');
-    } else {
-      this.listItem('Hold the current investigative standard and record the practices behind it.');
-      this.listItem('Circulate those practices to units with lower clearance rates.');
-    }
-
-    this.subhead('5 · Sustain community partnership');
-    this.listItem('Hold a standing barangay forum on incident trends using this report as the shared reference.');
-    this.listItem('Run youth engagement programmes in the barangays carrying the largest share of cases.');
-    this.listItem('Bring local businesses into area security arrangements where commercial premises are affected.');
   }
 
   private closingNotes(data: ReportData) {
@@ -1124,7 +1205,7 @@ export class PDFReportGenerator {
   /* ── Entry point ────────────────────────────────────────────────────────── */
 
   async generateReport(config: ReportConfig, data: ReportData): Promise<Blob> {
-    const sectionCount = Object.values(config).filter(Boolean).length;
+    const sectionCount = Object.values(config).filter((opts) => opts.enabled).length;
     const stamp = new Date();
     const slug =
       data.barangayName === 'All Barangays' || data.barangayName === 'General Dashboard'
@@ -1152,14 +1233,14 @@ export class PDFReportGenerator {
     this.doc.addPage();
     this.y = CONTENT_TOP;
 
-    if (config.includeExecutiveSummary) this.executiveSummary(data);
-    if (config.includeOverview) this.situationalOverview(data);
-    if (config.includeTrends) this.trendAnalysis(data);
-    if (config.includeTimePatterns) this.temporalAnalysis(data);
-    if (config.includeCrimeTypes) this.crimeClassification(data);
-    if (config.includeBarangayComparison) this.comparativeAnalysis(data);
-    if (config.includeCrimeMatrix) this.incidenceMatrix(data);
-    if (config.includeRecommendations) this.strategicRecommendations(data);
+    if (config.includeExecutiveSummary.enabled) this.executiveSummary(data, config.includeExecutiveSummary);
+    if (config.includeOverview.enabled) this.situationalOverview(data, config.includeOverview);
+    if (config.includeTrends.enabled) this.trendAnalysis(data, config.includeTrends);
+    if (config.includeTimePatterns.enabled) this.temporalAnalysis(data, config.includeTimePatterns);
+    if (config.includeCrimeTypes.enabled) this.crimeClassification(data, config.includeCrimeTypes);
+    if (config.includeBarangayComparison.enabled) this.comparativeAnalysis(data, config.includeBarangayComparison);
+    if (config.includeCrimeMatrix.enabled) this.incidenceMatrix(data, config.includeCrimeMatrix);
+    if (config.includeRecommendations.enabled) this.strategicRecommendations(data, config.includeRecommendations);
 
     this.closingNotes(data);
 
