@@ -332,16 +332,28 @@ body {
   }
 }
 
-/* Smooth scrolling for all devices */
+/* Smooth scrolling for all devices. overflow is pinned to hidden here too —
+   setting only body's overflow-y to hidden still left <html> itself as the
+   document's fallback scrolling element, so content that grew taller than
+   the viewport (e.g. an expanded dropdown deep in a dashboard page) could
+   still scroll the whole page and reveal blank space past the app shell.
+   Dashboard pages scroll internally via their own h-screen + overflow-y-auto
+   shell, so neither html nor body should ever scroll on their own. */
 html {
   scroll-behavior: smooth;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Prevent horizontal scroll on mobile */
+/* Prevent horizontal scroll on mobile. overflow-y is pinned to hidden here
+   too — CSS auto-promotes an unset axis to `auto` when the other axis is
+   non-visible, which was silently turning body into its own independent
+   scroll container. The dashboard pages already scroll internally via
+   their own h-screen + overflow-y-auto shell, so body itself never should. */
 body {
   overflow-x: hidden;
+  overflow-y: hidden;
   width: 100%;
 }
 

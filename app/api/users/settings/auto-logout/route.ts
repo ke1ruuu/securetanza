@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, invalidateSessionCache } from "@/lib/auth";
 import { prisma } from "@/backend/lib/prisma";
 
 export async function GET() {
@@ -66,6 +66,11 @@ export async function PATCH(request: NextRequest) {
       data: { autoLogoutTimer },
       select: { id: true, autoLogoutTimer: true },
     });
+
+    // The session cache still holds the pre-update autoLogoutTimer for up to
+    // TTL.USER_SESSION seconds — drop it now so the immediate refreshSession()
+    // call the client makes after saving picks up the new value right away.
+    invalidateSessionCache(session.userId);
 
     // Audit log
     const ip = request.headers.get("x-forwarded-for") || "unknown";

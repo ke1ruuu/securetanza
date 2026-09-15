@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (hadPriorSession || currentPath.startsWith("/dashboard") || currentPath === "/") {
           if (currentPath !== "/login") {
             console.warn("🔒 User access revoked or account removed. Automatically redirecting to auth page...");
-            window.location.replace("/login");
+            window.location.replace("/login?reason=expired");
           }
         }
       }
@@ -124,22 +124,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Idle timeout (auto logout if not used for configured minutes)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
-    const IDLE_TIMEOUT_MS = (user?.autoLogoutTimer ?? 15) * 60 * 1000; 
+    const IDLE_TIMEOUT_MS = (user?.autoLogoutTimer ?? 15) * 60 * 1000;
+    // eslint-disable-next-line no-console
+    console.log(`[idle-debug] effect (re)ran. user?.autoLogoutTimer=${user?.autoLogoutTimer}, IDLE_TIMEOUT_MS=${IDLE_TIMEOUT_MS} (${IDLE_TIMEOUT_MS / 60000} min)`);
 
     const handleIdleLogout = async () => {
+      // eslint-disable-next-line no-console
+      console.log("[idle-debug] TIMER FIRED — calling /api/auth/logout now");
       try {
         await fetch("/api/auth/logout", { method: "POST" });
-        window.location.href = "/login";
+        // eslint-disable-next-line no-console
+        console.log("[idle-debug] logout request succeeded, redirecting");
+        window.location.href = "/login?reason=idle";
       } catch (error) {
         console.error("Idle logout error:", error);
       }
     };
 
-    const resetTimer = () => {
+    let lastLoggedAt = 0;
+    const resetTimer = (e?: Event) => {
       clearTimeout(timeoutId);
-      // Only run idle timeout if we are not already on the login page
+      // Throttle logging for high-frequency events (mousemove/scroll) so the
+      // console stays readable; the actual reset always happens regardless.
+      const now = Date.now();
+      const isHighFrequency = e?.type === "mousemove" || e?.type === "scroll";
+      const shouldLog = !isHighFrequency || now - lastLoggedAt > 2000;
+      if (shouldLog) lastLoggedAt = now;
+
       if (window.location.pathname !== "/login") {
+        if (shouldLog) {
+          // eslint-disable-next-line no-console
+          console.log(`[idle-debug] resetTimer() via "${e?.type ?? "initial"}" — scheduling fire in ${IDLE_TIMEOUT_MS}ms at ${new Date(now + IDLE_TIMEOUT_MS).toLocaleTimeString()}`);
+        }
         timeoutId = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
+      } else if (shouldLog) {
+        // eslint-disable-next-line no-console
+        console.log(`[idle-debug] resetTimer() via "${e?.type ?? "initial"}" skipped — on /login`);
       }
     };
 
@@ -148,6 +168,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
 
     return () => {
+      // eslint-disable-next-line no-console
+      console.log("[idle-debug] effect cleanup — clearing timer and listeners");
       clearTimeout(timeoutId);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
@@ -162,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // This is a new tab or the session was lost (tab closed previously).
         // We explicitly log out to destroy the persistent cookie session.
         fetch("/api/auth/logout", { method: "POST" }).finally(() => {
-          window.location.href = "/login";
+          window.location.href = "/login?reason=tab";
         });
       }
     }
