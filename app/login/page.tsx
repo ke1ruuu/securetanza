@@ -3,10 +3,30 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Lock, User, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
+import { Clock, Lock, User, AlertCircle, Loader2, Eye, EyeOff, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { ForceChangePasswordModal } from "@/components/modals/ForceChangePasswordModal";
+
+type SignedOutReason = "idle" | "expired" | "tab";
+
+const SIGNED_OUT_COPY: Record<SignedOutReason, { title: string; message: string; icon: typeof Clock }> = {
+  idle: {
+    title: "You've been signed out",
+    message: "You were inactive for a while, so we signed you out to keep your account secure. Sign in again to continue.",
+    icon: Clock,
+  },
+  expired: {
+    title: "Session expired",
+    message: "Your session has expired or is no longer valid. Please sign in again.",
+    icon: ShieldOff,
+  },
+  tab: {
+    title: "Signed out",
+    message: "This account was opened in another tab, which ended your session here. Please sign in again.",
+    icon: ShieldOff,
+  },
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,6 +37,20 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForceChange, setShowForceChange] = useState(false);
+  const [signedOutReason, setSignedOutReason] = useState<SignedOutReason | null>(null);
+
+  // Picked up once on mount, then scrubbed from the URL so a refresh of the
+  // login page doesn't keep re-showing the same "you were signed out" modal.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const reason = params.get("reason");
+    if (reason === "idle" || reason === "expired" || reason === "tab") {
+      setSignedOutReason(reason);
+      params.delete("reason");
+      const rest = params.toString();
+      window.history.replaceState({}, "", `/login${rest ? `?${rest}` : ""}`);
+    }
+  }, []);
 
   // If user is already logged in but needs to change password, show modal
   React.useEffect(() => {
@@ -210,6 +244,39 @@ export default function LoginPage() {
           SecureTanza v1.0.0 • © 2026
         </p>
       </div>
+
+      {signedOutReason && (() => {
+        const { title, message, icon: Icon } = SIGNED_OUT_COPY[signedOutReason];
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setSignedOutReason(null)}
+          >
+            <div
+              role="alertdialog"
+              aria-modal="true"
+              aria-labelledby="signed-out-title"
+              className="w-full max-w-sm rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-xl p-6 shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
+                <Icon className="h-6 w-6 text-amber-400" />
+              </div>
+              <h2 id="signed-out-title" className="mt-4 text-lg font-bold text-white">
+                {title}
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{message}</p>
+              <Button
+                onClick={() => setSignedOutReason(null)}
+                autoFocus
+                className="mt-6 w-full h-11 bg-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white font-semibold rounded-lg"
+              >
+                Got it
+              </Button>
+            </div>
+          </div>
+        );
+      })()}
 
       {showForceChange && (
         <ForceChangePasswordModal

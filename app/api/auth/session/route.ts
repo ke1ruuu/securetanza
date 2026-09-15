@@ -35,6 +35,7 @@ export async function GET() {
         permissions: session.permissions,
         mustChangePassword: session.mustChangePassword,
         defaultLandingPage: session.defaultLandingPage,
+        autoLogoutTimer: session.autoLogoutTimer,
       },
     });
   } catch (error) {
