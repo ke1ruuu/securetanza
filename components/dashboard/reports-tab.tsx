@@ -318,6 +318,12 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
     });
   };
 
+  const selectAllBarangayMaps = (names: string[]) => {
+    setSelectedBarangayMaps((prev) => new Set([...prev, ...names]));
+  };
+
+  const clearBarangayMaps = () => setSelectedBarangayMaps(new Set());
+
   /** Selects every fixed chart/map item — not the per-barangay maps, since
    *  picking all ~40 of those isn't something anyone wants by default. */
   const selectAllImages = () => {
@@ -326,7 +332,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
 
   const clearImages = () => {
     setSelectedImages(new Set());
-    setSelectedBarangayMaps(new Set());
+    clearBarangayMaps();
   };
 
   const handleExportImages = async () => {
@@ -1000,7 +1006,13 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                 so it reuses the granular-options expand pattern instead of a
                 numbered row. */}
             <li className="flex flex-col border-b border-slate-100 last:border-0 dark:border-white/[0.05] px-5 py-3">
-              <BarangayMultiSelect names={barangayNames} selected={selectedBarangayMaps} onToggle={toggleBarangayMap} />
+              <BarangayMultiSelect
+                names={barangayNames}
+                selected={selectedBarangayMaps}
+                onToggle={toggleBarangayMap}
+                onSelectAll={selectAllBarangayMaps}
+                onClear={clearBarangayMaps}
+              />
             </li>
           </ul>
         </Card>

@@ -8,6 +8,11 @@ interface BarangayMultiSelectProps {
   names: string[];
   selected: Set<string>;
   onToggle: (name: string) => void;
+  /** Called with exactly the names currently visible (i.e. matching the
+   *  search box) — selecting all barangays when there's no query, or just
+   *  the filtered subset when there is one. */
+  onSelectAll: (names: string[]) => void;
+  onClear: () => void;
 }
 
 /** A checkbox list of barangays that lives in a portal, positioned with
@@ -18,7 +23,7 @@ interface BarangayMultiSelectProps {
  *  the ancestor's scrollable area, showing as blank space past the real
  *  content. A portal can't do that: it's a sibling of the whole app shell,
  *  so however tall it gets, it never touches anyone else's layout. */
-export default function BarangayMultiSelect({ names, selected, onToggle }: BarangayMultiSelectProps) {
+export default function BarangayMultiSelect({ names, selected, onToggle, onSelectAll, onClear }: BarangayMultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [coords, setCoords] = useState<{
@@ -142,6 +147,32 @@ export default function BarangayMultiSelect({ names, selected, onToggle }: Baran
                   onChange={(e) => setQuery(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-8 pr-3 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-[#4e86fd] dark:border-white/[0.06] dark:bg-white/[0.04] dark:text-white dark:placeholder:text-slate-600 dark:focus:border-[#0EA5E9]"
                 />
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-100 px-3 py-1.5 dark:border-white/[0.06]">
+              <p className="text-[11px] text-slate-400 dark:text-slate-500">
+                {filtered.length} barangay{filtered.length === 1 ? "" : "s"}
+                {query ? " matched" : ""}
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => onSelectAll(filtered)}
+                  disabled={filtered.length === 0 || filtered.every((name) => selected.has(name))}
+                  className="rounded-md px-1.5 py-0.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-40 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+                >
+                  Select all
+                </button>
+                <span aria-hidden className="h-3 w-px bg-slate-200 dark:bg-white/10" />
+                <button
+                  type="button"
+                  onClick={onClear}
+                  disabled={selected.size === 0}
+                  className="rounded-md px-1.5 py-0.5 text-[11px] font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-40 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+                >
+                  Clear
+                </button>
               </div>
             </div>
 
