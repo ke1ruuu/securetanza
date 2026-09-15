@@ -18,7 +18,7 @@ export interface ThreatThresholds {
 }
 
 // Calculate dynamic thresholds based on quartiles of actual crime data
-function calculateDynamicThresholds(crimeCounts: number[]): ThreatThresholds {
+export function calculateDynamicThresholds(crimeCounts: number[]): ThreatThresholds {
   // Filter out zeros and sort
   const nonZeroCounts = crimeCounts.filter(count => count > 0).sort((a, b) => a - b);
   

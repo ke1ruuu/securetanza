@@ -31,6 +31,7 @@ export interface ReportConfig {
   includeTimePatterns: SectionOptions;
   includeCrimeTypes: SectionOptions;
   includeBarangayComparison: SectionOptions;
+  includeGeographicHighlights: SectionOptions;
   includeCrimeMatrix: SectionOptions;
   includeRecommendations: SectionOptions;
 }
@@ -60,7 +61,6 @@ const SECTIONS: Array<{
     subOptions: [
       { key: "includeText", label: "Narrative", desc: "Overview paragraph" },
       { key: "includeCharts", label: "Chart", desc: "Stat cards & leading-types bar chart" },
-      { key: "includeTables", label: "Table", desc: "Incident type breakdown" },
     ],
   },
   {
@@ -89,8 +89,7 @@ const SECTIONS: Array<{
     desc: "Crime type breakdown",
     subOptions: [
       { key: "includeText", label: "Narrative", desc: "Classification paragraph" },
-      { key: "includeCharts", label: "Chart", desc: "Leading types bar chart" },
-      { key: "includeTables", label: "Table", desc: "Full classification breakdown" },
+      { key: "includeTables", label: "Table", desc: "Full ranked breakdown, every type" },
     ],
   },
   {
@@ -99,8 +98,17 @@ const SECTIONS: Array<{
     desc: "Cross-barangay data",
     subOptions: [
       { key: "includeText", label: "Narrative", desc: "Comparison paragraph" },
-      { key: "includeCharts", label: "Chart", desc: "Barangay bar chart" },
+      { key: "includeCharts", label: "Chart & map", desc: "Barangay bar chart + town-wide threat map" },
       { key: "includeTables", label: "Table", desc: "Barangay ranking" },
+    ],
+  },
+  {
+    key: "includeGeographicHighlights",
+    label: "Geographic Highlights",
+    desc: "Hotspot areas to watch",
+    subOptions: [
+      { key: "includeText", label: "Narrative", desc: "Which barangay(s) are flagged, plus a concentration summary" },
+      { key: "includeCharts", label: "Map", desc: "Zoomed-in map of the flagged area(s)" },
     ],
   },
   {
@@ -110,7 +118,6 @@ const SECTIONS: Array<{
     subOptions: [
       { key: "includeText", label: "Narrative", desc: "Matrix paragraph" },
       { key: "includeCharts", label: "Heatmap", desc: "Monthly heatmap grid" },
-      { key: "includeTables", label: "Table", desc: "Incident type totals" },
     ],
   },
   {
