@@ -1,5 +1,17 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {
+  type ThreatLevel,
+  type ThreatThresholds,
+  type GeoBounds,
+  type BarangayShape,
+  THREAT_RGB,
+  calculateDynamicThresholds,
+  threatLevelOf,
+  loadTanzaGeography,
+  makeGeoProjector,
+} from './geo-threat';
+import { type RGB, INK, INK_MID, INK_SOFT, RULE, HAIR, ACCENT, ACCENT_DEEP, PAPER, RAMP_LO, RAMP_HI, mix, rampColor } from './report-theme';
 
 export type SectionOptions = {
   enabled: boolean;
@@ -20,7 +32,7 @@ export interface ReportConfig {
   includeRecommendations: SectionOptions;
 }
 
-interface AnalyticsData {
+export interface AnalyticsData {
   crimesByType: Array<{ type: string; count: number }>;
   crimesByMonth: Array<{ month: number; count: number }>;
   crimesByBarangay: Array<{ barangay: string; count: number }>;
@@ -50,72 +62,6 @@ export interface ReportData {
   analyticsData: AnalyticsData;
   totalCrimes: number;
   generatedBy?: string;
-}
-
-type RGB = readonly [number, number, number];
-
-/* ── Ink ────────────────────────────────────────────────────────────────────
-   One ink, one accent. Accent tints carry data; accent-deep carries accent
-   text, because #0EA5E9 on paper falls below 3:1 at text sizes.            */
-const INK: RGB = [15, 23, 42];
-const INK_MID: RGB = [51, 65, 85];
-const INK_SOFT: RGB = [100, 116, 139];
-const RULE: RGB = [148, 163, 184];
-const HAIR: RGB = [214, 222, 232];
-const ACCENT: RGB = [14, 165, 233];
-const ACCENT_DEEP: RGB = [3, 105, 161];
-const PAPER: RGB = [255, 255, 255];
-
-/** Sequential ramp: pale sky → deep sky. Encodes magnitude, prints legibly. */
-const RAMP_LO: RGB = [222, 242, 254];
-const RAMP_HI: RGB = [7, 89, 133];
-
-/** Mirrors hooks/useThreatLevels.ts (THREAT_COLORS) so the printed map reads
- *  the same as the live dashboard map. Kept local so this file has no React
- *  dependency — update both if the palette or bands ever change. */
-type ThreatLevel = 'secure' | 'low' | 'moderate' | 'high' | 'critical';
-const THREAT_RGB: Record<ThreatLevel, RGB> = {
-  secure: ACCENT, // #0ea5e9
-  low: [16, 185, 129], // #10b981
-  moderate: [234, 179, 8], // #eab308
-  high: [249, 115, 22], // #f97316
-  critical: [239, 68, 68], // #ef4444
-};
-
-interface ThreatThresholds {
-  low: number;
-  moderate: number;
-  high: number;
-  critical: number;
-}
-
-function calculateDynamicThresholds(crimeCounts: number[]): ThreatThresholds {
-  const nonZero = crimeCounts.filter((c) => c > 0).sort((a, b) => a - b);
-  if (!nonZero.length) return { low: 2, moderate: 5, high: 10, critical: 15 };
-  const q1 = nonZero[Math.floor(nonZero.length * 0.25)] || 1;
-  const q2 = nonZero[Math.floor(nonZero.length * 0.5)] || 2;
-  const q3 = nonZero[Math.floor(nonZero.length * 0.75)] || 5;
-  return { low: Math.ceil(q1), moderate: Math.ceil(q2), high: Math.ceil(q3), critical: Math.ceil(q3) + 1 };
-}
-
-function threatLevelOf(count: number, t: ThreatThresholds): ThreatLevel {
-  if (count === 0) return 'secure';
-  if (count <= t.low) return 'low';
-  if (count <= t.moderate) return 'moderate';
-  if (count <= t.high) return 'high';
-  return 'critical';
-}
-
-interface GeoBounds {
-  minLon: number;
-  maxLon: number;
-  minLat: number;
-  maxLat: number;
-}
-
-interface BarangayShape {
-  name: string;
-  ring: Array<[number, number]>;
 }
 
 /* ── Geometry (mm) ────────────────────────────────────────────────────────── */
@@ -151,20 +97,6 @@ function formatHour(hour: number): string {
 function hourBand(hour: number): string {
   const next = (hour + 1) % 24;
   return `${formatHour(hour)}–${formatHour(next)}`;
-}
-
-function mix(a: RGB, b: RGB, t: number): RGB {
-  const k = Math.max(0, Math.min(1, t));
-  return [
-    Math.round(a[0] + (b[0] - a[0]) * k),
-    Math.round(a[1] + (b[1] - a[1]) * k),
-    Math.round(a[2] + (b[2] - a[2]) * k),
-  ];
-}
-
-/** Perceptual-ish ease so mid-range values stay distinguishable on paper. */
-function rampColor(intensity: number): RGB {
-  return mix(RAMP_LO, RAMP_HI, Math.pow(Math.max(0, Math.min(1, intensity)), 0.75));
 }
 
 function sortDesc<T extends Record<string, unknown>>(rows: T[], key: keyof T): T[] {
@@ -538,60 +470,20 @@ export class PDFReportGenerator {
   /* ── Map: Tanza's barangay boundaries, drawn as vector shapes from the same
      GeoJSON the live map uses, coloured with the same threat-level palette. ── */
 
-  /** Fetches and caches public/tanza_cavite.geojson. Safe to call repeatedly —
-   *  only the first call does any work. Leaves geoFeatures as [] on failure so
-   *  callers can treat "no data" and "fetch failed" the same way. */
+  /** Fetches and caches public/tanza_cavite.geojson (via lib/geo-threat.ts,
+   *  shared with lib/image-export.ts). Safe to call repeatedly — only the
+   *  first call does any work. Leaves geoFeatures as [] on failure so callers
+   *  can treat "no data" and "fetch failed" the same way. */
   private async loadGeography(): Promise<void> {
     if (this.geoFeatures) return;
-    try {
-      const res = await fetch('/tanza_cavite.geojson');
-      if (!res.ok) throw new Error(`geojson fetch failed: ${res.status}`);
-      const gj = await res.json();
-      const features: BarangayShape[] = [];
-      let minLon = Infinity;
-      let maxLon = -Infinity;
-      let minLat = Infinity;
-      let maxLat = -Infinity;
-
-      for (const f of gj.features ?? []) {
-        const name = f?.properties?.adm4_en;
-        const outerRing = f?.geometry?.coordinates?.[0];
-        if (!name || !Array.isArray(outerRing)) continue;
-
-        const ring: Array<[number, number]> = outerRing.map(([lon, lat]: [number, number]) => [lon, lat]);
-        ring.forEach(([lon, lat]) => {
-          if (lon < minLon) minLon = lon;
-          if (lon > maxLon) maxLon = lon;
-          if (lat < minLat) minLat = lat;
-          if (lat > maxLat) maxLat = lat;
-        });
-        features.push({ name, ring });
-      }
-
-      this.geoFeatures = features;
-      this.geoBounds = features.length ? { minLon, maxLon, minLat, maxLat } : null;
-    } catch (error) {
-      console.error('Could not load barangay boundaries for the report map:', error);
-      this.geoFeatures = [];
-      this.geoBounds = null;
-    }
+    const { features, bounds } = await loadTanzaGeography();
+    this.geoFeatures = features;
+    this.geoBounds = bounds;
   }
 
-  /** Builds a lon/lat → page-mm projector fitted to a box, preserving aspect
-   *  ratio (longitude scaled by cos(latitude) so the shape isn't stretched). */
+  /** Builds a lon/lat → page-mm projector fitted to a box. See lib/geo-threat.ts. */
   private makeProjector(bounds: GeoBounds, box: { x: number; y: number; w: number; h: number }) {
-    const latMean = (bounds.minLat + bounds.maxLat) / 2;
-    const lonScale = Math.cos((latMean * Math.PI) / 180);
-    const dataW = (bounds.maxLon - bounds.minLon) * lonScale || 1;
-    const dataH = bounds.maxLat - bounds.minLat || 1;
-    const scale = Math.min(box.w / dataW, box.h / dataH);
-    const offsetX = box.x + (box.w - dataW * scale) / 2;
-    const offsetY = box.y + (box.h - dataH * scale) / 2;
-
-    return (lon: number, lat: number): [number, number] => [
-      offsetX + (lon - bounds.minLon) * lonScale * scale,
-      offsetY + (bounds.maxLat - lat) * scale, // north is up
-    ];
+    return makeGeoProjector(bounds, box);
   }
 
   /** Fills (and optionally strokes) one boundary ring, already projected to mm. */

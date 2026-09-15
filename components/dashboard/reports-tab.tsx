@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { AlertCircle, Archive, Check, CheckCircle2, ChevronDown, Download, Eye, Loader2, Minus, X } from "lucide-react";
+import { AlertCircle, Archive, Check, CheckCircle2, ChevronDown, Download, Eye, FileText, Image as ImageIcon, Loader2, Minus, X } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMapContext } from "@/context/MapContext";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useCrimeMatrix } from "@/hooks/useCrimeMatrix";
-import { PDFReportGenerator } from "@/lib/pdf-generator";
+import { PDFReportGenerator, type ReportData } from "@/lib/pdf-generator";
+import { ImageExporter, type ExportedImage } from "@/lib/image-export";
 import { useAuth } from "@/context/AuthContext";
+import BarangayMultiSelect from "@/components/dashboard/barangay-multi-select";
 
 // Force fast refresh 1
 
@@ -144,6 +146,28 @@ const ALL_OFF = SECTIONS.reduce(
   {} as ReportConfig
 );
 
+type ImageItemKey =
+  | "trend"
+  | "timeOfDay"
+  | "crimeType"
+  | "barangayComparison"
+  | "matrixHeatmap"
+  | "tanzaMap"
+  | "hotspotsMap";
+
+/** Standalone chart/map PNGs an admin can pick individually for a PPT — kept
+ *  separate from the PDF's SECTIONS above since "export this one image" is a
+ *  different mental model from "assemble a document". */
+const IMAGE_ITEMS: Array<{ key: ImageItemKey; label: string; desc: string }> = [
+  { key: "trend", label: "Trend chart", desc: "Incidents by month" },
+  { key: "timeOfDay", label: "Time-of-day chart", desc: "Incidents by hour, peak highlighted" },
+  { key: "crimeType", label: "Crime-type chart", desc: "Leading incident types, ranked" },
+  { key: "barangayComparison", label: "Barangay comparison chart", desc: "Highest-volume barangays, ranked" },
+  { key: "matrixHeatmap", label: "Monthly heatmap", desc: "Incidence matrix grid" },
+  { key: "tanzaMap", label: "Tanza-wide map", desc: "Whole-town barangay risk map" },
+  { key: "hotspotsMap", label: "Hotspot highlights map", desc: "Flagged high/critical barangays" },
+];
+
 export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const { user } = useAuth();
   const { selectedYear, timeRange } = useMapContext();
@@ -160,6 +184,28 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
 
   const [reportConfig, setReportConfig] = useState<ReportConfig>(ALL_ON);
   const [expandedOptions, setExpandedOptions] = useState<Set<keyof ReportConfig>>(new Set());
+
+  const [activeView, setActiveView] = useState<"document" | "images">("document");
+
+  const [selectedImages, setSelectedImages] = useState<Set<ImageItemKey>>(new Set());
+  const [barangayNames, setBarangayNames] = useState<string[]>([]);
+  const [selectedBarangayMaps, setSelectedBarangayMaps] = useState<Set<string>>(new Set());
+  const [exportingImages, setExportingImages] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+
+  // Barangay list for the per-barangay map picker — independent of whatever
+  // barangay this report itself is scoped to, so an admin can pull any map.
+  useEffect(() => {
+    let cancelled = false;
+    new ImageExporter().listBarangayNames().then((names) => {
+      if (!cancelled) setBarangayNames(names);
+    }).catch(() => {
+      if (!cancelled) setBarangayNames([]);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const isGeneralDashboard = !barangayName || barangayName === "General Dashboard";
   const locationName = isGeneralDashboard ? "All Barangays" : barangayName || "Unknown";
@@ -214,11 +260,12 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const selectedCount = selectedSections.length;
   const needsMatrix = reportConfig.includeCrimeMatrix.enabled;
   const waitingForData = analyticsData.loading || (needsMatrix && matrixLoading);
+  const imagesWaitingForData = analyticsData.loading || (selectedImages.has("matrixHeatmap") && matrixLoading);
   const fileName = today ? `Crime-Report-${locationSlug}-${today}.pdf` : null;
 
-  /** Builds the document. Both the download and the archive start here. */
-  const buildReportBlob = async (): Promise<Blob> => {
-    setStep("Checking data");
+  /** Same data the PDF is built from — shared with the image exporter below
+   *  so a chart or map image reflects exactly the same numbers the report would. */
+  const getReportData = (): ReportData => {
     if (analyticsData.loading) {
       throw new Error('Analytics data is still loading. Please wait and try again.');
     }
@@ -226,9 +273,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
       throw new Error(`Analytics data error: ${analyticsData.error}`);
     }
 
-    setStep("Building document");
-    const pdfGenerator = new PDFReportGenerator();
-    return pdfGenerator.generateReport(reportConfig, {
+    return {
       barangayName: locationName,
       timeRange: timeRangeText,
       analyticsData: {
@@ -241,7 +286,75 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
       },
       totalCrimes,
       generatedBy: user?.fullName || user?.accountNumber || 'System',
+    };
+  };
+
+  /** Builds the document. Both the download and the archive start here. */
+  const buildReportBlob = async (): Promise<Blob> => {
+    setStep("Checking data");
+    const data = getReportData();
+    setStep("Building document");
+    const pdfGenerator = new PDFReportGenerator();
+    return pdfGenerator.generateReport(reportConfig, data);
+  };
+
+  const selectedImageCount = selectedImages.size + selectedBarangayMaps.size;
+
+  const toggleImageItem = (key: ImageItemKey) => {
+    setSelectedImages((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
     });
+  };
+
+  const toggleBarangayMap = (name: string) => {
+    setSelectedBarangayMaps((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  };
+
+  /** Selects every fixed chart/map item — not the per-barangay maps, since
+   *  picking all ~40 of those isn't something anyone wants by default. */
+  const selectAllImages = () => {
+    setSelectedImages(new Set(IMAGE_ITEMS.map((item) => item.key)));
+  };
+
+  const clearImages = () => {
+    setSelectedImages(new Set());
+    setSelectedBarangayMaps(new Set());
+  };
+
+  const handleExportImages = async () => {
+    if (!selectedImageCount) return;
+    setExportingImages(true);
+    setImageError(null);
+    try {
+      const data = getReportData();
+      const exporter = new ImageExporter();
+      const images: ExportedImage[] = [];
+
+      if (selectedImages.has("trend")) images.push(await exporter.exportTrendChart(data));
+      if (selectedImages.has("timeOfDay")) images.push(await exporter.exportTimeOfDayChart(data));
+      if (selectedImages.has("crimeType")) images.push(await exporter.exportCrimeTypeChart(data));
+      if (selectedImages.has("barangayComparison")) images.push(await exporter.exportBarangayComparisonChart(data));
+      if (selectedImages.has("matrixHeatmap")) images.push(await exporter.exportMatrixHeatmap(data));
+      if (selectedImages.has("tanzaMap")) images.push(await exporter.exportTanzaMap(data));
+      if (selectedImages.has("hotspotsMap")) images.push(await exporter.exportHotspotsMap(data));
+      for (const name of selectedBarangayMaps) {
+        images.push(await exporter.exportBarangayMap(data, name));
+      }
+
+      await exporter.downloadAsZip(images, `Crime-Report-Images-${locationSlug}-${today || ""}.zip`);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "Failed to export images. Please try again.");
+    } finally {
+      setExportingImages(false);
+    }
   };
 
   /** Keeps the report on the server instead of on whichever machine generated it. */
@@ -402,6 +515,51 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
         </dl>
       </header>
 
+      <div
+        role="tablist"
+        aria-label="Report output"
+        className="mb-6 inline-flex gap-1 rounded-xl border border-slate-200 bg-white p-1 dark:border-white/[0.06] dark:bg-white/[0.02]"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === "document"}
+          onClick={() => setActiveView("document")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeView === "document"
+              ? "bg-[#4e86fd] text-white dark:bg-[#0EA5E9]"
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.06]"
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          PDF Report
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === "images"}
+          onClick={() => setActiveView("images")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            activeView === "images"
+              ? "bg-[#4e86fd] text-white dark:bg-[#0EA5E9]"
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-white/[0.06]"
+          }`}
+        >
+          <ImageIcon className="h-4 w-4" />
+          Export Images
+          {selectedImageCount > 0 && (
+            <span
+              className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold leading-none ${
+                activeView === "images" ? "bg-white/25 text-white" : "bg-slate-200 text-slate-700 dark:bg-white/10 dark:text-slate-300"
+              }`}
+            >
+              {selectedImageCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeView === "document" && (
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         {/* Contents manifest — numbering mirrors the document's own section numbers */}
         <Card data-tour="reports-sections" className="gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
@@ -742,6 +900,187 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
           </Card>
         </div>
       </div>
+      )}
+
+      {activeView === "images" && (
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        {/* Contents manifest — same numbered-list language as Report Sections */}
+        <Card data-tour="reports-export-images" className="gap-0 overflow-hidden rounded-xl border border-slate-200 bg-white p-0 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
+          <div className="flex items-baseline justify-between gap-4 border-b border-slate-200 px-5 py-4 dark:border-white/[0.06]">
+            <div>
+              <h3 className="font-heading text-base font-medium text-slate-900 dark:text-white">
+                Export Images
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                <span className="tabular-nums font-medium text-slate-700 dark:text-slate-200">
+                  {selectedImageCount}
+                </span>{" "}
+                selected · pick individual charts and maps for a slide deck
+              </p>
+            </div>
+            <div className="-mr-2 flex items-center gap-1">
+              <button
+                type="button"
+                onClick={selectAllImages}
+                disabled={selectedImages.size === IMAGE_ITEMS.length}
+                className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-40 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              >
+                Select all
+              </button>
+              <span aria-hidden className="h-3 w-px bg-slate-200 dark:bg-white/10" />
+              <button
+                type="button"
+                onClick={clearImages}
+                disabled={selectedImageCount === 0}
+                className="rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:pointer-events-none disabled:opacity-40 dark:text-slate-400 dark:hover:bg-white/[0.06] dark:hover:text-white"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <ul className="divide-y divide-slate-200 dark:divide-white/[0.06]">
+            {IMAGE_ITEMS.map((item) => {
+              const checked = selectedImages.has(item.key);
+              const order = checked
+                ? IMAGE_ITEMS.filter((it) => selectedImages.has(it.key)).findIndex((it) => it.key === item.key) + 1
+                : null;
+              return (
+                <li key={item.key} className="flex flex-col border-b border-slate-100 last:border-0 dark:border-white/[0.05]">
+                  <button
+                    type="button"
+                    aria-pressed={checked}
+                    onClick={() => toggleImageItem(item.key)}
+                    className="group relative flex w-full items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.03]"
+                  >
+                    <span
+                      aria-hidden
+                      className={`absolute inset-y-0 left-0 w-[2px] transition-colors ${
+                        checked ? "bg-[#4e86fd] dark:bg-[#0EA5E9]" : "bg-transparent"
+                      }`}
+                    />
+                    <span
+                      aria-hidden
+                      className={`w-5 shrink-0 text-xs font-semibold tabular-nums ${
+                        checked ? "text-[#4e86fd] dark:text-[#0EA5E9]" : "text-slate-300 dark:text-slate-600"
+                      }`}
+                    >
+                      {order !== null ? String(order).padStart(2, "0") : "—"}
+                    </span>
+
+                    <span className="min-w-0 flex-1">
+                      <span
+                        className={`block text-sm font-medium transition-colors ${
+                          checked ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-slate-400"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-500">
+                        {item.desc}
+                      </span>
+                    </span>
+
+                    <span
+                      aria-hidden
+                      className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[5px] border transition-colors ${
+                        checked
+                          ? "border-[#4e86fd] bg-[#4e86fd] dark:border-[#0EA5E9] dark:bg-[#0EA5E9]"
+                          : "border-slate-300 group-hover:border-slate-400 dark:border-slate-600 dark:group-hover:border-slate-500"
+                      }`}
+                    >
+                      {checked && <Check className="h-3 w-3 stroke-[3] text-white" />}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+
+            {/* Per-barangay map — a bucket of picks rather than a single toggle,
+                so it reuses the granular-options expand pattern instead of a
+                numbered row. */}
+            <li className="flex flex-col border-b border-slate-100 last:border-0 dark:border-white/[0.05] px-5 py-3">
+              <BarangayMultiSelect names={barangayNames} selected={selectedBarangayMaps} onToggle={toggleBarangayMap} />
+            </li>
+          </ul>
+        </Card>
+
+        {/* Export panel — mirrors the PDF's cover-preview sidebar */}
+        <div className="lg:sticky lg:top-0 lg:self-start">
+          <Card className="gap-0 rounded-xl border border-slate-200 bg-white p-5 ring-0 dark:border-white/[0.06] dark:bg-white/[0.02]">
+            <div className="w-full overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-slate-900/10 dark:shadow-lg dark:shadow-black/40">
+              <div className="h-[3px] bg-[#0f172a]" />
+              <div className="flex aspect-[1/1.24] flex-col items-center justify-center gap-3 bg-slate-50 px-4 py-6 dark:bg-white/[0.02]">
+                <div className="relative h-14 w-14 shrink-0">
+                  <div className="absolute inset-0 translate-x-2 translate-y-2 rounded-md bg-slate-200 dark:bg-white/10" />
+                  <div className="absolute inset-0 translate-x-1 translate-y-1 rounded-md bg-slate-300 ring-1 ring-white dark:bg-white/20 dark:ring-[#0f172a]" />
+                  <div className="absolute inset-0 flex items-center justify-center rounded-md bg-white ring-1 ring-slate-900/10 dark:bg-[#0f172a] dark:ring-white/10">
+                    <ImageIcon className="h-6 w-6 text-[#4e86fd] dark:text-[#0EA5E9]" />
+                  </div>
+                </div>
+                <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-[#0369a1]">
+                  {selectedImageCount === 0 ? "Nothing selected" : `${selectedImageCount} image${selectedImageCount === 1 ? "" : "s"}`}
+                </p>
+                <p className="text-center text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">
+                  {isGeneralDashboard ? "Tanza, Cavite — all barangays" : `Barangay ${locationName}, Tanza, Cavite`}
+                  <br />
+                  {timeRangeText}
+                </p>
+              </div>
+            </div>
+
+            <dl className="mt-5 space-y-0 text-xs">
+              {[
+                { label: "Format", value: "PNG · high-resolution" },
+                { label: "Bundle", value: selectedImageCount > 1 ? "ZIP archive" : "Single file" },
+              ].map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-baseline justify-between gap-3 border-b border-slate-200 py-2 last:border-0 dark:border-white/[0.06]"
+                >
+                  <dt className="shrink-0 text-slate-500 dark:text-slate-400">{row.label}</dt>
+                  <dd className="truncate font-medium text-slate-800 dark:text-slate-200">{row.value}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <Button
+              onClick={handleExportImages}
+              disabled={selectedImageCount === 0 || exportingImages || imagesWaitingForData}
+              className="mt-5 h-11 w-full text-sm font-semibold"
+            >
+              {exportingImages ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Exporting
+                </>
+              ) : imagesWaitingForData ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading data
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  {selectedImageCount > 1 ? "Download as ZIP" : "Download Image"}
+                </>
+              )}
+            </Button>
+
+            {imageError ? (
+              <p role="alert" className="mt-3 flex items-start gap-2 text-xs leading-relaxed text-red-600 dark:text-red-400">
+                <AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />
+                <span>{imageError}</span>
+              </p>
+            ) : selectedImageCount === 0 && !imagesWaitingForData ? (
+              <p className="mt-3 text-center text-xs text-slate-500 dark:text-slate-500">
+                Select at least one item
+              </p>
+            ) : null}
+          </Card>
+        </div>
+      </div>
+      )}
 
       <Dialog open={!!previewUrl} onOpenChange={(open) => !open && closePreview()}>
         <DialogContent showCloseButton={false} className="max-w-none sm:max-w-none w-screen h-[100dvh] flex flex-col p-0 gap-0 overflow-hidden rounded-none border-0">

@@ -40,7 +40,7 @@ function ReportsContent() {
   }
 
   return (
-    <div className="flex flex-col h-screen transition-colors duration-700 overflow-hidden font-sans bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100">
+    <div className="flex flex-col h-screen min-h-0 transition-colors duration-700 overflow-hidden font-sans bg-[#f1f5f9] text-slate-900 dark:bg-[#0f172a] dark:text-slate-100">
       <MapHeader isVisible={true} />
 
       {/* Dashboard Sub-header with Barangay and Period Selectors */}
@@ -58,8 +58,8 @@ function ReportsContent() {
         </span>
       </div>
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f1f5f9] dark:bg-[#0f172a]">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
+      <main className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-[#f1f5f9] dark:bg-[#0f172a]">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
           <ReportsTab barangayName={barangayName} />
         </div>
       </main>
