@@ -36,6 +36,22 @@ export function rampColor(intensity: number): RGB {
   return mix(RAMP_LO, RAMP_HI, Math.pow(Math.max(0, Math.min(1, intensity)), 0.75));
 }
 
+/** Dark-mode counterpart to RAMP_LO/RAMP_HI. The paper ramp goes pale → deep
+ *  navy because "more ink" reads as "more emphasis" on white paper — but
+ *  that direction inverts on a dark card, where deep navy has *less*
+ *  contrast against the background than the mid-tones do. Live dashboard
+ *  charts (not the PDF, which is always paper) use this instead so the
+ *  highest-magnitude mark is always the most visually prominent one. */
+export const DARK_RAMP_LO: RGB = [30, 45, 68];
+export const DARK_RAMP_HI: RGB = [56, 189, 248];
+
+/** rampColor, but themed — use this (not rampColor) for anything that
+ *  renders live in the app rather than onto paper. */
+export function rampColorForTheme(intensity: number, theme: "light" | "dark"): RGB {
+  const t = Math.pow(Math.max(0, Math.min(1, intensity)), 0.75);
+  return theme === "dark" ? mix(DARK_RAMP_LO, DARK_RAMP_HI, t) : mix(RAMP_LO, RAMP_HI, t);
+}
+
 export function rgbToCss([r, g, b]: RGB): string {
   return `rgb(${r}, ${g}, ${b})`;
 }

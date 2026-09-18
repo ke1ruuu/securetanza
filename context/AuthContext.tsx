@@ -125,41 +125,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     const IDLE_TIMEOUT_MS = (user?.autoLogoutTimer ?? 15) * 60 * 1000;
-    // eslint-disable-next-line no-console
-    console.log(`[idle-debug] effect (re)ran. user?.autoLogoutTimer=${user?.autoLogoutTimer}, IDLE_TIMEOUT_MS=${IDLE_TIMEOUT_MS} (${IDLE_TIMEOUT_MS / 60000} min)`);
 
     const handleIdleLogout = async () => {
-      // eslint-disable-next-line no-console
-      console.log("[idle-debug] TIMER FIRED — calling /api/auth/logout now");
       try {
         await fetch("/api/auth/logout", { method: "POST" });
-        // eslint-disable-next-line no-console
-        console.log("[idle-debug] logout request succeeded, redirecting");
         window.location.href = "/login?reason=idle";
       } catch (error) {
         console.error("Idle logout error:", error);
       }
     };
 
-    let lastLoggedAt = 0;
-    const resetTimer = (e?: Event) => {
+    const resetTimer = () => {
       clearTimeout(timeoutId);
-      // Throttle logging for high-frequency events (mousemove/scroll) so the
-      // console stays readable; the actual reset always happens regardless.
-      const now = Date.now();
-      const isHighFrequency = e?.type === "mousemove" || e?.type === "scroll";
-      const shouldLog = !isHighFrequency || now - lastLoggedAt > 2000;
-      if (shouldLog) lastLoggedAt = now;
-
+      // Only run idle timeout if we are not already on the login page
       if (window.location.pathname !== "/login") {
-        if (shouldLog) {
-          // eslint-disable-next-line no-console
-          console.log(`[idle-debug] resetTimer() via "${e?.type ?? "initial"}" — scheduling fire in ${IDLE_TIMEOUT_MS}ms at ${new Date(now + IDLE_TIMEOUT_MS).toLocaleTimeString()}`);
-        }
         timeoutId = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
-      } else if (shouldLog) {
-        // eslint-disable-next-line no-console
-        console.log(`[idle-debug] resetTimer() via "${e?.type ?? "initial"}" skipped — on /login`);
       }
     };
 
@@ -168,8 +148,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
 
     return () => {
-      // eslint-disable-next-line no-console
-      console.log("[idle-debug] effect cleanup — clearing timer and listeners");
       clearTimeout(timeoutId);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
