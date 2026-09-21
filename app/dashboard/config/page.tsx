@@ -14,6 +14,8 @@ import {
 	btnOutline,
 	btnPrimary,
 	inputBase,
+	PAGE_FORM,
+	SplitLayout,
 } from "./_components/settings-ui";
 import { cn } from "@/lib/utils";
 
@@ -124,8 +126,12 @@ export default function ProfilePage() {
 	const hasUnsavedChanges = unsavedTimer || isEditingPassword;
 
 	return (
-		<div className="max-w-[720px] space-y-12">
-			<PageHeader title="My Profile" />
+		<div className={PAGE_FORM}>
+			<div className="mb-12">
+				<PageHeader title="My Profile" />
+			</div>
+
+			<SplitLayout>
 
 			<Section
 				title="Account Identity"
@@ -303,6 +309,8 @@ export default function ProfilePage() {
 					</Row>
 				</Rows>
 			</Section>
+
+			</SplitLayout>
 
 			{hasUnsavedChanges && (
 				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">

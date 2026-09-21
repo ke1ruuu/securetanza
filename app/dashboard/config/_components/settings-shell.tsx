@@ -265,7 +265,7 @@ function SettingsNav({
 					{groups.map((group, groupIndex) => (
 						<div key={group.id} className="contents lg:block">
 							<p
-								className={`hidden px-3 pb-1.5 text-[11px] font-semibold tracking-[0.07em] text-slate-500 dark:text-slate-400 uppercase lg:block dark:text-slate-500 ${
+								className={`hidden px-3 pb-1.5 text-[11px] font-semibold tracking-[0.07em] text-slate-500 uppercase lg:block dark:text-slate-400 ${
 									groupIndex > 0 ? "pt-6" : ""
 								}`}
 							>

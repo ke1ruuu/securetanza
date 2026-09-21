@@ -42,6 +42,7 @@ import {
 	inputBase,
 	td,
 	th,
+	PAGE_TABLE,
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 
@@ -308,7 +309,7 @@ function AuditLogs() {
 	}, [selectedLog]);
 
 	return (
-		<div className="max-w-[1040px] space-y-10">
+		<div className={cn(PAGE_TABLE, "space-y-10")}>
 			<PageHeader
 				title="Audit Logs"
 				description="Unified record of all system activity, data imports, and administrative events."

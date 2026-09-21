@@ -18,6 +18,8 @@ import {
 	SaveState,
 	Section,
 	btnPrimary,
+	PAGE_FORM,
+	SplitLayout,
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 
@@ -91,9 +93,10 @@ function DataExports() {
 	};
 
 	return (
-		<div className="max-w-[720px] space-y-12">
+		<div className={cn(PAGE_FORM, "space-y-12")}>
 			<PageHeader title="Data Exports" />
 
+			<SplitLayout>
 			<Section
 				title="Scheduled Exports"
 				description="Automatically generate incident reports on a recurring schedule."
@@ -114,7 +117,7 @@ function DataExports() {
 				>
 					<legend className="sr-only">Export schedule</legend>
 
-					<div className="space-y-5 pt-6">
+										<div className="space-y-5 pt-6">
 						<Field label="Frequency">
 							<div className="flex max-w-[380px] gap-1.5">
 								{["daily", "weekly", "monthly"].map((f) => (
@@ -230,6 +233,7 @@ function DataExports() {
 
 				</fieldset>
 			</Section>
+			</SplitLayout>
 
 			{hasUnsavedChanges && (
 				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
