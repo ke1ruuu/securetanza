@@ -5,6 +5,7 @@ import { Play, Pause, ChevronLeft, ChevronRight, ChevronDown, CalendarDays, X } 
 import { useMapContext } from "@/context/MapContext";
 import { getThreatLevelFromCount, THREAT_COLORS } from "@/hooks/useThreatLevels";
 import HourClock from "./hour-clock";
+import { OVERLAY_SURFACE } from "@/lib/map-overlay";
 
 interface TimeFilterProps {
 	onFilterChange: (filters: any) => void;
@@ -332,7 +333,7 @@ export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggl
 	// Height is left to the content — the parent flex column shrinks this when the
 	// rail runs out of room, and the hour list scrolls to absorb it.
 	const panelShell =
-		"pointer-events-auto relative flex w-full min-h-0 flex-col rounded-2xl bg-white/95 dark:bg-[#1E293B]/95 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] shadow-2xl transition-colors duration-300";
+		`pointer-events-auto relative flex w-full min-h-0 flex-col transition-colors duration-300 ${OVERLAY_SURFACE}`;
 
 	const closeButton = (
 		<button

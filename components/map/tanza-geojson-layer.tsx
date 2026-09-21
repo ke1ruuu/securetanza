@@ -280,12 +280,12 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
       }
       
       layer.bindTooltip(
-        `<div style="padding:4px 8px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5)">
-          <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#818cf8;font-weight:700;margin:0 0 2px">Barangay</p>
-          <p style="font-size:14px;font-weight:700;color:#f1f5f9;margin:0 0 4px">${name}</p>
-          <div style="display:flex;align-items:center;gap:6px;margin:0">
-            <div style="width:8px;height:8px;border-radius:50%;background:${THREAT_COLORS[threatLevel]}"></div>
-            <span style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:capitalize">${threatLevel} (${countLabel})</span>
+        `<div class="map-tip">
+          <p class="map-tip__label">Barangay</p>
+          <p class="map-tip__name">${name}</p>
+          <div class="map-tip__row">
+            <span class="map-tip__dot" style="background:${THREAT_COLORS[threatLevel]}"></span>
+            <span>${threatLevel} (${countLabel})</span>
           </div>
         </div>`,
         {

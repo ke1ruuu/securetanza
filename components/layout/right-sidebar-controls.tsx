@@ -2,6 +2,7 @@
 
 import { Plus, Minus, Crosshair } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
+import { OVERLAY_BUTTON } from "@/lib/map-overlay";
 
 export default function RightSidebarControls() {
 	const { mapRef, initialBounds } = useMapContext();
@@ -13,6 +14,14 @@ export default function RightSidebarControls() {
 		const maxZoom = map.getMaxZoom();
 		if (currentZoom < maxZoom) {
 			map.zoomIn();
+		}
+	};
+
+	const handleZoomOut = () => {
+		const map = mapRef.current;
+		if (!map) return;
+		if (map.getZoom() > map.getMinZoom()) {
+			map.zoomOut();
 		}
 	};
 
@@ -32,15 +41,23 @@ export default function RightSidebarControls() {
 			{/* Zoom In */}
 			<button
 				onClick={handleZoomIn}
-				className="w-11 h-11 rounded-xl bg-white/90 dark:bg-[#1E293B]/90 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white dark:hover:bg-[#1E293B] hover:border-slate-300 dark:hover:border-white/[0.12] transition-all duration-200 cursor-pointer group shadow-sm dark:shadow-none"
+				className={`w-11 h-11 cursor-pointer group ${OVERLAY_BUTTON}`}
 				title="Zoom In">
 				<Plus className="h-5 w-5 group-hover:scale-110 transition-transform" />
+			</button>
+
+			{/* Zoom Out */}
+			<button
+				onClick={handleZoomOut}
+				className={`w-11 h-11 cursor-pointer group ${OVERLAY_BUTTON}`}
+				title="Zoom Out">
+				<Minus className="h-5 w-5 group-hover:scale-110 transition-transform" />
 			</button>
 
 			{/* Reset View / Zoom to Default */}
 			<button
 				onClick={handleResetView}
-				className="w-11 h-11 rounded-xl bg-[#0EA5E9] border border-[#0EA5E9]/60 flex items-center justify-center text-white hover:bg-[#0EA5E9]/90 hover:shadow-[0_0_20px_rgba(14,165,233,0.4)] transition-all duration-200 cursor-pointer group shadow-sm dark:shadow-none"
+				className="w-11 h-11 rounded-lg border border-sky-500 bg-sky-500 flex items-center justify-center text-white shadow-sm transition-colors hover:bg-sky-600 cursor-pointer group"
 				title="Reset View">
 				<Crosshair className="h-5 w-5 group-hover:scale-110 transition-transform" />
 			</button>

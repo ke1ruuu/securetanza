@@ -4,6 +4,7 @@ import React from "react";
 import { useCrimeTypes, getCrimeTypeColor, extractCrimeType } from "@/hooks/useCrimeTypes";
 import { useMapContext } from "@/context/MapContext";
 import CrimeTypeBreakdown from "@/components/map/crime-type-breakdown";
+import { OVERLAY_SURFACE, OVERLAY_LABEL } from "@/lib/map-overlay";
 
 // Helper function to format numbers in standard notation
 function formatNumber(num: number): string {
@@ -17,8 +18,7 @@ function formatNumber(num: number): string {
 }
 
 // Shared card chrome so the legend and its breakdown panel read as one surface
-const CARD =
-	"rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-2xl shadow-[0_8px_30px_rgba(15,23,42,0.10)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.55)] overflow-hidden";
+const CARD = `${OVERLAY_SURFACE} overflow-hidden`;
 
 export default function CrimeLegend() {
 	const { stats, total, loading } = useCrimeTypes();
@@ -35,18 +35,13 @@ export default function CrimeLegend() {
 	return (
 		<div className="relative pointer-events-auto w-[180px] sm:w-[228px]">
 			<div className={`relative ${CARD}`}>
-				{/* Accent edge */}
-				<div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-[#0EA5E9] via-[#06B6D4] to-transparent" />
-
 				{/* Header */}
-				<div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-100 dark:border-white/[0.06]">
-					<span className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-						Crime Types
-					</span>
+				<div className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-slate-100 dark:border-white/[0.06]">
+					<span className={OVERLAY_LABEL}>Crime Types</span>
 					{selectedCrimeType ? (
 						<button
 							onClick={() => setSelectedCrimeType(null)}
-							className="shrink-0 text-[11px] font-bold uppercase tracking-[0.1em] text-[#0EA5E9] hover:text-[#0284C7] dark:hover:text-[#7DD3FC] transition-colors cursor-pointer">
+							className="shrink-0 text-[0.68rem] font-bold uppercase tracking-[0.11em] text-sky-600 hover:text-sky-500 dark:text-sky-400 transition-colors cursor-pointer">
 							Reset
 						</button>
 					) : (
@@ -85,7 +80,7 @@ export default function CrimeLegend() {
 									title={`${displayName} — ${item.count} incidents (${percentage}%)`}
 									className={`group relative flex w-full items-center gap-2.5 h-[34px] pl-3 pr-3 text-left transition-all duration-200 cursor-pointer ${
 										isActive
-											? "bg-[#0EA5E9]/10"
+											? "bg-sky-50 dark:bg-sky-400/10"
 											: isDimmed
 												? "opacity-45 hover:opacity-100 hover:bg-slate-50 dark:hover:bg-white/[0.04]"
 												: "hover:bg-slate-50 dark:hover:bg-white/[0.04]"
@@ -137,7 +132,7 @@ export default function CrimeLegend() {
 				{/* Hint */}
 				{!loading && stats.length > 0 && (
 					<div className="border-t border-slate-100 dark:border-white/[0.06] px-3 py-1.5">
-						<p className="text-[10.5px] font-bold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+						<p className="text-[0.62rem] font-semibold text-slate-400 dark:text-slate-500">
 							{selectedCrimeType ? "Showing barangay breakdown" : "Click a type for barangay detail"}
 						</p>
 					</div>
