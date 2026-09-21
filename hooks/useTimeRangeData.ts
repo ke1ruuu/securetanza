@@ -11,9 +11,12 @@ export interface DateRange {
  * Converts multiple time selections into an array of date ranges for API queries
  */
 export function useTimeRangeData(): DateRange[] {
-  const { timeRange, selectedYear } = useMapContext();
+  const { timeRange, selectedYear, customDateRange } = useMapContext();
 
   return useMemo(() => {
+    // An exact date window, when one is set, wins over the period selection.
+    if (customDateRange) return [customDateRange];
+
     const ranges = getDateRangesFromTimeRange(timeRange);
     if (ranges.length > 0 || selectedYear === null) return ranges;
 
@@ -27,7 +30,7 @@ export function useTimeRangeData(): DateRange[] {
         end: new Date(selectedYear, 11, 31, 23, 59, 59, 999),
       },
     ];
-  }, [timeRange, selectedYear]);
+  }, [timeRange, selectedYear, customDateRange]);
 }
 
 /**

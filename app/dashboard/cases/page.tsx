@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import IncidentsTab from "@/components/dashboard/incidents-tab";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
-import { MapProvider } from "@/context/MapContext";
+import { MapProvider, useMapContext } from "@/context/MapContext";
+import { fromInputDate } from "@/lib/date-input";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +19,20 @@ function CasesContent() {
   const rawParamName = searchParams.get("name");
   const barangayName = rawParamName || "General Dashboard";
   const { theme } = useTheme();
+  const { customDateRange, setCustomDateRange } = useMapContext();
+
+  // Exact date window carried over from the Analytics date picker (?from=&to=).
+  const rangeFrom = searchParams.get("from");
+  const rangeTo = searchParams.get("to");
+  useEffect(() => {
+    if (!rangeFrom || !rangeTo) return;
+    const start = fromInputDate(rangeFrom, false);
+    const end = fromInputDate(rangeTo, true);
+    if (start && end) setCustomDateRange({ start, end });
+  }, [rangeFrom, rangeTo, setCustomDateRange]);
+  // Hold the list back until that window is applied, so the case isn't looked
+  // up in a first load that's about to be replaced.
+  const rangeReady = !(rangeFrom && rangeTo) || customDateRange !== null;
 
   useEffect(() => {
     if (!authLoading) {
@@ -64,7 +79,7 @@ function CasesContent() {
         theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"
       }`}>
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
-          <IncidentsTab barangayName={barangayName} />
+          {rangeReady && <IncidentsTab barangayName={barangayName} />}
         </div>
       </main>
     </div>

@@ -327,6 +327,191 @@ function RankedBars({
   );
 }
 
+/**
+ * Loading state that mirrors the finished page — same header, numbered
+ * sections, panel shells and grid — so nothing jumps when the data lands.
+ * Everything that doesn't depend on the data (section names, panel titles,
+ * stat labels) is real text; only the values and charts are placeholders.
+ */
+function AnalyticsSkeleton({
+  theme,
+  isGeneralDashboard,
+  barangayName,
+}: {
+  theme: string;
+  isGeneralDashboard: boolean;
+  barangayName: string;
+}) {
+  const dark = theme === "dark";
+  const bone = dark ? "bg-white/10" : "bg-slate-200";
+  const track = dark ? "bg-sky-400/10" : "bg-sky-50";
+  const muted = dark ? "text-slate-400" : "text-slate-500";
+
+  // Fixed shapes rather than random ones, so the skeleton doesn't reshuffle on re-render.
+  const monthHeights = [55, 70, 48, 82, 64, 90, 58, 74, 66, 52, 80, 60];
+  const hourHeights = [20, 14, 10, 8, 8, 12, 22, 34, 46, 52, 58, 62, 66, 70, 76, 82, 90, 84, 72, 60, 48, 40, 32, 26];
+  const rankWidths = [92, 78, 66, 54, 44, 36, 28, 22];
+
+  const Bone = ({ className, style }: { className: string; style?: React.CSSProperties }) => (
+    <div className={`rounded ${bone} ${className}`} style={style} />
+  );
+
+  const Columns = ({ heights }: { heights: number[] }) => (
+    <div className="flex items-end" style={{ height: 150, gap: 3 }}>
+      {heights.map((h, i) => (
+        <div key={i} className={`flex-1 rounded-t-[3px] ${bone}`} style={{ height: `${h}%` }} />
+      ))}
+    </div>
+  );
+
+  const Ranked = ({ rows }: { rows: number }) => (
+    <div className="flex-1 flex flex-col justify-between">
+      {rankWidths.slice(0, rows).map((w, i) => (
+        <div key={i} className="flex items-center" style={{ gap: 10, padding: "6px 0" }}>
+          <div className="w-[42%] shrink-0 flex justify-end">
+            <Bone className="h-3" style={{ width: `${60 + ((i * 17) % 35)}%` }} />
+          </div>
+          <div className={`flex-1 h-[18px] rounded-[3px] overflow-hidden ${track}`}>
+            <div className={`h-full rounded-[3px] ${bone}`} style={{ width: `${w}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const footer = (
+    <>
+      <Bone className="h-3.5 w-3/5" />
+      <Bone className="h-3 w-2/5" />
+    </>
+  );
+
+  const stats = [
+    { label: "Crime Trend", Icon: Shield },
+    { label: "Peak Hours", Icon: Clock },
+    { label: "Resolution Rate", Icon: BarChart3 },
+    { label: "Safety Index", Icon: Shield },
+  ];
+
+  return (
+    <div
+      className="max-w-[1180px] mx-auto space-y-10 animate-pulse"
+      role="status"
+      aria-busy="true"
+      aria-label="Loading analytics"
+    >
+      {/* Header */}
+      <header
+        className={`flex flex-wrap items-end justify-between gap-4 border-b pb-[22px] ${dark ? "border-white/5" : "border-slate-200"}`}
+      >
+        <div className="max-w-lg">
+          <h2 className={`text-3xl font-bold tracking-tight mb-1.5 ${dark ? "text-white" : "text-slate-900"}`}>
+            Crime Analytics
+          </h2>
+          <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            Comprehensive analysis and insights for {isGeneralDashboard ? "all barangays in Tanza" : barangayName}
+          </p>
+        </div>
+        <dl className="text-right">
+          <dt className={`text-[12px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            Total Incidents
+          </dt>
+          <dd className="mt-1.5 flex justify-end">
+            <Bone className="h-6 w-16" />
+          </dd>
+        </dl>
+      </header>
+
+      {/* 01 Overview — one surface, four stats */}
+      <section>
+        <SectionHeader no="01" title="Overview" theme={theme} />
+        <div className={`rounded-xl border ${dark ? "border-white/[0.06] bg-[#1e293b]" : "border-slate-200 bg-white"}`}>
+          <div
+            className={`flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x ${dark ? "divide-white/[0.06]" : "divide-slate-200"}`}
+          >
+            {stats.map(({ label, Icon }) => (
+              <div key={label} className="flex-1 min-w-0" style={{ padding: "16px 22px" }}>
+                <p className={`flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.11em] ${muted}`} style={{ marginBottom: 8 }}>
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </p>
+                <Bone className="h-[1.3rem] w-24" />
+                <Bone className="h-3 w-32" style={{ marginTop: 9 }} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 02 Temporal Patterns */}
+      <section>
+        <SectionHeader no="02" title="Temporal Patterns" theme={theme} />
+        <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1fr] gap-[18px]">
+          <Panel
+            theme={theme}
+            title="Monthly Trend"
+            subtitle={`Incidents per month, ${isGeneralDashboard ? "all barangays" : barangayName}`}
+            bodyClassName="justify-center"
+            footer={footer}
+          >
+            <Columns heights={monthHeights} />
+          </Panel>
+          <Panel
+            theme={theme}
+            title="Hour of Day"
+            subtitle="24-hour incident distribution"
+            bodyClassName="justify-center"
+            footer={footer}
+          >
+            <Columns heights={hourHeights} />
+          </Panel>
+        </div>
+      </section>
+
+      {/* 03 Crime Composition */}
+      <section>
+        <SectionHeader no="03" title="Crime Composition" theme={theme} />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[18px]">
+          <Panel theme={theme} title="Crime Types Distribution" subtitle="Most common incident categories" footer={footer}>
+            <Ranked rows={8} />
+          </Panel>
+          <Panel theme={theme} title="Crime Modus Operandi" subtitle="Most common methods used in crimes" footer={footer}>
+            <Ranked rows={8} />
+          </Panel>
+        </div>
+      </section>
+
+      {/* 04 Where It Happens */}
+      <section>
+        <SectionHeader no="04" title="Where It Happens" theme={theme} />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[18px]">
+          <Panel theme={theme} title="Crime Location Types" subtitle="Where crimes most frequently occur" footer={footer}>
+            <Ranked rows={8} />
+          </Panel>
+          {/* Only exists on the all-barangays view */}
+          {isGeneralDashboard && (
+            <Panel theme={theme} title="Barangay Comparison" subtitle="Crime distribution across areas" footer={footer}>
+              <Ranked rows={8} />
+            </Panel>
+          )}
+        </div>
+      </section>
+
+      {/* 05 Matrix — has its own loading state further down once the rest has landed */}
+      <section>
+        <SectionHeader no="05" title="Crime Type Matrix" theme={theme} />
+        <Panel theme={theme} title="Crime Type Matrix">
+          <div className="grid grid-cols-6 gap-1.5" style={{ height: 280 }}>
+            {Array.from({ length: 36 }, (_, i) => (
+              <div key={i} className={`rounded ${bone}`} style={{ opacity: 0.35 + ((i * 37) % 60) / 100 }} />
+            ))}
+          </div>
+        </Panel>
+      </section>
+    </div>
+  );
+}
+
 export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
   const { theme } = useTheme();
 
@@ -351,19 +536,11 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className={`p-6 rounded-2xl h-64 ${theme === "dark" ? "bg-white/5" : "bg-white"}`}
-            >
-              <div className="h-4 bg-gray-300 rounded mb-4"></div>
-              <div className="h-32 bg-gray-300 rounded"></div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <AnalyticsSkeleton
+        theme={theme}
+        isGeneralDashboard={isGeneralDashboard}
+        barangayName={barangayName}
+      />
     );
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Minus, RotateCcw } from "lucide-react";
 import { MapContainer, TileLayer, GeoJSON, CircleMarker, Tooltip, useMap } from "react-leaflet";
 import type { Layer } from "leaflet";
 import L from "leaflet";
@@ -47,6 +48,163 @@ function FrameMap({ bounds }: { bounds: L.LatLngBounds | null }) {
   }, [map, bounds]);
 
   return null;
+}
+
+/**
+ * Draws the outer Tanza boundary — the silhouette of all barangays together.
+ *
+ * The GeoJSON is 41 separate barangay polygons whose shared borders don't
+ * line up vertex-for-vertex, so there's no reliable way to dissolve them into
+ * one outline by matching edges. Instead this paints on a canvas: stroke every
+ * barangay thick, then erase each barangay's interior. Inner borders are
+ * covered from both sides and vanish; only the band outside the outer edge
+ * survives. The canvas sits in its own pane between the polygons and the pins
+ * and ignores pointer events, so tooltips underneath keep working.
+ */
+function TanzaOutline({ geo, theme }: { geo: any; theme: string }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (!geo?.features) return;
+
+    const paneName = "tanza-outline-pane";
+    const pane = map.getPane(paneName) ?? map.createPane(paneName);
+    pane.style.zIndex = "450";
+    pane.style.pointerEvents = "none";
+
+    const canvas = L.DomUtil.create("canvas", "", pane) as HTMLCanvasElement;
+    canvas.style.position = "absolute";
+    const color = theme === "dark" ? "rgba(226,232,240,0.9)" : "rgba(15,23,42,0.85)";
+
+    const rings: number[][][] = [];
+    geo.features.forEach((f: any) => {
+      const g = f?.geometry;
+      if (g?.type === "Polygon") rings.push(...g.coordinates);
+      else if (g?.type === "MultiPolygon") g.coordinates.forEach((p: any) => rings.push(...p));
+    });
+
+    const draw = () => {
+      // Paint twice the viewport so a drag doesn't reveal blank edges.
+      const size = map.getSize();
+      const origin = map.containerPointToLayerPoint([-size.x / 2, -size.y / 2]);
+      const dpr = window.devicePixelRatio || 1;
+      const w = size.x * 2;
+      const h = size.y * 2;
+
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      L.DomUtil.setPosition(canvas, origin);
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.scale(dpr, dpr);
+
+      const trace = () => {
+        ctx.beginPath();
+        rings.forEach((ring) => {
+          ring.forEach(([lng, lat], i) => {
+            const p = map.latLngToLayerPoint([lat, lng]);
+            const x = p.x - origin.x;
+            const y = p.y - origin.y;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.closePath();
+        });
+      };
+
+      ctx.lineJoin = "round";
+      trace();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      // Erase interiors, plus a hairline stroke to clear slivers where
+      // neighbouring polygons don't quite touch.
+      ctx.globalCompositeOperation = "destination-out";
+      trace();
+      ctx.fillStyle = "#000";
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
+
+      canvas.style.visibility = "visible";
+    };
+
+    // Stale during the zoom animation, so hide until it lands.
+    const hide = () => {
+      canvas.style.visibility = "hidden";
+    };
+
+    map.on("zoomstart", hide);
+    map.on("moveend zoomend resize", draw);
+    draw();
+
+    return () => {
+      map.off("zoomstart", hide);
+      map.off("moveend zoomend resize", draw);
+      canvas.remove();
+    };
+  }, [map, geo, theme]);
+
+  return null;
+}
+
+/**
+ * Zoom in / zoom out / reset-to-original-frame buttons.
+ *
+ * The global stylesheet hides Leaflet's built-in zoom control (the main map
+ * uses sidebar controls instead), so the mini map carries its own. "Reset"
+ * re-applies the same frame FrameMap computed — the involved barangays — or
+ * the default Tanza view when nothing is highlighted.
+ */
+function ZoomControls({ bounds, theme }: { bounds: L.LatLngBounds | null; theme: string }) {
+  const map = useMap();
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Keep clicks/drags on the buttons from leaking through to the map.
+  useEffect(() => {
+    if (ref.current) {
+      L.DomEvent.disableClickPropagation(ref.current);
+      L.DomEvent.disableScrollPropagation(ref.current);
+    }
+  }, []);
+
+  const reset = () => {
+    if (bounds && bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [16, 16], maxZoom: 14 });
+    } else {
+      map.setView(TANZA_CENTER, 12);
+    }
+  };
+
+  const btn =
+    "flex h-7 w-7 items-center justify-center transition-colors " +
+    (theme === "dark"
+      ? "bg-slate-800 text-slate-200 hover:bg-slate-700"
+      : "bg-white text-slate-700 hover:bg-slate-100");
+
+  return (
+    <div
+      ref={ref}
+      className={`absolute right-2 top-2 z-1000 flex flex-col overflow-hidden rounded-md border shadow-sm divide-y ${
+        theme === "dark" ? "border-white/10 divide-white/10" : "border-slate-300 divide-slate-200"
+      }`}
+    >
+      <button type="button" className={btn} onClick={() => map.zoomIn()} aria-label="Zoom in" title="Zoom in">
+        <Plus size={14} />
+      </button>
+      <button type="button" className={btn} onClick={() => map.zoomOut()} aria-label="Zoom out" title="Zoom out">
+        <Minus size={14} />
+      </button>
+      <button type="button" className={btn} onClick={reset} aria-label="Reset view" title="Reset view">
+        <RotateCcw size={13} />
+      </button>
+    </div>
+  );
 }
 
 export default function SliceMiniMapInner({
@@ -179,7 +337,9 @@ export default function SliceMiniMapInner({
           </Tooltip>
         </CircleMarker>
       ))}
+      <TanzaOutline geo={geo} theme={theme} />
       <FrameMap bounds={bounds} />
+      <ZoomControls bounds={bounds} theme={theme} />
     </MapContainer>
   );
 }

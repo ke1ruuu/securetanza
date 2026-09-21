@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   MapPin,
@@ -41,6 +42,8 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20); // 20 items per page
+  const targetCaseId = useSearchParams().get("case");
+  const handledCaseRef = useRef<string | null>(null);
 
   const isGeneralDashboard = !barangayName || barangayName === "General Dashboard";
 
@@ -172,6 +175,20 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   useEffect(() => {
     setCurrentPage(1);
   }, [crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter]);
+
+  // Deep link from the analytics detail view (?case=<id>): select that case,
+  // jump to the page it's on and open its details. This has to stay below the
+  // effects above — they reset the page to 1 when `cases` changes, and this
+  // one needs to run last in the same commit so its page wins.
+  useEffect(() => {
+    if (!targetCaseId || loading || handledCaseRef.current === targetCaseId) return;
+    const index = cases.findIndex((c) => c.id === targetCaseId);
+    if (index === -1) return;
+    handledCaseRef.current = targetCaseId;
+    setSelectedCase(cases[index]);
+    setCurrentPage(Math.floor(index / itemsPerPage) + 1);
+    setIsModalOpen(true);
+  }, [targetCaseId, loading, cases, itemsPerPage]);
 
   // Get unique values for filters
   const crimeTypes = ["(All)", ...Array.from(new Set(cases.map((c) => c.incidentType)))];

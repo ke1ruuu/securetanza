@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,8 @@ import {
   sliceLabel,
 } from "@/lib/analytics-slice";
 import SliceMiniMap from "./slice-mini-map";
+import { toInputDate } from "@/lib/date-input";
+import { useMapContext } from "@/context/MapContext";
 
 interface Props {
   /** null closes the dialog. */
@@ -74,6 +77,7 @@ export default function IncidentDetailModal({
   onClose,
 }: Props) {
   const dark = theme === "dark";
+  const { customDateRange } = useMapContext();
 
   const incidents = useMemo(
     () => (slice ? filterIncidents(allCrimes, slice) : []),
@@ -94,6 +98,17 @@ export default function IncidentDetailModal({
   }, [incidents, slice]);
 
   if (!slice) return null;
+
+  // The Cases page has its own period state, so an exact date window set here
+  // travels with the link — otherwise the case could fall outside what Cases loads.
+  const casesHref = (id: string) => {
+    const params = new URLSearchParams({ case: id });
+    if (customDateRange) {
+      params.set("from", toInputDate(customDateRange.start));
+      params.set("to", toInputDate(customDateRange.end));
+    }
+    return `/dashboard/cases?${params}`;
+  };
 
   const share =
     totalIncidents > 0 ? Math.round((incidents.length / totalIncidents) * 100) : 0;
@@ -185,10 +200,15 @@ export default function IncidentDetailModal({
               </div>
               <div className="max-h-[320px] overflow-y-auto">
                 {incidents.map((c, i) => (
-                  <div
+                  <Link
                     key={c.id ?? i}
-                    className={`grid gap-3 px-3 py-2 text-[0.78rem] border-t ${rowBorder} ${
-                      dark ? "text-slate-300" : "text-slate-600"
+                    // Opens this case in the Cases view (?case= is read by IncidentsTab).
+                    href={casesHref(c.id)}
+                    title="Open in Cases"
+                    className={`grid gap-3 px-3 py-2 text-[0.78rem] border-t ${rowBorder} cursor-pointer transition-colors ${
+                      dark
+                        ? "text-slate-300 hover:bg-white/[0.05]"
+                        : "text-slate-600 hover:bg-slate-50"
                     }`}
                     style={{ gridTemplateColumns: "1.4fr 1fr 0.8fr 1.2fr 1.4fr 1fr" }}
                   >
@@ -202,7 +222,7 @@ export default function IncidentDetailModal({
                       {cleanLabel(c.incidentType ?? "—")}
                     </span>
                     <span className="truncate" title={c.caseStatus}>{c.caseStatus ?? "—"}</span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
