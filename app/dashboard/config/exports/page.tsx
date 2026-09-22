@@ -54,6 +54,7 @@ function DataExports() {
 	const [dayOfWeek, setDayOfWeek] = useState("Monday");
 	const [dayOfMonth, setDayOfMonth] = useState("1");
 	const [monthlyOn, setMonthlyOn] = useState("1"); // day of year for annually
+	const [timeOfDay, setTimeOfDay] = useState("00:00");
 	const [deliveryMode, setDeliveryMode] = useState<"prompt" | "auto">("prompt");
 	const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -68,6 +69,7 @@ function DataExports() {
 					setDayOfWeek(data.schedule.dayOfWeek || "Monday");
 					setDayOfMonth(data.schedule.dayOfMonth || "1");
 					setMonthlyOn(data.schedule.monthlyOn || "1");
+					setTimeOfDay(data.schedule.timeOfDay || "00:00");
 					setDeliveryMode(data.schedule.deliveryMode || "prompt");
 				}
 			})
@@ -80,7 +82,7 @@ function DataExports() {
 			const res = await fetch("/api/exports/schedule", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ enabled, frequency, dayOfWeek, dayOfMonth, monthlyOn, deliveryMode }),
+				body: JSON.stringify({ enabled, frequency, dayOfWeek, dayOfMonth, monthlyOn, timeOfDay, deliveryMode }),
 			});
 			if (!res.ok) throw new Error("Failed to save schedule");
 			setSaveState("saved");
@@ -183,11 +185,19 @@ function DataExports() {
 							</Field>
 						)}
 
-						{frequency === "daily" && (
-							<p className="text-[13px] text-slate-500 dark:text-slate-400">
-								A report will be generated every day at midnight.
-							</p>
-						)}
+						<Field label="Generate at" htmlFor="time-of-day">
+							<div className="max-w-[380px]">
+								<input
+									id="time-of-day"
+									type="time"
+									value={timeOfDay}
+									onChange={(e) => { setTimeOfDay(e.target.value); setHasUnsavedChanges(true); }}
+									// [color-scheme] themes the native clock picker itself, not just this
+									// field's own chrome — without it the popup ignores dark mode.
+									className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-[14px] text-slate-900 [color-scheme:light] focus:outline-none focus:ring-2 focus:ring-sky-500/40 dark:border-white/[0.12] dark:bg-white/[0.03] dark:text-slate-100 dark:[color-scheme:dark]"
+								/>
+							</div>
+						</Field>
 					</div>
 
 					<div className="pt-8">

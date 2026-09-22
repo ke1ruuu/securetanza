@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"next dev\" \"npx tsx backend/cron/worker.ts\"",
     "build": "next build",
-    "start": "concurrently \"next start\" \"npx tsx backend/cron/worker.ts\"",
+    "start": "concurrently --kill-others-on-fail \"next start\" \"npx tsx backend/cron/worker.ts\"",
     "lint": "eslint",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
