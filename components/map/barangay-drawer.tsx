@@ -1,24 +1,22 @@
 "use client";
 
 import React from "react";
-import { 
-  Drawer, 
-  DrawerContent, 
-  DrawerHeader, 
-  DrawerTitle, 
-  DrawerDescription, 
-  DrawerFooter, 
-  DrawerClose 
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import { MapPin, Info, Shield, Users, Activity, X, AlertTriangle } from "lucide-react";
+import { MapPin, X, ArrowRight } from "lucide-react";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { useCrimeHoverStats } from "@/hooks/useCrimeHoverStats";
 import { useThreatLevels, getThreatLevelFromCount } from "@/hooks/useThreatLevels";
-import { getCrimeTypeColor } from "@/hooks/useCrimeTypes";
 import { useTheme } from "@/context/ThemeContext";
-
-import { BarangayData } from "@/constants/dummy";
+import { getCrimeTypeColor } from "@/hooks/useCrimeTypes";
+import { OVERLAY_LABEL } from "@/lib/map-overlay";
 
 interface BarangayDrawerProps {
   open: boolean;
@@ -27,240 +25,204 @@ interface BarangayDrawerProps {
   onMoreInfo: (name: string) => void;
 }
 
+/**
+ * Side drawer for a clicked barangay. Laid out like the Analytics panels: an
+ * uppercase label over a bold title, one bordered stat strip with hairline
+ * dividers, ranked bars on the shared sky ramp, and hairline info rows.
+ */
 export default function BarangayDrawer({ open, onOpenChange, barangayName, onMoreInfo }: BarangayDrawerProps) {
   const { stats, loading } = useCrimeHoverStats(barangayName);
   const { barangayCrimeCounts } = useThreatLevels();
   const { theme } = useTheme();
+  const dark = theme === "dark";
 
   // Calculate threat level and risk
   const totalCrimes = stats?.crimesByType.reduce((sum, crime) => sum + crime.count, 0) || 0;
-  const normalizedName = barangayName?.toUpperCase() || '';
-  const actualCrimeCount = barangayCrimeCounts[normalizedName] || barangayCrimeCounts[barangayName || ''] || totalCrimes;
-  
+  const normalizedName = barangayName?.toUpperCase() || "";
+  const actualCrimeCount = barangayCrimeCounts[normalizedName] || barangayCrimeCounts[barangayName || ""] || totalCrimes;
+
   const threatLevel = getThreatLevelFromCount(actualCrimeCount, {
     low: 2,
     moderate: 5,
     high: 10,
-    critical: 15
+    critical: 15,
   });
-  
-  const riskLevel = threatLevel.charAt(0).toUpperCase() + threatLevel.slice(1);
-  const riskColor = threatLevel === "critical"
-    ? (theme === 'dark' ? 'text-red-400' : 'text-red-600')
-    : threatLevel === "high"
-    ? (theme === 'dark' ? 'text-orange-400' : 'text-orange-600')
-    : threatLevel === "moderate"
-    ? (theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600')
-    : threatLevel === "low"
-    ? (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600')
-    : (theme === 'dark' ? 'text-blue-400' : 'text-blue-600');
-  
-  const statusText = threatLevel === "critical" || threatLevel === "high" ? "Alert" : 
-                     threatLevel === "moderate" ? "Nominal" : "Secure";
 
-  const statusColor = statusText === 'Secure'
-    ? (theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600')
-    : statusText === 'Alert'
-    ? (theme === 'dark' ? 'text-red-400' : 'text-red-600')
-    : (theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600');
+  const riskLevel = threatLevel.charAt(0).toUpperCase() + threatLevel.slice(1);
+  const riskColor =
+    threatLevel === "critical"
+      ? dark ? "text-red-400" : "text-red-600"
+      : threatLevel === "high"
+        ? dark ? "text-orange-400" : "text-orange-600"
+        : threatLevel === "moderate"
+          ? dark ? "text-yellow-400" : "text-yellow-600"
+          : threatLevel === "low"
+            ? dark ? "text-emerald-400" : "text-emerald-600"
+            : dark ? "text-sky-400" : "text-sky-600";
+
+  const statusText =
+    threatLevel === "critical" || threatLevel === "high" ? "Alert" : threatLevel === "moderate" ? "Nominal" : "Secure";
+  const statusColor =
+    statusText === "Secure"
+      ? dark ? "text-emerald-400" : "text-emerald-600"
+      : statusText === "Alert"
+        ? dark ? "text-red-400" : "text-red-600"
+        : dark ? "text-slate-300" : "text-slate-600";
+
+  const mutedText = dark ? "text-slate-400" : "text-slate-500";
+  const hairline = dark ? "border-white/[0.06]" : "border-slate-100";
+  const valueClass = `text-[1.15rem] font-bold leading-tight tabular-nums ${dark ? "text-white" : "text-slate-900"}`;
+
+  const distribution = (stats?.crimesByType ?? [])
+    .filter((crime) => crime.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const statCells = [
+    { label: "Total Crimes", value: totalCrimes.toLocaleString(), className: "" },
+    { label: "Risk Level", value: riskLevel, className: riskColor },
+    { label: "Status", value: statusText, className: statusColor },
+    { label: "Safety Index", value: stats?.safetyIndex ?? "—", className: dark ? "text-emerald-400" : "text-emerald-600" },
+  ];
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className={`backdrop-blur-xl border-l h-full w-[400px] sm:max-w-[400px] transition-colors duration-500 ${
-        theme === 'dark' 
-          ? 'bg-slate-900/95 border-l-white/10 text-slate-100' 
-          : 'bg-white/95 border-l-slate-200 text-slate-800'
-      }`}>
-        <div className="flex flex-col h-full">
+      <DrawerContent
+        className={`h-full w-[400px] border-l sm:max-w-[400px] ${
+          dark ? "border-l-white/[0.08] bg-[#1e293b] text-slate-100" : "border-l-slate-200 bg-white text-slate-800"
+        }`}
+      >
+        <div className="flex h-full flex-col">
           {loading ? (
-            // Loading state
             <>
-              <DrawerHeader className={`border-b pb-6 ${theme === 'dark' ? 'border-white/5' : 'border-slate-100'}`}>
+              <DrawerHeader className={`border-b pb-6 ${hairline}`}>
                 <VisuallyHidden>
                   <DrawerTitle>Loading Barangay Data</DrawerTitle>
                 </VisuallyHidden>
               </DrawerHeader>
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-1 items-center justify-center">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                  <p className="text-sm font-semibold text-slate-400">Loading barangay data...</p>
+                  <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-sky-500 border-t-transparent" />
+                  <p className={`text-sm font-medium ${mutedText}`}>Loading barangay data...</p>
                 </div>
               </div>
             </>
           ) : !barangayName || !stats ? (
-            // No data state
             <>
-              <DrawerHeader className={`border-b pb-6 ${theme === 'dark' ? 'border-white/5' : 'border-slate-100'}`}>
+              <DrawerHeader className={`border-b pb-6 ${hairline}`}>
                 <VisuallyHidden>
                   <DrawerTitle>Select Barangay</DrawerTitle>
                 </VisuallyHidden>
               </DrawerHeader>
-              <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-1 items-center justify-center">
                 <div className="text-center">
-                  <MapPin className={`h-12 w-12 mx-auto mb-4 ${theme === 'dark' ? 'text-slate-600' : 'text-slate-300'}`} />
-                  <p className="text-sm font-semibold text-slate-400">
+                  <MapPin className={`mx-auto mb-4 h-10 w-10 ${dark ? "text-slate-600" : "text-slate-300"}`} />
+                  <p className={`text-sm font-medium ${mutedText}`}>
                     {barangayName ? "No crime data available" : "Select a barangay to view details"}
                   </p>
                 </div>
               </div>
             </>
           ) : (
-            // Data loaded state
             <>
-              <DrawerHeader className={`border-b pb-6 ${theme === 'dark' ? 'border-white/5' : 'border-slate-100'}`}>
-                <div className="flex justify-between items-start">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-lg ${theme === 'dark' ? 'bg-indigo-500/20' : 'bg-indigo-50'}`}>
-                        <MapPin className={`h-4 w-4 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                      </div>
-                      <span className={`text-[11.5px] font-bold uppercase tracking-widest ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`}>
-                        Crime Statistics
-                      </span>
-                    </div>
-                    <DrawerTitle className={`text-2xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
+              <DrawerHeader className={`border-b px-6 pb-5 ${hairline}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className={OVERLAY_LABEL}>Barangay</p>
+                    <DrawerTitle
+                      className={`font-heading mt-1 text-2xl font-bold tracking-tight ${dark ? "text-white" : "text-slate-900"}`}
+                    >
                       {barangayName}
                     </DrawerTitle>
-                    <DrawerDescription className={`font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                      Real-time security and crime data
+                    <DrawerDescription className={`mt-1 text-sm ${mutedText}`}>
+                      Crime statistics for this area
                     </DrawerDescription>
                   </div>
                   <DrawerClose asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={`h-8 w-8 rounded-full ${theme === 'dark' ? 'hover:bg-white/10 text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                    <button
+                      aria-label="Close"
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                        dark ? "text-slate-400 hover:bg-white/10" : "text-slate-500 hover:bg-slate-100"
+                      }`}
                     >
                       <X className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </DrawerClose>
                 </div>
               </DrawerHeader>
 
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Total Crimes
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Activity className={`h-3.5 w-3.5 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
-                      <span className={`text-lg font-black ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                        {totalCrimes}
-                      </span>
+              <div className="flex-1 space-y-7 overflow-y-auto px-6 py-6">
+                {/* Key figures — one surface, hairline dividers */}
+                <div
+                  className={`grid grid-cols-2 overflow-hidden rounded-xl border ${
+                    dark ? "border-white/[0.06]" : "border-slate-200"
+                  }`}
+                >
+                  {statCells.map((cell, i) => (
+                    <div
+                      key={cell.label}
+                      className={`px-4 py-3.5 ${i % 2 === 1 ? `border-l ${hairline}` : ""} ${i >= 2 ? `border-t ${hairline}` : ""}`}
+                    >
+                      <p className={`${OVERLAY_LABEL} mb-1.5`}>{cell.label}</p>
+                      <p className={`${valueClass} ${cell.className}`}>{cell.value}</p>
                     </div>
-                  </div>
-                  <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Risk Level
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Shield className={`h-3.5 w-3.5 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-500'}`} />
-                      <span className={`text-lg font-black ${riskColor}`}>
-                        {riskLevel}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Status
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Activity className={`h-3.5 w-3.5 ${statusColor}`} />
-                      <span className={`text-sm font-bold ${statusColor}`}>
-                        {statusText}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={`rounded-2xl p-4 border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                    <p className="text-[11.5px] font-bold text-slate-500 uppercase tracking-widest mb-1">
-                      Safety Index
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Shield className={`h-3.5 w-3.5 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
-                      <span className={`text-lg font-black ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`}>
-                        {stats.safetyIndex}
-                      </span>
-                    </div>
+                  ))}
+                </div>
+
+                {/* Crime distribution */}
+                <div>
+                  <h4 className={`${OVERLAY_LABEL} mb-3`}>Crime Distribution</h4>
+                  <div className="custom-scrollbar max-h-[380px] overflow-y-auto">
+                    {distribution.map((crime) => {
+                      const share = totalCrimes > 0 ? Math.round((crime.count / totalCrimes) * 100) : 0;
+                      return (
+                        <div
+                          key={crime.type}
+                          className={`flex items-center gap-3 border-b py-2.5 last:border-b-0 ${hairline}`}
+                        >
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: getCrimeTypeColor(crime.type) }}
+                          />
+                          <span className={`min-w-0 flex-1 truncate text-[0.82rem] ${dark ? "text-slate-200" : "text-slate-700"}`}>
+                            {crime.type}
+                          </span>
+                          <span className={`shrink-0 text-[0.82rem] font-semibold tabular-nums ${dark ? "text-white" : "text-slate-900"}`}>
+                            {crime.count.toLocaleString()}
+                          </span>
+                          <span className={`w-9 shrink-0 text-right text-[0.75rem] tabular-nums ${mutedText}`}>{share}%</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Crime Distribution */}
-                <div className="space-y-4">
-                  <h4 className={`text-[12px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    Crime Distribution
-                  </h4>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar">
-                    {stats.crimesByType
-                      .filter(crime => crime.count > 0)
-                      .sort((a, b) => b.count - a.count)
-                      .map((crime) => {
-                        const percentage = totalCrimes > 0 ? Math.round((crime.count / totalCrimes) * 100) : 0;
-                        const color = getCrimeTypeColor(crime.type);
-                        
-                        return (
-                          <div key={crime.type} className={`flex items-center justify-between py-2 px-3 rounded-lg border transition-colors ${theme === 'dark' ? 'bg-white/5 border-white/5' : 'bg-slate-50 border-slate-200/60'}`}>
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div 
-                                className="w-3 h-3 rounded-full flex-shrink-0" 
-                                style={{ backgroundColor: color }}
-                              />
-                              <span className={`text-xs font-medium truncate ${theme === 'dark' ? 'text-slate-200' : 'text-slate-700'}`}>
-                                {crime.type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-                                {crime.count}
-                              </span>
-                              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                                ({percentage}%)
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-
-                {/* Administrative Info */}
-                <div className="space-y-4">
-                  <h4 className={`text-[12px] font-bold uppercase tracking-widest flex items-center gap-2 ${theme === 'dark' ? 'text-slate-500' : 'text-slate-600'}`}>
-                    <Users className="h-3.5 w-3.5" />
-                    Administrative Info
-                  </h4>
-                  <div className="space-y-3">
+                {/* Administrative info */}
+                <div>
+                  <h4 className={`${OVERLAY_LABEL} mb-1`}>Administrative Info</h4>
+                  <dl>
                     {[
                       { label: "Municipality", value: "Tanza" },
                       { label: "Province", value: "Cavite" },
                       { label: "Region", value: "IV-A (CALABARZON)" },
                       { label: "Country", value: "Philippines" },
                     ].map((item) => (
-                      <div
-                        key={item.label}
-                        className={`flex justify-between items-center py-2 border-b transition-colors ${theme === 'dark' ? 'border-white/5' : 'border-slate-100'}`}
-                      >
-                        <span className={`text-xs font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>
-                          {item.label}
-                        </span>
-                        <span className={`text-xs font-bold ${theme === 'dark' ? 'text-slate-100' : 'text-slate-800'}`}>
-                          {item.value}
-                        </span>
+                      <div key={item.label} className={`flex items-center justify-between border-b py-2.5 last:border-b-0 ${hairline}`}>
+                        <dt className={`text-xs ${mutedText}`}>{item.label}</dt>
+                        <dd className={`text-xs font-semibold ${dark ? "text-slate-100" : "text-slate-800"}`}>{item.value}</dd>
                       </div>
                     ))}
-                  </div>
+                  </dl>
                 </div>
               </div>
 
-              <DrawerFooter className={`border-t p-6 transition-colors ${theme === 'dark' ? 'border-white/5 bg-slate-950/50' : 'border-slate-200 bg-slate-50'}`}>
-                <Button 
+              <DrawerFooter className={`border-t px-6 py-4 ${hairline}`}>
+                <button
                   onClick={() => onMoreInfo(barangayName)}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold h-11 rounded-xl shadow-lg shadow-indigo-500/20"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
                 >
                   View Full Dashboard
-                </Button>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </DrawerFooter>
             </>
           )}

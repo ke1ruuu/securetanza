@@ -4,6 +4,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { useCrimeTypeByBarangay } from "@/hooks/useCrimeTypeByBarangay";
 import { extractCrimeType, getCrimeTypeColor } from "@/hooks/useCrimeTypes";
+import { OVERLAY_SURFACE, OVERLAY_LABEL } from "@/lib/map-overlay";
 
 // Helper function to format numbers in standard notation
 function formatNumber(num: number): string {
@@ -48,13 +49,7 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 	const total = rows.reduce((sum, [, count]) => sum + count, 0);
 
 	return (
-		<div className="relative w-[168px] sm:w-[232px] rounded-2xl border border-slate-200 dark:border-white/[0.08] bg-white/95 dark:bg-[#0F172A]/95 backdrop-blur-2xl shadow-[0_8px_30px_rgba(15,23,42,0.10)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.55)] overflow-hidden animate-in fade-in slide-in-from-right-1 duration-200">
-			{/* Accent edge tinted with the crime type colour */}
-			<div
-				className="absolute top-0 left-0 right-0 h-[1.5px]"
-				style={{ background: `linear-gradient(to right, ${color}, ${color}00)` }}
-			/>
-
+		<div className={`relative w-[168px] sm:w-[232px] overflow-hidden animate-in fade-in slide-in-from-right-1 duration-200 ${OVERLAY_SURFACE}`}>
 			{/* Header */}
 			<div className="flex items-start justify-between gap-2 px-3 pt-2.5 pb-2 border-b border-slate-100 dark:border-white/[0.06]">
 				<div className="min-w-0">
@@ -70,7 +65,7 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 							{displayName}
 						</span>
 					</div>
-					<p className="mt-1 text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+					<p className={`mt-1 ${OVERLAY_LABEL} !text-[0.62rem]`}>
 						Barangay Breakdown
 					</p>
 				</div>
@@ -88,7 +83,7 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 					<p className="text-[15px] font-bold leading-none tabular-nums text-slate-900 dark:text-white">
 						{isPending ? "—" : rows.length}
 					</p>
-					<p className="mt-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+					<p className={`mt-1.5 ${OVERLAY_LABEL} !text-[0.62rem]`}>
 						Barangays
 					</p>
 				</div>
@@ -96,7 +91,7 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 					<p className="text-[15px] font-bold leading-none tabular-nums" style={{ color }}>
 						{isPending ? "—" : formatNumber(total)}
 					</p>
-					<p className="mt-1.5 text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+					<p className={`mt-1.5 ${OVERLAY_LABEL} !text-[0.62rem]`}>
 						Incidents
 					</p>
 				</div>
@@ -104,8 +99,8 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 
 			{/* Column labels */}
 			<div className="flex items-center justify-between px-3 py-1 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/[0.06]">
-				<span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">Barangay</span>
-				<span className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">Count</span>
+				<span className={`${OVERLAY_LABEL} !text-[0.62rem]`}>Barangay</span>
+				<span className={`${OVERLAY_LABEL} !text-[0.62rem]`}>Count</span>
 			</div>
 
 			{/* Barangay list */}

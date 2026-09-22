@@ -7,6 +7,8 @@ import {
 	PageHeader,
 	Section,
 	btnPrimary,
+	PAGE_FORM,
+	SplitLayout,
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 import { landingOptions, themes } from "../_components/preview-thumbnails";
@@ -130,8 +132,12 @@ export default function PreferencesPage() {
 	};
 
 	return (
-		<div className="max-w-[720px] space-y-12">
-			<PageHeader title="Account Preferences" />
+		<div className={PAGE_FORM}>
+			<div className="mb-12">
+				<PageHeader title="Account Preferences" />
+			</div>
+
+			<SplitLayout>
 
 			<Section
 				title="Interface Theme"
@@ -178,6 +184,8 @@ export default function PreferencesPage() {
 					))}
 				</div>
 			</Section>
+
+			</SplitLayout>
 
 			{hasUnsavedChanges && (
 				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">

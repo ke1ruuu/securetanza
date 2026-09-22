@@ -25,6 +25,8 @@ import {
 	btnGhost,
 	btnPrimary,
 	inputBase,
+	PAGE_FORM,
+	SplitLayout,
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 
@@ -222,12 +224,13 @@ function NotificationSettings() {
 	const activeRules = rules.filter((r) => r.isEnabled).length;
 
 	return (
-		<div className="max-w-[860px] space-y-12 pb-12">
+		<div className={cn(PAGE_FORM, "space-y-12 pb-12")}>
 			<PageHeader
 				title="Notification & Alert Engine"
 				description="Configure post-ingestion analytical triggers, mathematical detection thresholds, and in-app alerts."
 			/>
 
+			<SplitLayout>
 			<Section
 				title="Analytical Rule Engine"
 				description="Automated conditions evaluated across crime datasets upon CSV/Excel upload."
@@ -302,12 +305,12 @@ function NotificationSettings() {
 													})
 												}
 											>
-												<SelectTrigger className="h-8 w-48 border-slate-200 bg-white text-[13px] dark:border-white/[0.12] dark:bg-white/[0.03]">
+												<SelectTrigger className="h-9 w-48 border-slate-200 bg-white text-[14px] dark:border-white/[0.12] dark:bg-white/[0.03]">
 													<SelectValue />
 												</SelectTrigger>
 												<SelectContent>
 													{SEVERITY_OPTIONS.map((opt) => (
-														<SelectItem key={opt.value} value={opt.value} className="text-[13px]">
+														<SelectItem key={opt.value} value={opt.value} className="text-[14px]">
 															{opt.label}
 														</SelectItem>
 													))}
@@ -429,6 +432,7 @@ function NotificationSettings() {
 				</div>
 			</Section>
 
+			</SplitLayout>
 			{hasUnsavedChanges && (
 				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
 					<div className="flex items-center gap-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full py-2 pl-6 pr-2">

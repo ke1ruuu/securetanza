@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import AnalyticsTab from "@/components/dashboard/analytics-tab";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
+import TimeSelector from "@/components/layout/time-selector";
 import { MapProvider } from "@/context/MapContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
@@ -51,7 +52,11 @@ function AnalyticsContent() {
       }`}>
         <DashboardBarangaySelector currentBarangay={barangayName} />
         <div className={`h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
-        <span className={`text-sm font-medium ${
+        {/* Quick periods (year → day) plus a custom start–end date range; scopes
+            every chart, the matrix and the detail view. */}
+        <TimeSelector allowCustomRange />
+        <div className={`hidden lg:block h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
+        <span className={`hidden lg:block truncate text-sm font-medium ${
           theme === "dark" ? "text-slate-500" : "text-slate-400"
         }`}>
           {barangayName === "General Dashboard" 

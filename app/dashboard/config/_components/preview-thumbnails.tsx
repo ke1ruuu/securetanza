@@ -1,7 +1,7 @@
 "use client";
 
 /* Miniature UI previews for the theme and landing-page pickers.
-   Lifted verbatim from the previous AccountSettingsTab — these are
+   Lifted verbatim from the old account-settings tab — these are
    the one place on this surface where drawn illustration earns its
    keep, because they show the thing being chosen. */
 

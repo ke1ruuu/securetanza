@@ -15,6 +15,7 @@ import { MapProvider, useMapContext } from "@/context/MapContext";
 
 import RightSidebarControls from "@/components/layout/right-sidebar-controls";
 import CrimeLegend from "@/components/map/crime-legend";
+import ThreatScale from "@/components/map/threat-scale";
 
 const TanzaMap = dynamic(() => import("@/components/map/tanza-map-root"), {
 	ssr: false,
@@ -99,12 +100,13 @@ function HomeContent() {
 				<div
 					className={`absolute left-3 sm:left-4 lg:left-6 flex flex-col items-start gap-3 transition-all duration-500 ease-in-out ${
 						isFilterActive
-							? "top-3 bottom-[76px] sm:top-4 sm:bottom-[84px] lg:top-6 lg:bottom-[92px]"
+							? "top-3 bottom-3 sm:top-4 sm:bottom-4 lg:top-6 lg:bottom-6"
 							: "top-[72px] sm:top-20"
 					}`}>
-					<UnifiedFilterBar />
+					{/* Filters are tucked away while the temporal view is open — it has its own focus */}
+					{!isFilterActive && <UnifiedFilterBar />}
 
-					{/* Hour-by-hour timeline sits at the foot of the rail, just above the clock toggle */}
+					{/* Hour-by-hour timeline sits at the foot of the rail, in the corner (the clock is hidden while it is open) */}
 					{isFilterActive && (
 						<div className="mt-auto flex min-h-0 flex-col w-[324px] sm:w-[348px] max-w-[calc(100vw-24px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
 							<TimeFilter
@@ -127,9 +129,15 @@ function HomeContent() {
 					<CrimeLegend />
 				</div>
 
+				{/* Bottom centre: one-line threat scale. Hidden below lg, where the clock and
+				    data pill already fill the bottom edge. */}
+				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-1/2 hidden -translate-x-1/2 lg:block">
+					<ThreatScale />
+				</div>
+
 				{/* Bottom Right: Latest Data Indicator beside Zoom Controls */}
 				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6 flex items-end gap-2.5 sm:gap-3">
-					<LatestDataIndicator />
+					{!isFilterActive && <LatestDataIndicator />}
 					<div data-tour="map-zoom-controls">
 						<RightSidebarControls />
 					</div>
