@@ -13,6 +13,7 @@ import {
 	btnPrimary,
 	td,
 	th,
+	PAGE_TABLE,
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 
@@ -132,7 +133,7 @@ function Backups() {
 	const totalBytes = backups.reduce((sum, backup) => sum + backup.sizeBytes, 0);
 
 	return (
-		<div className="max-w-[1040px] space-y-10">
+		<div className={cn(PAGE_TABLE, "space-y-10")}>
 			<PageHeader title="Backups" />
 
 			<Section

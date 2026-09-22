@@ -10,6 +10,7 @@ interface User {
   permissions: string[];
   mustChangePassword?: boolean;
   defaultLandingPage?: string;
+  autoLogoutTimer?: number;
 }
 
 interface AuthContextType {
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (hadPriorSession || currentPath.startsWith("/dashboard") || currentPath === "/") {
           if (currentPath !== "/login") {
             console.warn("🔒 User access revoked or account removed. Automatically redirecting to auth page...");
-            window.location.replace("/login");
+            window.location.replace("/login?reason=expired");
           }
         }
       }
@@ -120,18 +121,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user, pathname, checkSession]);
 
-  // Idle timeout (auto logout if not used for 15 minutes)
+  // Idle timeout (auto logout if not used for configured minutes)
   useEffect(() => {
-    // Do not run idle tracker on login page
-    if (pathname === "/login") return;
-
-    const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes 
-    let lastActivity = Date.now();
+    let timeoutId: NodeJS.Timeout;
+    const IDLE_TIMEOUT_MS = (user?.autoLogoutTimer ?? 15) * 60 * 1000;
 
     const handleIdleLogout = async () => {
       try {
         await fetch("/api/auth/logout", { method: "POST" });
-        window.location.href = "/login";
+        window.location.href = "/login?reason=idle";
       } catch (error) {
         console.error("Idle logout error:", error);
       }
@@ -164,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (throttleTimeout) clearTimeout(throttleTimeout);
       events.forEach((event) => window.removeEventListener(event, updateActivity));
     };
-  }, [pathname]);
+  }, [user?.autoLogoutTimer]);
 
   // Tab-Session Enforcer (Logout on tab close / new tab isolation)
   useEffect(() => {
@@ -175,7 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // This is a new tab or the session was lost (tab closed previously).
         // We explicitly log out to destroy the persistent cookie session.
         fetch("/api/auth/logout", { method: "POST" }).finally(() => {
-          window.location.href = "/login";
+          window.location.href = "/login?reason=tab";
         });
       }
     }

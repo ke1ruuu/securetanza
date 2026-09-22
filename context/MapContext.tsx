@@ -20,6 +20,12 @@ export interface TimeRange {
   selections: TimeSelection[];
 }
 
+/** An exact start/end date window, inclusive of both days. */
+export interface CustomDateRange {
+  start: Date;
+  end: Date;
+}
+
 interface MapContextType {
   geoJsonData: any;
   barangayNames: string[];
@@ -43,7 +49,11 @@ interface MapContextType {
   selectedYear: number | null;
   availableYears: number[];
   timeRange: TimeRange;
-  
+  /** Exact-date window that, when set, replaces `timeRange` for data queries.
+   *  Deliberately not persisted or shared with the map's period filter — it's
+   *  scoped to the page that sets it (the Analytics date picker). */
+  customDateRange: CustomDateRange | null;
+
   // Actions
   setSelectedBarangay: (name: string | null) => void;
   setHoveredBarangay: (name: string | null) => void;
@@ -59,6 +69,7 @@ interface MapContextType {
   setSelectedCrimeType: (crimeType: string | null) => void;
   setSelectedYear: (year: number | null) => void;
   setTimeRange: (timeRange: TimeRange) => void;
+  setCustomDateRange: (range: CustomDateRange | null) => void;
   onFlyToStationComplete: () => void;
 }
 
@@ -85,6 +96,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [timeRange, setTimeRangeState] = useState<TimeRange>({ mode: 'year', selections: [] });
+  const [customDateRange, setCustomDateRange] = useState<CustomDateRange | null>(null);
   const [initialBounds, setInitialBounds] = useState<L.LatLngBounds | null>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -246,6 +258,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     selectedYear,
     availableYears,
     timeRange,
+    customDateRange,
     mapRef,
     initialBounds,
     setSelectedBarangay,
@@ -262,6 +275,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setSelectedCrimeType,
     setSelectedYear: setSelectedYearWithPersistence,
     setTimeRange,
+    setCustomDateRange,
     onFlyToStationComplete,
   };
 

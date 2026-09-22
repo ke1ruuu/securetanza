@@ -223,6 +223,7 @@ model User {
   passwordHash    String   @map("password_hash")
   mustChangePassword Boolean @default(false) @map("must_change_password")
   defaultLandingPage String @default("dashboard") @map("default_landing_page")
+  autoLogoutTimer    Int     @default(15) @map("auto_logout_timer")
 
   // Sign-in lockout. Three consecutive wrong passwords stamp lockedAt; only an
   // administrator clears it, which also issues a fresh temporary password.

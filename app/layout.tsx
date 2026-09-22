@@ -19,7 +19,9 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-	title: "SECURE Tanza",
+	// The main map and the login page use the bare name; every other page adds its own
+	// title through this template ("Analytics | Secure Tanza").
+	title: { default: "Secure Tanza", template: "%s | Secure Tanza" },
 	description: "A map-based platform for crime monitoring and response in Tanza, Cavite.",
 };
 

@@ -3,91 +3,146 @@
 import React, { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
-import { Switch } from "@/components/ui/switch";
 import {
 	PageHeader,
-	Row,
-	Rows,
-	SaveState,
 	Section,
+	btnPrimary,
+	PAGE_FORM,
+	SplitLayout,
 } from "../_components/settings-ui";
+import { cn } from "@/lib/utils";
 import { landingOptions, themes } from "../_components/preview-thumbnails";
 
 export default function PreferencesPage() {
 	const { theme, setTheme } = useTheme();
 	const { user, refreshSession } = useAuth();
-	const [syncWithSystem, setSyncWithSystem] = useState(false);
+	const [savedSync, setSavedSync] = useState(false);
+	const [draftSync, setDraftSync] = useState(false);
+
+	const [savedTheme, setSavedTheme] = useState(theme);
+	const [draftTheme, setDraftTheme] = useState(theme);
+
 	const [landingState, setLandingState] = useState<"idle" | "saving" | "saved" | "error">("idle");
-	const [landingPage, setLandingPage] = useState<string>(() => {
-		const raw =
-			user?.defaultLandingPage ||
-			(typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
+	
+	const [savedLanding, setSavedLanding] = useState<string>(() => {
+		const raw = user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
 		if (raw === "dashboard") return "overview";
 		return raw || "overview";
 	});
+	const [draftLanding, setDraftLanding] = useState<string>(savedLanding);
+
+	React.useEffect(() => {
+		setSavedTheme(theme);
+		setDraftTheme(theme);
+	}, [theme]);
 
 	React.useEffect(() => {
 		if (user && user.defaultLandingPage) {
 			const norm = user.defaultLandingPage === "dashboard" ? "overview" : user.defaultLandingPage;
-			setLandingPage(norm);
+			setSavedLanding(norm);
+			setDraftLanding(norm);
 		}
 	}, [user]);
 
-	const handleSyncToggle = (val: boolean) => {
-		setSyncWithSystem(val);
-		if (val && typeof window !== "undefined") {
-			const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-			setTheme(prefersDark ? "dark" : "light");
+	React.useEffect(() => {
+		const applyTheme = (t: string) => {
+			if (t === "dark") {
+				document.documentElement.classList.add("dark");
+			} else {
+				document.documentElement.classList.remove("dark");
+			}
+		};
+
+		const isCurrentlyDark = document.documentElement.classList.contains("dark");
+		const wantsDark = draftTheme === "dark";
+
+		if (isCurrentlyDark === wantsDark) return;
+
+		if (!document.startViewTransition) {
+			applyTheme(draftTheme);
+		} else {
+			document.startViewTransition(() => applyTheme(draftTheme));
 		}
-	};
+	}, [draftTheme]);
+
+	const savedThemeRef = React.useRef(savedTheme);
+	React.useEffect(() => {
+		savedThemeRef.current = savedTheme;
+	}, [savedTheme]);
+
+	React.useEffect(() => {
+		return () => {
+			if (savedThemeRef.current === "dark") {
+				document.documentElement.classList.add("dark");
+			} else {
+				document.documentElement.classList.remove("dark");
+			}
+		};
+	}, []);
+
 
 	const handleThemeSelect = (id: string) => {
 		if (id === "system") {
-			setSyncWithSystem(true);
+			setDraftSync(true);
 			if (typeof window !== "undefined") {
 				const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-				setTheme(prefersDark ? "dark" : "light");
+				setDraftTheme(prefersDark ? "dark" : "light");
 			}
 		} else {
-			setSyncWithSystem(false);
-			setTheme(id as "light" | "dark");
+			setDraftSync(false);
+			setDraftTheme(id as "light" | "dark");
 		}
 	};
 
-	const handleLandingSelect = async (id: string) => {
-		setLandingPage(id); // optimistic update
-		if (typeof window !== "undefined") localStorage.setItem("landingPage", id);
+	const handleLandingSelect = (id: string) => {
+		setDraftLanding(id);
+	};
 
+	const hasUnsavedChanges = draftSync !== savedSync || draftTheme !== savedTheme || draftLanding !== savedLanding;
+
+	const handleSave = async () => {
 		setLandingState("saving");
-		try {
-			const res = await fetch("/api/users/settings/landing-page", {
-				method: "PATCH",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ landingPage: id }),
-			});
-			if (!res.ok) throw new Error("Request rejected");
-			await refreshSession();
-			setLandingState("saved");
-			setTimeout(() => setLandingState((s) => (s === "saved" ? "idle" : s)), 2500);
-		} catch (error) {
-			console.error("Failed to update landing page", error);
-			setLandingState("error");
+
+		// Apply Theme
+		if (draftTheme !== savedTheme || draftSync !== savedSync) {
+			setTheme(draftTheme);
+			setSavedTheme(draftTheme);
+			setSavedSync(draftSync);
 		}
+
+		// Apply Landing Page
+		if (draftLanding !== savedLanding) {
+			if (typeof window !== "undefined") localStorage.setItem("landingPage", draftLanding);
+			try {
+				const res = await fetch("/api/users/settings/landing-page", {
+					method: "PATCH",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ landingPage: draftLanding }),
+				});
+				if (!res.ok) throw new Error("Request rejected");
+				await refreshSession();
+			} catch (error) {
+				console.error("Failed to update landing page", error);
+			}
+		}
+
+		setSavedLanding(draftLanding);
+		setLandingState("saved");
+		setTimeout(() => setLandingState((s) => (s === "saved" ? "idle" : s)), 2500);
 	};
 
 	return (
-		<div className="max-w-[720px] space-y-12">
-			<PageHeader title="Account Preferences" />
+		<div className={PAGE_FORM}>
+			<div className="mb-12">
+				<PageHeader title="Account Preferences" />
+			</div>
+
+			<SplitLayout>
 
 			<Section
 				title="Interface Theme"
 				description="Select a theme or sync with your system for automatic switching."
 			>
-				<Rows>
-					<Row label="Sync with system" htmlFor="sync-system">
-						<Switch id="sync-system" checked={syncWithSystem} onCheckedChange={handleSyncToggle} />
-					</Row>
-				</Rows>
 				<div
 					role="radiogroup"
 					aria-label="Interface theme"
@@ -96,7 +151,7 @@ export default function PreferencesPage() {
 					{themes.map(({ id, label, sublabel, Preview }) => (
 						<PickerTile
 							key={id}
-							selected={theme === id || (id === "system" && syncWithSystem)}
+							selected={id === "system" ? draftSync : (!draftSync && draftTheme === id)}
 							label={label}
 							caption={sublabel}
 							onSelect={() => handleThemeSelect(id)}
@@ -110,12 +165,6 @@ export default function PreferencesPage() {
 			<Section
 				title="Default Landing Page"
 				description="Choose which view opens automatically when you log in."
-				actions={
-					<SaveState
-						state={landingState}
-						labels={{ saved: "Preference saved", error: "Could not save" }}
-					/>
-				}
 			>
 				<div
 					role="radiogroup"
@@ -125,7 +174,7 @@ export default function PreferencesPage() {
 					{landingOptions.map(({ id, label, description, Preview }) => (
 						<PickerTile
 							key={id}
-							selected={landingPage === id}
+							selected={draftLanding === id}
 							label={label}
 							caption={description}
 							onSelect={() => handleLandingSelect(id)}
@@ -135,6 +184,25 @@ export default function PreferencesPage() {
 					))}
 				</div>
 			</Section>
+
+			</SplitLayout>
+
+			{hasUnsavedChanges && (
+				<div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+					<div className="flex items-center gap-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl rounded-full py-2 pl-6 pr-2">
+						<span className="text-[14px] font-medium text-slate-700 dark:text-slate-200 whitespace-nowrap">
+							Unsaved changes
+						</span>
+						<button
+							onClick={handleSave}
+							disabled={landingState === "saving"}
+							className={cn(btnPrimary, "rounded-full h-9 px-6 shadow-sm text-[13.5px] font-semibold")}
+						>
+							{landingState === "saving" ? "Saving..." : "Save Changes"}
+						</button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Clock } from "lucide-react";
+import { OVERLAY_SURFACE } from "@/lib/map-overlay";
 
 interface RealTimeClockProps {
 	onFilterToggle: (isActive: boolean) => void;
@@ -24,7 +25,7 @@ export default function RealTimeClock({ onFilterToggle, isFilterActive }: RealTi
 	if (!mounted) {
 		return (
 			<div className="pointer-events-auto opacity-0">
-				<div className="h-[56px] w-[56px] rounded-xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-white/[0.08]" />
+				<div className={`h-[56px] w-[56px] ${OVERLAY_SURFACE}`} />
 			</div>
 		);
 	}
@@ -54,9 +55,9 @@ export default function RealTimeClock({ onFilterToggle, isFilterActive }: RealTi
 		<div className="pointer-events-auto flex items-center gap-3">
 			{/* Time & Date Display - Only shown when NOT in filter active mode */}
 			{!isFilterActive && (
-				<div className="flex items-center gap-3 h-[56px] pl-4 pr-5 rounded-xl bg-white/90 dark:bg-[#0F172A]/70 backdrop-blur-xl border border-slate-200 dark:border-white/[0.08] shadow-lg animate-in fade-in slide-in-from-left-2 duration-350">
-					<div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200 dark:border-white/10 flex items-center justify-center">
-						<Clock className="h-4 w-4 text-[#0EA5E9]" />
+				<div className={`flex items-center gap-3 h-[56px] pl-4 pr-5 animate-in fade-in slide-in-from-left-2 duration-350 ${OVERLAY_SURFACE}`}>
+					<div className="w-8 h-8 rounded-lg bg-sky-50 dark:bg-sky-400/10 flex items-center justify-center">
+						<Clock className="h-4 w-4 text-sky-600 dark:text-sky-400" />
 					</div>
 					<div className="flex flex-col">
 						<span
@@ -75,10 +76,10 @@ export default function RealTimeClock({ onFilterToggle, isFilterActive }: RealTi
 
 			<button
 				onClick={() => onFilterToggle(!isFilterActive)}
-				className={`group h-[56px] w-[56px] rounded-xl backdrop-blur-xl border transition-all duration-200 flex items-center justify-center shadow-lg ${
+				className={`group h-[56px] w-[56px] transition-colors duration-200 flex items-center justify-center ${
 					isFilterActive
-						? "bg-[#0EA5E9] border-[#0EA5E9] hover:bg-[#0EA5E9]/90 text-white"
-						: "bg-white/90 dark:bg-[#0F172A]/70 border-slate-200 dark:border-white/[0.08] hover:bg-white dark:hover:bg-[#0F172A]/90 text-[#0EA5E9]"
+						? "rounded-xl border border-sky-500 bg-sky-500 text-white shadow-lg shadow-sky-500/20 hover:bg-sky-600"
+						: `${OVERLAY_SURFACE} text-sky-600 hover:bg-slate-100 dark:text-sky-400 dark:hover:bg-[#273449]`
 				}`}
 				aria-label="Filter"
 				aria-pressed={isFilterActive}>

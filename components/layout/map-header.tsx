@@ -103,7 +103,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
           <div className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center relative">
             <Image
               src="/SC LOGO W 1.png"
-              alt="SECURE Tanza Logo"
+              alt="Secure Tanza Logo"
               width={34}
               height={34}
               className="hidden dark:block object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-200"
@@ -111,7 +111,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
             />
             <Image
               src="/SC LOGO 2.png"
-              alt="SECURE Tanza Logo"
+              alt="Secure Tanza Logo"
               width={34}
               height={34}
               className="block dark:hidden object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-200"

@@ -159,6 +159,54 @@ body {
   padding: 0 !important;
 }
 
+/* Barangay hover tooltip on the map — same surface language as the dashboard panels */
+.map-tip {
+  min-width: 150px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+  color: #334155;
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+.dark .map-tip {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: #cbd5e1;
+}
+.map-tip__label {
+  margin: 0 0 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.dark .map-tip__label { color: #94a3b8; }
+.map-tip__name {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.dark .map-tip__name { color: #ffffff; }
+.map-tip__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.map-tip__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
 /* Custom scrollbar for dropdown */
 ::-webkit-scrollbar {
   width: 5px;
@@ -332,16 +380,28 @@ body {
   }
 }
 
-/* Smooth scrolling for all devices */
+/* Smooth scrolling for all devices. overflow is pinned to hidden here too —
+   setting only body's overflow-y to hidden still left <html> itself as the
+   document's fallback scrolling element, so content that grew taller than
+   the viewport (e.g. an expanded dropdown deep in a dashboard page) could
+   still scroll the whole page and reveal blank space past the app shell.
+   Dashboard pages scroll internally via their own h-screen + overflow-y-auto
+   shell, so neither html nor body should ever scroll on their own. */
 html {
   scroll-behavior: smooth;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Prevent horizontal scroll on mobile */
+/* Prevent horizontal scroll on mobile. overflow-y is pinned to hidden here
+   too — CSS auto-promotes an unset axis to `auto` when the other axis is
+   non-visible, which was silently turning body into its own independent
+   scroll container. The dashboard pages already scroll internally via
+   their own h-screen + overflow-y-auto shell, so body itself never should. */
 body {
   overflow-x: hidden;
+  overflow-y: hidden;
   width: 100%;
 }
 

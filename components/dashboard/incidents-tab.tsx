@@ -1,19 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  Search,
-  MapPin,
-  Calendar,
-  Filter
-} from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { Search, MapPin, Calendar, ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTheme } from "@/context/ThemeContext";
 import { useMapContext } from "@/context/MapContext";
 import { useTimeRangeData } from "@/hooks/useTimeRangeData";
 import { fetchCrimes, CrimeIncident } from "@/lib/api";
-import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +16,68 @@ import {
 } from "@/components/ui/dialog";
 interface IncidentsTabProps {
   barangayName?: string;
+}
+
+/**
+ * A labelled filter dropdown on Radix Select, so the open list is a rounded,
+ * themed popover instead of the browser's square native menu.
+ */
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+  dark,
+  labelClass,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: string[];
+  dark: boolean;
+  labelClass: string;
+}) {
+  return (
+    <div>
+      <span className={`${labelClass} mb-2 block`}>{label}</span>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger
+          aria-label={label}
+          className={`w-full rounded-lg px-3 text-sm focus-visible:border-sky-500/50 focus-visible:ring-sky-500/30 data-[size=default]:h-10 ${
+            dark
+              ? "border-white/10 bg-[#0f172a] text-white hover:bg-[#0f172a] dark:bg-[#0f172a] dark:hover:bg-[#0f172a]"
+              : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
+          }`}
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent
+          className={`rounded-xl border p-1 shadow-lg ${
+            dark ? "border-white/10 bg-[#1e293b] text-slate-100" : "border-slate-200 bg-white text-slate-900"
+          }`}
+        >
+          {options.map((option) => (
+            <SelectItem
+              key={option}
+              value={option}
+              // The chosen option is tinted sky with bold text (the check mark follows the
+              // text colour); hover/keyboard focus is a neutral fill, a touch stronger on
+              // the chosen one so it still reads as focused.
+              // outline-none! because app/globals.css draws a sky outline on every
+              // :focus-visible, which would ring the highlighted row on top of its fill.
+              className={`rounded-lg py-2 text-sm data-[state=checked]:font-semibold focus-visible:outline-none! ${
+                dark
+                  ? "focus:bg-white/10 focus:text-white data-[state=checked]:bg-sky-400/15 data-[state=checked]:text-sky-300 data-[state=checked]:focus:bg-sky-400/25 data-[state=checked]:focus:text-sky-200"
+                  : "focus:bg-slate-100 focus:text-slate-900 data-[state=checked]:bg-sky-50 data-[state=checked]:text-sky-700 data-[state=checked]:focus:bg-sky-100 data-[state=checked]:focus:text-sky-800"
+              }`}
+            >
+              {option}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
 
 export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
@@ -41,6 +97,8 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(20); // 20 items per page
+  const targetCaseId = useSearchParams().get("case");
+  const handledCaseRef = useRef<string | null>(null);
 
   const isGeneralDashboard = !barangayName || barangayName === "General Dashboard";
 
@@ -173,6 +231,20 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     setCurrentPage(1);
   }, [crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter]);
 
+  // Deep link from the analytics detail view (?case=<id>): select that case,
+  // jump to the page it's on and open its details. This has to stay below the
+  // effects above — they reset the page to 1 when `cases` changes, and this
+  // one needs to run last in the same commit so its page wins.
+  useEffect(() => {
+    if (!targetCaseId || loading || handledCaseRef.current === targetCaseId) return;
+    const index = cases.findIndex((c) => c.id === targetCaseId);
+    if (index === -1) return;
+    handledCaseRef.current = targetCaseId;
+    setSelectedCase(cases[index]);
+    setCurrentPage(Math.floor(index / itemsPerPage) + 1);
+    setIsModalOpen(true);
+  }, [targetCaseId, loading, cases, itemsPerPage]);
+
   // Get unique values for filters
   const crimeTypes = ["(All)", ...Array.from(new Set(cases.map((c) => c.incidentType)))];
   const barangays = ["(All)", ...Array.from(new Set(cases.map((c) => c.barangay)))];
@@ -252,464 +324,487 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     const idNum = crime.id.slice(0, 8).toUpperCase();
     return `TZ-${year}-${idNum}`;
   };
+  const dark = theme === "dark";
+  const mutedText = dark ? "text-slate-400" : "text-slate-500";
+  const surface = `rounded-xl border ${dark ? "border-white/[0.06] bg-[#1e293b]" : "border-slate-200 bg-white"}`;
+  const hairline = dark ? "border-white/[0.06]" : "border-slate-100";
+  const labelClass = `text-[0.68rem] font-bold uppercase tracking-[0.11em] ${mutedText}`;
+  const columns = "1.2fr 1.1fr 1.7fr 1fr 1.1fr";
+
+  const statusChip = (caseStatus?: string) => {
+    const label = getStatusLabel(caseStatus);
+    const tone =
+      label === "Cleared"
+        ? "bg-emerald-500/10 text-emerald-500"
+        : label === "Under Investigation"
+          ? "bg-blue-500/10 text-blue-500"
+          : label === "Filed in Court"
+            ? "bg-purple-500/10 text-purple-500"
+            : label === "Archived"
+              ? "bg-slate-500/10 text-slate-500"
+              : "bg-yellow-500/10 text-yellow-600";
+    return (
+      <span className={`inline-flex w-max items-center rounded-full px-2.5 py-1 text-xs font-medium ${tone}`}>
+        {label}
+      </span>
+    );
+  };
+
+  const filtersActive =
+    searchQuery !== "" ||
+    crimeTypeFilter !== "(All)" ||
+    dateRangeFilter !== "(All)" ||
+    statusFilter !== "(All)" ||
+    (isGeneralDashboard && barangayFilter !== "(All)");
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setCrimeTypeFilter("(All)");
+    setDateRangeFilter("(All)");
+    setBarangayFilter("(All)");
+    setStatusFilter("(All)");
+  };
 
   if (loading) {
+    const bone = dark ? "bg-white/10" : "bg-slate-200";
     return (
-      <div className="max-w-[1400px] mx-auto space-y-6 animate-pulse">
-        {/* Search Bar Skeleton */}
-        <div className={`h-12 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-slate-200"}`}></div>
-
-        {/* Filters Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className={`h-10 rounded-lg ${theme === "dark" ? "bg-white/5" : "bg-slate-200"}`}></div>
-          ))}
-        </div>
-
-        {/* Cases Grid Skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Cases List Skeleton */}
-          <div className="space-y-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className={`p-4 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-white"}`}
-              >
-                <div className={`h-4 rounded mb-3 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '60%' }}></div>
-                <div className={`h-3 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '40%' }}></div>
-                <div className={`h-3 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '50%' }}></div>
-              </div>
-            ))}
+      <div
+        className="max-w-[1280px] mx-auto space-y-6 animate-pulse"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading cases"
+      >
+        <header className={`flex flex-wrap items-end justify-between gap-4 border-b pb-[22px] ${dark ? "border-white/5" : "border-slate-200"}`}>
+          <div className="max-w-lg">
+            <h2 className={`text-3xl font-bold tracking-tight mb-1.5 ${dark ? "text-white" : "text-slate-900"}`}>Crime Cases</h2>
+            <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>
+              {isGeneralDashboard ? "All recorded cases across Tanza, Cavite" : `Recorded cases in Brgy. ${barangayName}`}
+            </p>
           </div>
+          <dl className="text-right">
+            <dt className={`text-[12px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+              Matching Cases
+            </dt>
+            <dd className="mt-1.5 flex justify-end">
+              <div className={`h-6 w-14 rounded ${bone}`} />
+            </dd>
+          </dl>
+        </header>
 
-          {/* Case Details Skeleton */}
-          <div className={`p-6 rounded-xl ${theme === "dark" ? "bg-white/5" : "bg-white"}`}>
-            <div className={`h-6 rounded mb-4 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '70%' }}></div>
-            <div className="space-y-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+        <section>
+          <div className={`${surface} space-y-4`} style={{ padding: 18 }}>
+            <div className={`h-11 rounded-lg ${bone}`} />
+            <div className={`grid grid-cols-1 gap-4 ${isGeneralDashboard ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+              {Array.from({ length: isGeneralDashboard ? 4 : 3 }, (_, i) => (
                 <div key={i}>
-                  <div className={`h-3 rounded mb-2 ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '30%' }}></div>
-                  <div className={`h-4 rounded ${theme === "dark" ? "bg-white/10" : "bg-slate-300"}`} style={{ width: '80%' }}></div>
+                  <div className={`mb-2 h-3 w-20 rounded ${bone}`} />
+                  <div className={`h-10 rounded-lg ${bone}`} />
                 </div>
               ))}
             </div>
           </div>
-        </div>
+        </section>
+
+        <section>
+          <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-[18px]">
+            <div className={`${surface} overflow-hidden`}>
+              <div className={`grid gap-4 border-b ${hairline}`} style={{ gridTemplateColumns: columns, padding: "12px 22px" }}>
+                {["Case ID", "Type", "Location", "Date", "Status"].map((h) => (
+                  <span key={h} className={labelClass}>{h}</span>
+                ))}
+              </div>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className={`grid items-center gap-4 border-b ${hairline}`} style={{ gridTemplateColumns: columns, padding: "14px 22px" }}>
+                  {[1, 2, 3, 4].map((j) => (
+                    <div key={j} className={`h-3.5 rounded ${bone}`} style={{ width: `${55 + ((i * j * 11) % 40)}%` }} />
+                  ))}
+                  <div className={`h-6 w-24 rounded-full ${bone}`} />
+                </div>
+              ))}
+            </div>
+
+            <div className={`${surface} space-y-5`} style={{ padding: 22 }}>
+              <div>
+                <div className={`h-5 w-3/4 rounded ${bone}`} />
+                <div className={`mt-2 h-3 w-1/2 rounded ${bone}`} />
+              </div>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i}>
+                  <div className={`mb-2 h-3 w-20 rounded ${bone}`} />
+                  <div className={`h-4 rounded ${bone}`} style={{ width: `${60 + i * 8}%` }} />
+                </div>
+              ))}
+              <div className={`h-40 rounded-lg ${bone}`} />
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Search & Filters Controls */}
-      <div data-tour="cases-controls" className="space-y-6">
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search cases by ID, type, location"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full pl-12 pr-4 py-3 rounded-xl border ${theme === "dark"
-              ? "bg-[#1e293b] border-white/10 text-white placeholder-slate-500"
-              : "bg-white border-slate-200 text-slate-900 placeholder-slate-400"
-              } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-          />
+    <div className="max-w-[1280px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {/* Header */}
+      <header
+        className={`flex flex-wrap items-end justify-between gap-4 border-b pb-[22px] ${dark ? "border-white/5" : "border-slate-200"}`}
+      >
+        <div className="max-w-lg">
+          <h2 className={`text-3xl font-bold tracking-tight mb-1.5 ${dark ? "text-white" : "text-slate-900"}`}>
+            Crime Cases
+          </h2>
+          <p className={`text-sm ${dark ? "text-slate-400" : "text-slate-600"}`}>
+            {isGeneralDashboard ? "All recorded cases across Tanza, Cavite" : `Recorded cases in Brgy. ${barangayName}`}
+          </p>
         </div>
+        <dl className="text-right">
+          <dt className={`text-[12px] font-semibold uppercase tracking-[0.14em] ${dark ? "text-slate-500" : "text-slate-400"}`}>
+            {filtersActive ? "Matching Cases" : "Total Cases"}
+          </dt>
+          <dd className={`mt-1.5 text-lg font-semibold ${dark ? "text-white" : "text-slate-900"}`}>
+            {filteredCases.length.toLocaleString()}
+          </dd>
+        </dl>
+      </header>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Crime Type Filter */}
-          <div>
-            <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
-              Crime Type
-            </label>
-            <select
-              value={crimeTypeFilter}
-              onChange={(e) => setCrimeTypeFilter(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              {crimeTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
+      {/* Search & filters */}
+      <section data-tour="cases-controls">
+        <div className={`${surface} space-y-4`} style={{ padding: 18 }}>
+          <div className="relative">
+            <Search className={`absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 ${mutedText}`} />
+            <input
+              type="text"
+              placeholder="Search cases by ID, type, location"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full rounded-lg border py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500/40 ${
+                dark
+                  ? "border-white/10 bg-[#0f172a] text-white placeholder-slate-500"
+                  : "border-slate-200 bg-white text-slate-900 placeholder-slate-400"
+              }`}
+            />
           </div>
 
-          {/* Date Range Filter */}
-          <div>
-            <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
-              Date Range
-            </label>
-            <select
+          <div className={`grid grid-cols-1 gap-4 ${isGeneralDashboard ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+            <FilterSelect label="Crime Type" value={crimeTypeFilter} onChange={setCrimeTypeFilter} options={crimeTypes} dark={dark} labelClass={labelClass} />
+            <FilterSelect
+              label="Date Range"
               value={dateRangeFilter}
-              onChange={(e) => setDateRangeFilter(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              <option>(All)</option>
-              <option>(Last 7 Days)</option>
-              <option>(Last 30 Days)</option>
-              <option>(Last 90 Days)</option>
-            </select>
+              onChange={setDateRangeFilter}
+              options={["(All)", "(Last 7 Days)", "(Last 30 Days)", "(Last 90 Days)"]}
+              dark={dark}
+              labelClass={labelClass}
+            />
+            {/* Barangay Filter - Only show for general dashboard */}
+            {isGeneralDashboard && (
+              <FilterSelect label="Barangay" value={barangayFilter} onChange={setBarangayFilter} options={barangays} dark={dark} labelClass={labelClass} />
+            )}
+            <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statuses} dark={dark} labelClass={labelClass} />
           </div>
 
-          {/* Barangay Filter - Only show for general dashboard */}
-          {isGeneralDashboard && (
-            <div>
-              <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                }`}>
-                Barangay
-              </label>
-              <select
-                value={barangayFilter}
-                onChange={(e) => setBarangayFilter(e.target.value)}
-                className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
-                  ? "bg-[#1e293b] border-white/10 text-white"
-                  : "bg-white border-slate-200 text-slate-900"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+          {filtersActive && (
+            <div className={`flex items-center justify-between border-t pt-3 text-xs ${hairline}`}>
+              <span className={mutedText}>
+                {filteredCases.length.toLocaleString()} of {cases.length.toLocaleString()} cases match
+              </span>
+              <button
+                onClick={clearFilters}
+                className="font-semibold text-sky-600 transition-colors hover:text-sky-500 dark:text-sky-400"
               >
-                {barangays.map((barangay) => (
-                  <option key={barangay} value={barangay}>
-                    {barangay}
-                  </option>
-                ))}
-              </select>
+                Clear filters
+              </button>
             </div>
           )}
-
-          {/* Status Filter */}
-          <div>
-            <label className={`text-sm font-medium mb-2 block ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-              }`}>
-              Status
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border ${theme === "dark"
-                ? "bg-[#1e293b] border-white/10 text-white"
-                : "bg-white border-slate-200 text-slate-900"
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            >
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cases List */}
-        <Card data-tour="cases-list" className={`lg:col-span-2 border-0 shadow-lg ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"
-          }`}>
-          <CardContent className="p-0">
-            {/* Table Header */}
-            <div className={`grid grid-cols-5 gap-4 px-6 py-4 border-b ${theme === "dark" ? "border-white/10" : "border-slate-200"
-              }`}>
-              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                }`}>
-                Case ID
-              </div>
-              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                }`}>
-                Type
-              </div>
-              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                }`}>
-                Location
-              </div>
-              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                }`}>
-                Date
-              </div>
-              <div className={`text-sm font-semibold ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                }`}>
-                Status
-              </div>
-            </div>
-
-            {/* Table Body */}
-            <div className="max-h-[600px] overflow-y-auto">
-              {filteredCases.length === 0 ? (
-                <div className="flex items-center justify-center h-64">
-                  <p className="text-slate-500">No cases found</p>
+      {/* List & details */}
+      <section>
+        <div className="grid grid-cols-1 xl:grid-cols-[1.7fr_1fr] gap-[18px]">
+          {/* Cases List */}
+          <div data-tour="cases-list" className={`${surface} overflow-hidden self-start`}>
+            <div className="overflow-x-auto">
+              <div className="min-w-[640px]">
+                <div
+                  className={`grid gap-4 border-b ${hairline}`}
+                  style={{ gridTemplateColumns: columns, padding: "12px 22px" }}
+                >
+                  {["Case ID", "Type", "Location", "Date", "Status"].map((h) => (
+                    <span key={h} className={labelClass}>{h}</span>
+                  ))}
                 </div>
-              ) : (
-                currentCases.map((crime) => (
-                  <div
-                    key={crime.id}
-                    onClick={() => setSelectedCase(crime)}
-                    className={`grid grid-cols-5 gap-4 px-6 py-4 border-b cursor-pointer transition-colors ${theme === "dark"
-                      ? "border-white/5 hover:bg-white/5"
-                      : "border-slate-100 hover:bg-slate-50"
-                      } ${selectedCase?.id === crime.id
-                        ? theme === "dark"
-                          ? "bg-blue-500/10"
-                          : "bg-blue-50"
-                        : ""
-                      }`}
-                  >
-                    <div className={`text-sm font-medium ${theme === "dark" ? "text-slate-300" : "text-slate-700"
-                      }`}>
-                      {getCaseId(crime)}
+
+                <div className="max-h-[640px] overflow-y-auto">
+                  {filteredCases.length === 0 ? (
+                    <div className={`flex h-56 flex-col items-center justify-center gap-1 text-sm ${mutedText}`}>
+                      <p>No cases found</p>
+                      {filtersActive && (
+                        <button onClick={clearFilters} className="font-semibold text-sky-600 hover:text-sky-500 dark:text-sky-400">
+                          Clear filters
+                        </button>
+                      )}
                     </div>
-                    <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
-                      {crime.incidentType}
-                    </div>
-                    <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
-                      {crime.street ? `${crime.street}, ${crime.barangay}` : crime.barangay}
-                    </div>
-                    <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
-                      {formatDate(crime.dateCommitted)}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${getStatusColor(crime.caseStatus)}`} />
-                      <span className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                        }`}>
-                        {getStatusLabel(crime.caseStatus)}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
+                  ) : (
+                    currentCases.map((crime) => {
+                      const selected = selectedCase?.id === crime.id;
+                      return (
+                        <div
+                          key={crime.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedCase(crime)}
+                          // Double-click (or Enter on the already-selected row) opens the full view.
+                          onDoubleClick={() => {
+                            setSelectedCase(crime);
+                            setIsModalOpen(true);
+                          }}
+                          title="Double-click to open full details"
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              if (selected && e.key === "Enter") setIsModalOpen(true);
+                              else setSelectedCase(crime);
+                            }
+                          }}
+                          aria-pressed={selected}
+                          className={`grid cursor-pointer items-center gap-4 border-b text-[0.82rem] outline-none transition-colors ${hairline} ${
+                            selected
+                              ? dark
+                                ? "bg-sky-400/[0.08] shadow-[inset_3px_0_0_#38bdf8]"
+                                : "bg-sky-50 shadow-[inset_3px_0_0_#0369a1]"
+                              : dark
+                                ? "hover:bg-white/[0.03] focus-visible:bg-white/[0.03]"
+                                : "hover:bg-slate-50 focus-visible:bg-slate-50"
+                          }`}
+                          style={{ gridTemplateColumns: columns, padding: "13px 22px" }}
+                        >
+                          <span className={`truncate font-semibold tabular-nums ${dark ? "text-slate-100" : "text-slate-900"}`} title={getCaseId(crime)}>
+                            {getCaseId(crime)}
+                          </span>
+                          <span className={`truncate ${dark ? "text-slate-300" : "text-slate-700"}`} title={crime.incidentType}>
+                            {crime.incidentType}
+                          </span>
+                          <span className={`truncate ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                            {crime.street ? `${crime.street}, ${crime.barangay}` : crime.barangay}
+                          </span>
+                          <span className={`tabular-nums ${dark ? "text-slate-400" : "text-slate-600"}`}>
+                            {formatDate(crime.dateCommitted)}
+                          </span>
+                          {statusChip(crime.caseStatus)}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Pagination */}
             {filteredCases.length > 0 && (
-              <div className={`flex items-center justify-between px-6 py-4 border-t ${theme === "dark" ? "border-white/10" : "border-slate-200"
-                }`}>
-                <div className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                  }`}>
-                  Showing {startIndex + 1} to {Math.min(endIndex, filteredCases.length)} of {filteredCases.length} cases
+              <div className={`flex flex-wrap items-center justify-between gap-3 border-t ${hairline}`} style={{ padding: "12px 22px" }}>
+                <div className={`text-xs ${mutedText}`}>
+                  Showing {startIndex + 1}–{Math.min(endIndex, filteredCases.length)} of {filteredCases.length.toLocaleString()} cases
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === 1
-                      ? theme === "dark"
-                        ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                      : theme === "dark"
-                        ? "bg-slate-700 text-white hover:bg-slate-600"
-                        : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-                      }`}
+                    aria-label="Previous page"
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      dark ? "text-slate-300 hover:bg-white/10" : "text-slate-600 hover:bg-slate-100"
+                    }`}
                   >
-                    Previous
+                    <ChevronLeft className="h-4 w-4" />
                   </button>
 
-                  {/* Page numbers */}
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1;
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = currentPage - 2 + i;
-                      }
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
 
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
-                            ? theme === "dark"
-                              ? "bg-blue-500 text-white"
-                              : "bg-blue-500 text-white"
-                            : theme === "dark"
-                              ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                              : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                            }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        aria-current={currentPage === pageNum ? "page" : undefined}
+                        className={`h-8 min-w-8 rounded-lg px-2 text-xs font-semibold tabular-nums transition-colors ${
+                          currentPage === pageNum
+                            ? "bg-sky-500/15 text-sky-600 dark:text-sky-400"
+                            : dark
+                              ? "text-slate-300 hover:bg-white/10"
+                              : "text-slate-600 hover:bg-slate-100"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
 
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === totalPages
-                      ? theme === "dark"
-                        ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-                        : "bg-slate-100 text-slate-400 cursor-not-allowed"
-                      : theme === "dark"
-                        ? "bg-slate-700 text-white hover:bg-slate-600"
-                        : "bg-slate-200 text-slate-900 hover:bg-slate-300"
-                      }`}
+                    aria-label="Next page"
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      dark ? "text-slate-300 hover:bg-white/10" : "text-slate-600 hover:bg-slate-100"
+                    }`}
                   >
-                    Next
+                    <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Case Details Panel */}
-        <Card
-          data-tour="cases-details-panel"
-          onClick={() => {
-            if (selectedCase) setIsModalOpen(true);
-          }}
-          className={`border-0 shadow-lg cursor-pointer transition-all hover:ring-2 hover:ring-blue-500/50 ${theme === "dark" ? "bg-[#1e293b]" : "bg-white"
-            }`}
-        >
-          <CardContent className="p-6">
+          {/* Case Details Panel — a compact card: map cover, headline facts, then
+              short previews of the long text. Stays in view while you scroll the list. */}
+          <div
+            data-tour="cases-details-panel"
+            className={`${surface} self-start overflow-hidden xl:sticky xl:top-0`}
+          >
             {selectedCase ? (
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <h3 className={`text-lg font-bold mb-2 ${theme === "dark" ? "text-white" : "text-slate-900"
-                      }`}>
-                      Case Details: {getCaseId(selectedCase)}
-                    </h3>
-                  </div>
-                  <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                    }`}>
-                    {selectedCase.incidentType}
-                  </p>
-                </div>
+              (() => {
+                const c = selectedCase;
+                const hasMap = Boolean(c.latitude && c.longitude);
+                const facts = [
+                  { label: "Blotter No.", value: c.blotterNo },
+                  { label: "Type of place", value: c.typeOfPlace },
+                  { label: "Suspects", value: c.suspectCount },
+                  { label: "Victims", value: c.victimCount },
+                  { label: "Investigator", value: c.investigator },
+                ].filter((f) => f.value !== undefined && f.value !== null && f.value !== "");
+                const previews = [
+                  { label: "Description", text: c.offense },
+                  { label: "Modus operandi", text: c.modus },
+                  { label: "Suspect motive", text: c.suspectMotive },
+                ].filter((p) => p.text);
+                const body = dark ? "text-slate-300" : "text-slate-700";
 
-                <div className="space-y-4">
-                  <div>
-                    <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
-                      Description
-                    </h4>
-                    <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
-                      }`}>
-                      {selectedCase.offense || "No description available"}
-                    </p>
-                  </div>
+                // Pinned to the top of the card so it's always in reach.
+                const expand = (
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    title="Open the full case record (or double-click a row)"
+                    aria-label="Open full case details"
+                    // Black on white in both themes, so it stands out from the card without color.
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500/40"
+                  >
+                    <Maximize2 className="h-3.5 w-3.5" />
+                    Full details
+                  </button>
+                );
 
-                  <div>
-                    <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
-                      Location
-                    </h4>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-slate-500 mt-0.5" />
+                return (
+                  <>
+                    <div className="space-y-4" style={{ padding: 20 }}>
+                      {/* Identity */}
                       <div>
-                        <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
-                          }`}>
-                          {selectedCase.street || "Street not specified"}
-                        </p>
-                        <p className={`text-sm ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                          }`}>
-                          Brgy. {selectedCase.barangay}
+                        <div className="flex items-start justify-between gap-3">
+                          <p className={`${labelClass} tabular-nums`}>{getCaseId(c)}</p>
+                          {expand}
+                        </div>
+                        <h3
+                          className={`font-heading mt-1 text-lg font-bold leading-snug ${dark ? "text-white" : "text-slate-900"}`}
+                        >
+                          {c.incidentType}
+                        </h3>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          {statusChip(c.caseStatus)}
+                          <span className={`flex items-center gap-1.5 text-xs ${mutedText}`}>
+                            <Calendar className="h-3.5 w-3.5" />
+                            {formatDate(c.dateCommitted)} · {formatTime(c.timeCommitted)}
+                          </span>
+                        </div>
+                        <p className={`mt-2 flex items-start gap-1.5 text-[0.82rem] ${body}`}>
+                          <MapPin className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${mutedText}`} />
+                          <span>
+                            {c.street ? `${c.street}, ` : ""}Brgy. {c.barangay}
+                          </span>
                         </p>
                       </div>
-                    </div>
-                  </div>
 
-                  <div>
-                    <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                      }`}>
-                      Date & Time
-                    </h4>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-500" />
-                      <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
-                        }`}>
-                        {formatDate(selectedCase.dateCommitted)} at {formatTime(selectedCase.timeCommitted)}
-                      </p>
-                    </div>
-                  </div>
+                      {/* Headline facts — only the ones this case actually has */}
+                      {facts.length > 0 && (
+                        <dl className={`grid grid-cols-2 gap-x-4 gap-y-3 border-t pt-4 ${hairline}`}>
+                          {facts.map((f) => (
+                            <div key={f.label} className="min-w-0">
+                              <dt className={labelClass}>{f.label}</dt>
+                              <dd className={`mt-0.5 truncate text-[0.82rem] font-medium ${dark ? "text-slate-100" : "text-slate-800"}`} title={String(f.value)}>
+                                {f.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      )}
 
-                  {selectedCase.modus && (
-                    <div>
-                      <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                        }`}>
-                        Modus Operandi
-                      </h4>
-                      <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
-                        }`}>
-                        {selectedCase.modus}
-                      </p>
+                      {/* Long text, previewed — the rest is in the full view */}
+                      {previews.length > 0 && (
+                        <div className={`space-y-3 border-t pt-4 ${hairline}`}>
+                          {previews.map((p) => (
+                            <div key={p.label}>
+                              <h4 className={`${labelClass} mb-1`}>{p.label}</h4>
+                              <p className={`line-clamp-3 text-[0.82rem] leading-relaxed ${body}`}>{p.text}</p>
+                            </div>
+                          ))}
+                          <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="text-xs font-semibold text-sky-600 transition-colors hover:text-sky-500 dark:text-sky-400"
+                          >
+                            Read the full record →
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {selectedCase.suspectMotive && (
-                    <div>
-                      <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                        }`}>
-                        Suspect Motive
-                      </h4>
-                      <p className={`text-sm ${theme === "dark" ? "text-slate-300" : "text-slate-700"
-                        }`}>
-                        {selectedCase.suspectMotive}
-                      </p>
-                    </div>
-                  )}
-
-                  {selectedCase.latitude && selectedCase.longitude && (
-                    <div>
-                      <h4 className={`text-sm font-semibold mb-2 ${theme === "dark" ? "text-slate-400" : "text-slate-600"
-                        }`}>
-                        Location Map
-                      </h4>
-                      <div className={`w-full h-48 rounded-lg overflow-hidden ${theme === "dark" ? "bg-slate-800" : "bg-slate-200"
-                        }`}>
+                    {/* Location map — last, so nothing competes with the header above */}
+                    {hasMap && (
+                      <div className={`relative h-36 border-t ${hairline}`}>
+                        {/* A thumbnail, not a control: it stays inert so it never traps the
+                            page scroll, and the link opens the real map. */}
                         <iframe
-                          width="100%"
-                          height="100%"
+                          title="Case location"
+                          className="pointer-events-none h-full w-full"
                           frameBorder="0"
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${selectedCase.longitude - 0.01},${selectedCase.latitude - 0.01},${selectedCase.longitude + 0.01},${selectedCase.latitude + 0.01}&layer=mapnik&marker=${selectedCase.latitude},${selectedCase.longitude}`}
+                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${c.longitude! - 0.008},${c.latitude! - 0.005},${c.longitude! + 0.008},${c.latitude! + 0.005}&layer=mapnik&marker=${c.latitude},${c.longitude}`}
                         />
+                        <a
+                          href={`https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=17/${c.latitude}/${c.longitude}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="absolute bottom-2 right-3 rounded bg-white/90 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-700 shadow-sm hover:bg-white dark:bg-slate-900/85 dark:text-slate-200"
+                        >
+                          Open map ↗
+                        </a>
                       </div>
-                    </div>
-                  )}
-
-                  <div className="pt-4">
-                    <Button onClick={() => setIsModalOpen(true)} className="w-full">
-                      View Full Details
-                    </Button>
-                  </div>
-                </div>
-              </div>
+                    )}
+                  </>
+                );
+              })()
             ) : (
-              <div className="flex items-center justify-center h-64">
-                <p className="text-slate-500">Select a case to view details</p>
+              <div className={`flex h-56 items-center justify-center text-sm ${mutedText}`}>
+                Select a case to view details
               </div>
             )}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </section>
 
       {/* Full Details Modal */}
       {selectedCase && (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className={`w-full max-w-5xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[85vh] overflow-y-auto p-6 md:p-8 ${theme === "dark" ? "bg-[#1e293b] text-slate-100" : "bg-white text-slate-900"}`}>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold border-b pb-4">Case Details: {getCaseId(selectedCase)}</DialogTitle>
+              <DialogTitle className="font-heading text-xl font-bold border-b pb-4">Case Details: {getCaseId(selectedCase)}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold text-lg border-b pb-2 mb-3 text-blue-500">Basic Information</h4>
+                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mb-3 text-sky-600 dark:text-sky-400">Basic Information</h4>
                   <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
                     <span className="text-slate-500 font-medium">Case ID:</span> <span>{getCaseId(selectedCase)}</span>
                     <span className="text-slate-500 font-medium">Incident Type:</span> <span>{selectedCase.incidentType}</span>
@@ -723,7 +818,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Location</h4>
+                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Location</h4>
                   <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
                     <span className="text-slate-500 font-medium">Barangay:</span> <span>{selectedCase.barangay}</span>
                     <span className="text-slate-500 font-medium">Street:</span> <span>{selectedCase.street || "N/A"}</span>
@@ -735,7 +830,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Police Unit</h4>
+                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Police Unit</h4>
                   <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
                     <span className="text-slate-500 font-medium">PCP:</span> <span>{selectedCase.pcp || "N/A"}</span>
                     <span className="text-slate-500 font-medium">Station:</span> <span>{selectedCase.stn || "N/A"}</span>
@@ -747,7 +842,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
 
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold text-lg border-b pb-2 mb-3 text-blue-500">Case Status & Legal</h4>
+                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mb-3 text-sky-600 dark:text-sky-400">Case Status & Legal</h4>
                   <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm items-center">
                     <span className="text-slate-500 font-medium">Status:</span>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold w-max ${getStatusColor(selectedCase.caseStatus)} text-white shadow-sm`}>{getStatusLabel(selectedCase.caseStatus)}</span>
@@ -762,7 +857,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Details & Suspects</h4>
+                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Details & Suspects</h4>
                   <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
                     <span className="text-slate-500 font-medium">Modus:</span> <span className="break-words leading-relaxed">{selectedCase.modus || "N/A"}</span>
                     <span className="text-slate-500 font-medium">Suspect Motive:</span> <span className="break-words leading-relaxed">{selectedCase.suspectMotive || "N/A"}</span>
@@ -774,7 +869,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-lg border-b pb-2 mt-8 mb-3 text-blue-500">Management</h4>
+                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Management</h4>
                   <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
                     <span className="text-slate-500 font-medium">Investigator:</span> <span>{selectedCase.investigator || "N/A"}</span>
                     <span className="text-slate-500 font-medium">Head Investigator:</span> <span>{selectedCase.headInves || "N/A"}</span>

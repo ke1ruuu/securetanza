@@ -59,6 +59,7 @@ export async function middleware(request: NextRequest) {
     // Redirect to login for protected pages
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
+    loginUrl.searchParams.set('reason', 'expired');
     return NextResponse.redirect(loginUrl);
   }
 
@@ -99,7 +100,8 @@ export async function middleware(request: NextRequest) {
 
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    
+    loginUrl.searchParams.set('reason', 'expired');
+
     const response = NextResponse.redirect(loginUrl);
     response.cookies.delete('session');
     return response;

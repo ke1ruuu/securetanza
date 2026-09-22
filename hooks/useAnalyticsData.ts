@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchCrimes, fetchCrimeStats } from '@/lib/api'
+import { fetchCrimes, fetchCrimeStats, type CrimeIncident } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
 import { useTimeRangeData } from './useTimeRangeData'
 
@@ -43,6 +43,12 @@ interface AnalyticsData {
   crimesByBarangay: CrimeByBarangay[]
   timePatterns: TimePatterns
   trends: Trends
+  /** The raw incidents behind the aggregates above. They're fetched anyway to
+   *  compute hourlyDistribution and the quarter counts, so exposing them lets
+   *  the Analytics page drill from a bar into the specific incidents without a
+   *  second round trip. Note these are subject to fetchCrimes' row limit, so
+   *  this array can be shorter than a server-computed total. */
+  allCrimes: CrimeIncident[]
   loading: boolean
   error: string | null
 }
@@ -71,6 +77,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
       currentQuarterLabel: '',
       previousQuarterLabel: ''
     },
+    allCrimes: [],
     loading: true,
     error: null
   })
@@ -289,6 +296,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
             currentQuarterLabel: currentQuarter.quarterLabel,
             previousQuarterLabel: previousQuarter.quarterLabel
           },
+          allCrimes: crimes,
           loading: false,
           error: null
         })

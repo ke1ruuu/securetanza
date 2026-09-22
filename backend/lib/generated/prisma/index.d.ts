@@ -154,7 +154,7 @@ export class PrismaClient<
    * Read more in our [docs](https://pris.ly/d/client).
    */
 
-  constructor(optionsArg ?: Prisma.Subset<ClientOptions, Prisma.PrismaClientOptions>);
+  constructor(optionsArg ?: Prisma.PrismaClientConstructorArgs<ClientOptions>);
   $on<V extends U>(eventType: V, callback: (event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent) => void): PrismaClient;
 
   /**
@@ -227,7 +227,7 @@ export class PrismaClient<
    * 
    * Read more in our [docs](https://www.prisma.io/docs/orm/prisma-client/queries/transactions).
    */
-  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(arg: [...P], options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
 
   $transaction<R>(fn: (prisma: Omit<PrismaClient, runtime.ITXClientDenyList>) => $Utils.JsPromise<R>, options?: { maxWait?: number, timeout?: number, isolationLevel?: Prisma.TransactionIsolationLevel }): $Utils.JsPromise<R>
 
@@ -384,8 +384,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 7.7.0
-   * Query Engine version: 75cbdc1eb7150937890ad5465d861175c6624711
+   * Prisma Client JS version: 7.10.0
+   * Query Engine version: 0edf323efd1d98336f3f0a68684b56f689b900d3
    */
   export type PrismaVersion = {
     client: string
@@ -520,6 +520,19 @@ export namespace Prisma {
   };
 
   /**
+   * Resolved type of the argument passed to the `PrismaClient` constructor.
+   *
+   * When called without a narrower options type (the common case), this resolves
+   * to `PrismaClientOptions` directly, which produces a clear TypeScript error
+   * message (`not assignable to parameter of type 'PrismaClientOptions'`) when
+   * the argument is missing or incomplete. When the user supplies a narrower
+   * options type (e.g. via a literal), it falls back to `Subset` to keep
+   * filtering out unknown properties.
+   */
+  export type PrismaClientConstructorArgs<Options extends PrismaClientOptions> =
+    [PrismaClientOptions] extends [Options] ? PrismaClientOptions : Subset<Options, PrismaClientOptions>;
+
+  /**
    * SelectSubset
    * @desc From `T` pick properties that exist in `U`. Simple version of Intersection.
    * Additionally, it validates, if both select and include are present. If the case, it errors.
@@ -551,7 +564,7 @@ export namespace Prisma {
   type XOR<T, U> =
     T extends object ?
     U extends object ?
-      (Without<T, U> & U) | (Without<U, T> & T)
+      ((Without<T, U> & U) | (Without<U, T> & T)) & object
     : U : T
 
 
@@ -1605,11 +1618,26 @@ export namespace Prisma {
       isolationLevel?: Prisma.TransactionIsolationLevel
     }
     /**
-     * Instance of a Driver Adapter, e.g., like one provided by `@prisma/adapter-planetscale`
+     * A driver adapter that PrismaClient uses to connect to your database, such as the ones provided by `@prisma/adapter-pg`, `@prisma/adapter-libsql`, `@prisma/adapter-planetscale`, etc.
+     * 
+     * A driver adapter is **required** unless you connect to your database through Prisma Accelerate (in which case use `accelerateUrl` instead).
+     * 
+     * Learn more: https://pris.ly/d/driver-adapters
+     * 
+     * @example
+     * ```ts
+     * import { PrismaPg } from '@prisma/adapter-pg'
+     * import { PrismaClient } from './generated/prisma/client'
+     * 
+     * const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
+     * const prisma = new PrismaClient({ adapter })
+     * ```
      */
     adapter?: runtime.SqlDriverAdapterFactory
     /**
-     * Prisma Accelerate URL allowing the client to connect through Accelerate instead of a direct database.
+     * The Prisma Accelerate connection URL. Use this option to connect to your database through Prisma Accelerate instead of using a driver adapter to connect directly.
+     * 
+     * Learn more: https://pris.ly/d/accelerate
      */
     accelerateUrl?: string
     /**
@@ -8048,11 +8076,13 @@ export namespace Prisma {
 
   export type UserAvgAggregateOutputType = {
     id: number | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
   }
 
   export type UserSumAggregateOutputType = {
     id: number | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
   }
 
@@ -8063,6 +8093,7 @@ export namespace Prisma {
     passwordHash: string | null
     mustChangePassword: boolean | null
     defaultLandingPage: string | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
     lockedAt: Date | null
     createdAt: Date | null
@@ -8076,6 +8107,7 @@ export namespace Prisma {
     passwordHash: string | null
     mustChangePassword: boolean | null
     defaultLandingPage: string | null
+    autoLogoutTimer: number | null
     failedLoginAttempts: number | null
     lockedAt: Date | null
     createdAt: Date | null
@@ -8089,6 +8121,7 @@ export namespace Prisma {
     passwordHash: number
     mustChangePassword: number
     defaultLandingPage: number
+    autoLogoutTimer: number
     failedLoginAttempts: number
     lockedAt: number
     createdAt: number
@@ -8099,11 +8132,13 @@ export namespace Prisma {
 
   export type UserAvgAggregateInputType = {
     id?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
   }
 
   export type UserSumAggregateInputType = {
     id?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
   }
 
@@ -8114,6 +8149,7 @@ export namespace Prisma {
     passwordHash?: true
     mustChangePassword?: true
     defaultLandingPage?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
     lockedAt?: true
     createdAt?: true
@@ -8127,6 +8163,7 @@ export namespace Prisma {
     passwordHash?: true
     mustChangePassword?: true
     defaultLandingPage?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
     lockedAt?: true
     createdAt?: true
@@ -8140,6 +8177,7 @@ export namespace Prisma {
     passwordHash?: true
     mustChangePassword?: true
     defaultLandingPage?: true
+    autoLogoutTimer?: true
     failedLoginAttempts?: true
     lockedAt?: true
     createdAt?: true
@@ -8240,6 +8278,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword: boolean
     defaultLandingPage: string
+    autoLogoutTimer: number
     failedLoginAttempts: number
     lockedAt: Date | null
     createdAt: Date
@@ -8272,6 +8311,7 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
@@ -8288,6 +8328,7 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
@@ -8301,6 +8342,7 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
@@ -8314,13 +8356,14 @@ export namespace Prisma {
     passwordHash?: boolean
     mustChangePassword?: boolean
     defaultLandingPage?: boolean
+    autoLogoutTimer?: boolean
     failedLoginAttempts?: boolean
     lockedAt?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "defaultLandingPage" | "failedLoginAttempts" | "lockedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "accountNumber" | "fullName" | "passwordHash" | "mustChangePassword" | "defaultLandingPage" | "autoLogoutTimer" | "failedLoginAttempts" | "lockedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     permissions?: boolean | User$permissionsArgs<ExtArgs>
     exportSchedules?: boolean | User$exportSchedulesArgs<ExtArgs>
@@ -8342,6 +8385,7 @@ export namespace Prisma {
       passwordHash: string
       mustChangePassword: boolean
       defaultLandingPage: string
+      autoLogoutTimer: number
       failedLoginAttempts: number
       lockedAt: Date | null
       createdAt: Date
@@ -8777,6 +8821,7 @@ export namespace Prisma {
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly mustChangePassword: FieldRef<"User", 'Boolean'>
     readonly defaultLandingPage: FieldRef<"User", 'String'>
+    readonly autoLogoutTimer: FieldRef<"User", 'Int'>
     readonly failedLoginAttempts: FieldRef<"User", 'Int'>
     readonly lockedAt: FieldRef<"User", 'DateTime'>
     readonly createdAt: FieldRef<"User", 'DateTime'>
@@ -13872,6 +13917,7 @@ export namespace Prisma {
     passwordHash: 'passwordHash',
     mustChangePassword: 'mustChangePassword',
     defaultLandingPage: 'defaultLandingPage',
+    autoLogoutTimer: 'autoLogoutTimer',
     failedLoginAttempts: 'failedLoginAttempts',
     lockedAt: 'lockedAt',
     createdAt: 'createdAt',
@@ -14753,6 +14799,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
     defaultLandingPage?: StringFilter<"User"> | string
+    autoLogoutTimer?: IntFilter<"User"> | number
     failedLoginAttempts?: IntFilter<"User"> | number
     lockedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -14768,6 +14815,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -14786,6 +14834,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     mustChangePassword?: BoolFilter<"User"> | boolean
     defaultLandingPage?: StringFilter<"User"> | string
+    autoLogoutTimer?: IntFilter<"User"> | number
     failedLoginAttempts?: IntFilter<"User"> | number
     lockedAt?: DateTimeNullableFilter<"User"> | Date | string | null
     createdAt?: DateTimeFilter<"User"> | Date | string
@@ -14801,6 +14850,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -14822,6 +14872,7 @@ export namespace Prisma {
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     mustChangePassword?: BoolWithAggregatesFilter<"User"> | boolean
     defaultLandingPage?: StringWithAggregatesFilter<"User"> | string
+    autoLogoutTimer?: IntWithAggregatesFilter<"User"> | number
     failedLoginAttempts?: IntWithAggregatesFilter<"User"> | number
     lockedAt?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
@@ -15879,6 +15930,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -15894,6 +15946,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -15908,6 +15961,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15923,6 +15977,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15938,6 +15993,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -15950,6 +16006,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -15963,6 +16020,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17027,6 +17085,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrder
     createdAt?: SortOrder
@@ -17035,6 +17094,7 @@ export namespace Prisma {
 
   export type UserAvgOrderByAggregateInput = {
     id?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
   }
 
@@ -17045,6 +17105,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrder
     createdAt?: SortOrder
@@ -17058,6 +17119,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     mustChangePassword?: SortOrder
     defaultLandingPage?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
     lockedAt?: SortOrder
     createdAt?: SortOrder
@@ -17066,6 +17128,7 @@ export namespace Prisma {
 
   export type UserSumOrderByAggregateInput = {
     id?: SortOrder
+    autoLogoutTimer?: SortOrder
     failedLoginAttempts?: SortOrder
   }
 
@@ -18194,6 +18257,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18208,6 +18272,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18237,6 +18302,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18251,6 +18317,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18302,6 +18369,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18316,6 +18384,7 @@ export namespace Prisma {
     passwordHash: string
     mustChangePassword?: boolean
     defaultLandingPage?: string
+    autoLogoutTimer?: number
     failedLoginAttempts?: number
     lockedAt?: Date | string | null
     createdAt?: Date | string
@@ -18361,6 +18430,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18375,6 +18445,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     mustChangePassword?: BoolFieldUpdateOperationsInput | boolean
     defaultLandingPage?: StringFieldUpdateOperationsInput | string
+    autoLogoutTimer?: IntFieldUpdateOperationsInput | number
     failedLoginAttempts?: IntFieldUpdateOperationsInput | number
     lockedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

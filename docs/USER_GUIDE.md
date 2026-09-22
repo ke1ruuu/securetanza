@@ -166,7 +166,7 @@ Clicking on any barangay polygon opens the right-hand slide drawer:
 
 The Executive Dashboard consolidates critical municipal metrics into a high-level briefing display.
 
-### 5.1 Primary Metric Cards
+### 5.1 Key Metrics Strip
 
 - **Total Crimes:** Cumulative incident count matching current geographic and temporal filters.
 - **Top Offense Type:** The most prevalent crime category (e.g., *Theft* or *Physical Injury*).
@@ -175,7 +175,7 @@ The Executive Dashboard consolidates critical municipal metrics into a high-leve
 ### 5.2 Visual Charts & Incident Feed
 
 - **12-Month Crime Volume Trajectory:** Area chart showing monthly trend line with peak markers.
-- **Categorical Distribution Donut:** Proportional percentage breakdown of index vs. non-index offenses.
+- **Crime Distribution:** Ranked bars showing each top offense type's share of all incidents.
 - **Recent Blotter Activity Table:** Real-time log of the latest 10 recorded incidents showing Case ID, date/time, barangay, and status badges.
 - **"View Cases →" Action:** Deep-links directly to the Case Blotter with matching filters applied.
 

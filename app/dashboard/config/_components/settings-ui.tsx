@@ -11,6 +11,25 @@ import React from "react";
    unit: an input, a picker tile, a table, a modal.
    ───────────────────────────────────────────────────────────── */
 
+/* Page widths. Form pages stay one readable column below xl. From xl each
+   Section becomes a two-pane row: its title and description on the left, its
+   controls on the right at a comfortable width — so the page fills the screen
+   with structure instead of stretching controls across it. Table pages simply
+   use the room. Content is centred so wide screens get even margins. */
+export const PAGE_FORM = "mx-auto w-full max-w-[720px] xl:max-w-[1040px]";
+export const PAGE_TABLE = "mx-auto w-full max-w-[1360px]";
+
+const SplitContext = React.createContext(false);
+
+/** Wrap a form page's Sections in this to get the two-pane rows from xl up. */
+export function SplitLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SplitContext.Provider value={true}>
+      <div className="space-y-12 xl:space-y-10">{children}</div>
+    </SplitContext.Provider>
+  );
+}
+
 export const LINE = "border-slate-200 dark:border-white/[0.07]";
 export const DIVIDE = "divide-slate-200 dark:divide-white/[0.07]";
 
@@ -41,7 +60,7 @@ export function PageHeader({
 	);
 }
 
-/** A titled block of the document. */
+/** A titled block of the document. Two-pane inside a SplitLayout (from xl). */
 export function Section({
 	title,
 	description,
@@ -53,19 +72,39 @@ export function Section({
 	actions?: React.ReactNode;
 	children: React.ReactNode;
 }) {
+	const split = React.useContext(SplitContext);
+
+	const heading = (
+		<div className="min-w-0">
+			<h2 className="text-[14px] font-semibold tracking-[-0.006em] text-slate-900 dark:text-white">
+				{title}
+			</h2>
+			{description && (
+				<p className="mt-1 max-w-[68ch] text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+					{description}
+				</p>
+			)}
+		</div>
+	);
+
+	if (split) {
+		return (
+			<section
+				className={`scroll-mt-8 xl:grid xl:grid-cols-[minmax(220px,280px)_minmax(0,1fr)] xl:gap-x-14 xl:[&:not(:first-child)]:border-t xl:[&:not(:first-child)]:pt-10 ${LINE}`}
+			>
+				<div className="pb-3 xl:pb-0">
+					{heading}
+					{actions && <div className="mt-3 flex items-center gap-2">{actions}</div>}
+				</div>
+				<div className="min-w-0">{children}</div>
+			</section>
+		);
+	}
+
 	return (
 		<section className="scroll-mt-8">
 			<div className="flex items-end justify-between gap-4 pb-3">
-				<div className="min-w-0">
-					<h2 className="text-[14px] font-semibold tracking-[-0.006em] text-slate-900 dark:text-white">
-						{title}
-					</h2>
-					{description && (
-						<p className="mt-1 max-w-[68ch] text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
-							{description}
-						</p>
-					)}
-				</div>
+				{heading}
 				{actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
 			</div>
 			{children}
@@ -270,7 +309,7 @@ export const btnDanger =
 	"inline-flex h-9 items-center justify-center gap-2 rounded-md bg-red-600 px-3.5 text-[13px] font-medium text-white transition-colors hover:bg-red-700 disabled:pointer-events-none disabled:opacity-40";
 
 export const inputBase =
-	"h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-[14px] text-slate-900 transition-colors placeholder:text-slate-500 dark:text-slate-400 focus-visible:border-[#0EA5E9] dark:border-white/[0.12] dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-500";
+	"h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-[14px] text-slate-900 transition-colors placeholder:text-slate-500 focus-visible:border-[#0EA5E9] dark:border-white/[0.12] dark:bg-white/[0.03] dark:text-white dark:placeholder:text-slate-400";
 
 /** Table header cell — sentence case, not shouted small caps. */
 export const th =

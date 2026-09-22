@@ -30,6 +30,7 @@ import {
 	inputBase,
 	td,
 	th,
+	PAGE_TABLE,
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 
@@ -283,7 +284,7 @@ function AccessSecurity() {
 	);
 
 	return (
-		<div className="max-w-[1040px] space-y-10">
+		<div className={cn(PAGE_TABLE, "space-y-10")}>
 			<PageHeader title="Access & Security" />
 
 			<Section
