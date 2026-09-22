@@ -1,10 +1,15 @@
 "use client";
 
-import { Plus, Minus, Crosshair } from "lucide-react";
+import { Plus, Minus, Crosshair, Maximize2, Minimize2 } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { OVERLAY_BUTTON } from "@/lib/map-overlay";
 
-export default function RightSidebarControls() {
+interface RightSidebarControlsProps {
+	isFocusMode?: boolean;
+	onToggleFocusMode?: () => void;
+}
+
+export default function RightSidebarControls({ isFocusMode = false, onToggleFocusMode }: RightSidebarControlsProps) {
 	const { mapRef, initialBounds } = useMapContext();
 
 	const handleZoomIn = () => {
@@ -38,6 +43,25 @@ export default function RightSidebarControls() {
 
 	return (
 		<div className="flex flex-col items-center gap-1.5 pointer-events-auto">
+			{/* Focus Mode - tucks away every other panel so only the map and these controls remain */}
+			{onToggleFocusMode && (
+				<button
+					onClick={onToggleFocusMode}
+					aria-pressed={isFocusMode}
+					className={`w-11 h-11 cursor-pointer group ${
+						isFocusMode
+							? "rounded-lg border border-sky-500 bg-sky-500 flex items-center justify-center text-white shadow-sm transition-colors hover:bg-sky-600"
+							: OVERLAY_BUTTON
+					}`}
+					title={isFocusMode ? "Exit Focus Mode" : "Enter Focus Mode"}>
+					{isFocusMode ? (
+						<Minimize2 className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+					) : (
+						<Maximize2 className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
+					)}
+				</button>
+			)}
+
 			{/* Zoom In */}
 			<button
 				onClick={handleZoomIn}

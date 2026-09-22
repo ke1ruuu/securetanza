@@ -9,7 +9,7 @@ import MapHeader from "@/components/layout/map-header";
 import UnifiedFilterBar from "@/components/layout/unified-filter-bar";
 import RealTimeClock from "@/components/layout/real-time-clock";
 import TimeFilter from "@/components/layout/time-filter";
-import LatestDataIndicator from "@/components/layout/latest-data-indicator";
+import LastUploadIndicator from "@/components/layout/last-upload-indicator";
 
 import { MapProvider, useMapContext } from "@/context/MapContext";
 
@@ -26,6 +26,7 @@ function HomeContent() {
 	const router = useRouter();
 	const [isFilterActive, setIsFilterActive] = useState(false);
 	const [isPlaying, setIsPlaying] = useState(false);
+	const [isFocusMode, setIsFocusMode] = useState(false);
 
 	const { setIsTimeFilterActive, setTimeFilter } = useMapContext();
 
@@ -49,6 +50,29 @@ function HomeContent() {
 		},
 		[setIsTimeFilterActive, setTimeFilter],
 	);
+
+	const handleFocusModeToggle = useCallback(() => {
+		setIsFocusMode((prev) => {
+			const next = !prev;
+			// Entering focus tucks away the temporal filter too — its clock
+			// entry point is hidden in focus mode, so leaving it running
+			// invisibly would be confusing.
+			if (next && isFilterActive) {
+				handleFilterToggle(false);
+			}
+			return next;
+		});
+	}, [isFilterActive, handleFilterToggle]);
+
+	// Escape exits focus mode, matching the temporal filter's own close affordance
+	useEffect(() => {
+		if (!isFocusMode) return;
+		const handleKeyDown = (e: KeyboardEvent) => {
+			if (e.key === "Escape") setIsFocusMode(false);
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [isFocusMode]);
 
 	const handleFilterChange = useCallback((filters: any) => {
 		console.log("Filter changed:", filters);
@@ -85,69 +109,77 @@ function HomeContent() {
 					fallback={
 						<div className="w-full h-16 bg-white dark:bg-[#0F172A] border-b border-slate-200 dark:border-white/[0.06] transition-colors duration-500" />
 					}>
-					<MapHeader isVisible={!isFilterActive} />
+					<MapHeader isVisible={!isFilterActive && !isFocusMode} />
 				</Suspense>
 			</div>
 
 			<div
 				data-tour="map-canvas"
-				className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
+				className={`absolute inset-0 z-0 transition-all duration-500 ease-in-out ${isFilterActive || isFocusMode ? "pt-0" : "pt-16"}`}>
 				<TanzaMap />
 			</div>
 
-			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive ? "pt-0" : "pt-16"}`}>
+			<div className={`fixed inset-0 z-10 pointer-events-none transition-all duration-500 ease-in-out ${isFilterActive || isFocusMode ? "pt-0" : "pt-16"}`}>
 				{/* Left Rail: Unified Filter Bar (Barangay, Crime Type, Time Selector) + Hourly Timeline */}
-				<div
-					className={`absolute left-3 sm:left-4 lg:left-6 flex flex-col items-start gap-3 transition-all duration-500 ease-in-out ${
-						isFilterActive
-							? "top-3 bottom-3 sm:top-4 sm:bottom-4 lg:top-6 lg:bottom-6"
-							: "top-[72px] sm:top-20"
-					}`}>
-					{/* Filters are tucked away while the temporal view is open — it has its own focus */}
-					{!isFilterActive && <UnifiedFilterBar />}
+				{!isFocusMode && (
+					<div
+						className={`absolute left-3 sm:left-4 lg:left-6 flex flex-col items-start gap-3 transition-all duration-500 ease-in-out ${
+							isFilterActive
+								? "top-3 bottom-3 sm:top-4 sm:bottom-4 lg:top-6 lg:bottom-6"
+								: "top-[72px] sm:top-20"
+						}`}>
+						{/* Filters are tucked away while the temporal view is open — it has its own focus */}
+						{!isFilterActive && <UnifiedFilterBar />}
 
-					{/* Hour-by-hour timeline sits at the foot of the rail, in the corner (the clock is hidden while it is open) */}
-					{isFilterActive && (
-						<div className="mt-auto flex min-h-0 flex-col w-[324px] sm:w-[348px] max-w-[calc(100vw-24px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
-							<TimeFilter
-								key="time-filter-active"
-								onFilterChange={handleFilterChange}
-								isPlaying={isPlaying}
-								onPlayPauseToggle={handlePlayPauseToggle}
-								onClose={() => handleFilterToggle(false)}
-							/>
-						</div>
-					)}
-				</div>
+						{/* Hour-by-hour timeline sits at the foot of the rail, in the corner (the clock is hidden while it is open) */}
+						{isFilterActive && (
+							<div className="mt-auto flex min-h-0 flex-col w-[324px] sm:w-[348px] max-w-[calc(100vw-24px)] animate-in fade-in slide-in-from-bottom-2 duration-300">
+								<TimeFilter
+									key="time-filter-active"
+									onFilterChange={handleFilterChange}
+									isPlaying={isPlaying}
+									onPlayPauseToggle={handlePlayPauseToggle}
+									onClose={() => handleFilterToggle(false)}
+								/>
+							</div>
+						)}
+					</div>
+				)}
 
-				{/* Top Right Legend */}
-				<div
-					data-tour="map-legend"
-					className={`absolute right-3 sm:right-4 lg:right-6 transition-all duration-500 ease-in-out ${
-						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
-					}`}>
-					<CrimeLegend />
-				</div>
+				{/* Top Right Legend - tucked away in Focus Mode */}
+				{!isFocusMode && (
+					<div
+						data-tour="map-legend"
+						className={`absolute right-3 sm:right-4 lg:right-6 transition-all duration-500 ease-in-out ${
+							isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
+						}`}>
+						<CrimeLegend />
+					</div>
+				)}
 
 				{/* Bottom centre: one-line threat scale. Hidden below lg, where the clock and
-				    data pill already fill the bottom edge. */}
-				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-1/2 hidden -translate-x-1/2 lg:block">
-					<ThreatScale />
-				</div>
+				    data pill already fill the bottom edge. Tucked away in Focus Mode. */}
+				{!isFocusMode && (
+					<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 left-1/2 hidden -translate-x-1/2 lg:block">
+						<ThreatScale />
+					</div>
+				)}
 
-				{/* Bottom Right: Latest Data Indicator beside Zoom Controls */}
+				{/* Bottom Right: Last Upload Indicator beside Zoom Controls (zoom column, with the
+				    Focus Mode toggle, stays available even inside Focus Mode) */}
 				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6 flex items-end gap-2.5 sm:gap-3">
-					{!isFilterActive && <LatestDataIndicator />}
+					{!isFilterActive && !isFocusMode && <LastUploadIndicator />}
 					<div data-tour="map-zoom-controls">
-						<RightSidebarControls />
+						<RightSidebarControls isFocusMode={isFocusMode} onToggleFocusMode={handleFocusModeToggle} />
 					</div>
 				</div>
 
-				{/* Real Time Clock - hidden while the temporal filter is open (it closes via its own X) */}
+				{/* Real Time Clock - hidden while the temporal filter is open (it closes via its own X)
+				    or while Focus Mode is on */}
 				<div
 					data-tour="real-time-clock"
 					className={`absolute left-3 sm:left-4 lg:left-6 bottom-3 sm:bottom-4 lg:bottom-6 transition-all duration-300 ease-in-out ${
-						isFilterActive ? "pointer-events-none invisible opacity-0" : "visible opacity-100"
+						isFilterActive || isFocusMode ? "pointer-events-none invisible opacity-0" : "visible opacity-100"
 					}`}>
 					<RealTimeClock onFilterToggle={handleFilterToggle} isFilterActive={isFilterActive} />
 				</div>

@@ -125,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
     const IDLE_TIMEOUT_MS = (user?.autoLogoutTimer ?? 15) * 60 * 1000;
+    let lastActivity = Date.now();
 
     const handleIdleLogout = async () => {
       try {
