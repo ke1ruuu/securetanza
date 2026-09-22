@@ -46,6 +46,16 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
   // pass over the map).
   const layerRegistryRef = React.useRef<Map<string, { layer: L.Path; feature: any }>>(new Map());
   const previousHoverKeyRef = React.useRef<string | null>(null);
+
+  // Tracks whichever polygon's sticky tooltip is currently open. Each layer's
+  // bindTooltip only knows how to open/close *its own* tooltip on its own
+  // hover events — on small, adjacent barangays (sharing a boundary), a fast
+  // mouse sweep can fire the next polygon's mouseover before the previous
+  // one's mouseout cleanly fires, leaving multiple tooltips stuck open at
+  // once. Explicitly closing whatever was last tracked open, on every
+  // mouseover, guarantees at most one is ever visible regardless of that
+  // timing race.
+  const openTooltipLayerRef = React.useRef<L.Layer | null>(null);
   
   const { barangayCrimeCounts, filteredBarangayCrimeCounts, thresholds, loading } = useThreatLevels();
   const { crimeTypeCounts, loading: crimeTypeLoading } = useCrimeTypeByBarangay();
@@ -255,10 +265,23 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     }
 
     layer.on({
-      // The actual highlight is applied by the hoveredBarangay effect below —
+      // The style highlight is applied by the hoveredBarangay effect below —
       // this just reports the hover, the same way a list row hovering it would.
-      mouseover: () => setHoveredBarangay(name),
-      mouseout: () => setHoveredBarangay(null),
+      mouseover: () => {
+        setHoveredBarangay(name);
+        if (openTooltipLayerRef.current && openTooltipLayerRef.current !== layer) {
+          openTooltipLayerRef.current.closeTooltip();
+        }
+        layer.openTooltip();
+        openTooltipLayerRef.current = layer;
+      },
+      mouseout: () => {
+        setHoveredBarangay(null);
+        layer.closeTooltip();
+        if (openTooltipLayerRef.current === layer) {
+          openTooltipLayerRef.current = null;
+        }
+      },
       click: () => {
         if (onClickBarangay) onClickBarangay(name);
       },
