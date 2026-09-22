@@ -43,7 +43,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 		if (!document.startViewTransition) {
 			applyTheme();
 		} else {
-			document.startViewTransition(applyTheme);
+			const transition = document.startViewTransition(applyTheme);
+			// Catch AbortError when a transition is skipped (e.g. due to rapid clicking or navigation)
+			transition.ready.catch(() => { });
+			transition.finished.catch(() => { });
 		}
 	}, [theme, mounted]);
 
