@@ -38,6 +38,7 @@ export interface CrimeIncident {
   suspectEGOPosition?: string
   suspectEGOClass?: string
   suspectCount?: number
+  suspectArrested?: boolean
   victimIsEGO?: boolean
   victimEGOPosition?: string
   victimEGOClass?: string

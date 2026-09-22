@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTheme } from "@/context/ThemeContext";
 import { useMapContext } from "@/context/MapContext";
 import { useTimeRangeData } from "@/hooks/useTimeRangeData";
+import { extractCrimeType } from "@/hooks/useCrimeTypes";
 import { fetchCrimes, CrimeIncident } from "@/lib/api";
 import {
   Dialog,
@@ -250,25 +251,6 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   const barangays = ["(All)", ...Array.from(new Set(cases.map((c) => c.barangay)))];
   const statuses = ["(All)", "Cleared", "Under Investigation", "Filed in Court", "Archived", "Pending"];
 
-  // Get status color based on caseStatus
-  const getStatusColor = (caseStatus?: string) => {
-    if (!caseStatus) return "bg-yellow-500";
-    const statusLower = caseStatus.toLowerCase();
-    if (statusLower.includes("cleared") || statusLower.includes("solved")) {
-      return "bg-green-500";
-    }
-    if (statusLower.includes("investigation") || statusLower.includes("investigating")) {
-      return "bg-blue-500";
-    }
-    if (statusLower.includes("filed") || statusLower.includes("court")) {
-      return "bg-purple-500";
-    }
-    if (statusLower.includes("archived") || statusLower.includes("closed")) {
-      return "bg-slate-500";
-    }
-    return "bg-yellow-500";
-  };
-
   // Get status label based on caseStatus
   const getStatusLabel = (caseStatus?: string) => {
     if (!caseStatus) return "Pending";
@@ -329,7 +311,28 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   const surface = `rounded-xl border ${dark ? "border-white/[0.06] bg-[#1e293b]" : "border-slate-200 bg-white"}`;
   const hairline = dark ? "border-white/[0.06]" : "border-slate-100";
   const labelClass = `text-[0.68rem] font-bold uppercase tracking-[0.11em] ${mutedText}`;
+  // A section heading ("Classification") reads too much like the field labels beneath it
+  // ("Offense classification") when both share the same size, weight and muted color —
+  // this one takes the sky accent used for section headers elsewhere so the two tiers
+  // are told apart at a glance instead of by reading order alone.
+  const sectionLabelClass = "text-[0.72rem] font-bold uppercase tracking-[0.11em] text-sky-600 dark:text-sky-400";
   const columns = "1.2fr 1.1fr 1.7fr 1fr 1.1fr";
+
+  // Text-only color for a status label — no pill, for places (like the full-detail
+  // header) where a badge reads as a small compact-card widget rather than part of
+  // the record itself.
+  const statusTextTone = (caseStatus?: string) => {
+    const label = getStatusLabel(caseStatus);
+    return label === "Cleared"
+      ? "text-emerald-600 dark:text-emerald-400"
+      : label === "Under Investigation"
+        ? "text-blue-600 dark:text-blue-400"
+        : label === "Filed in Court"
+          ? "text-purple-600 dark:text-purple-400"
+          : label === "Archived"
+            ? mutedText
+            : "text-amber-600 dark:text-amber-500";
+  };
 
   const statusChip = (caseStatus?: string) => {
     const label = getStatusLabel(caseStatus);
@@ -581,7 +584,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                             {getCaseId(crime)}
                           </span>
                           <span className={`truncate ${dark ? "text-slate-300" : "text-slate-700"}`} title={crime.incidentType}>
-                            {crime.incidentType}
+                            {extractCrimeType(crime.incidentType)}
                           </span>
                           <span className={`truncate ${dark ? "text-slate-400" : "text-slate-600"}`}>
                             {crime.street ? `${crime.street}, ${crime.barangay}` : crime.barangay}
@@ -711,7 +714,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                         <h3
                           className={`font-heading mt-1 text-lg font-bold leading-snug ${dark ? "text-white" : "text-slate-900"}`}
                         >
-                          {c.incidentType}
+                          {extractCrimeType(c.incidentType)}
                         </h3>
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
                           {statusChip(c.caseStatus)}
@@ -742,7 +745,8 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                         </dl>
                       )}
 
-                      {/* Long text, previewed — the rest is in the full view */}
+                      {/* Long text, previewed — the rest is in the full view (opened via
+                          the "Full details" button pinned at the top of this panel). */}
                       {previews.length > 0 && (
                         <div className={`space-y-3 border-t pt-4 ${hairline}`}>
                           {previews.map((p) => (
@@ -751,12 +755,6 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                               <p className={`line-clamp-3 text-[0.82rem] leading-relaxed ${body}`}>{p.text}</p>
                             </div>
                           ))}
-                          <button
-                            onClick={() => setIsModalOpen(true)}
-                            className="text-xs font-semibold text-sky-600 transition-colors hover:text-sky-500 dark:text-sky-400"
-                          >
-                            Read the full record →
-                          </button>
                         </div>
                       )}
                     </div>
@@ -794,91 +792,215 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
         </div>
       </section>
 
-      {/* Full Details Modal */}
+      {/* Full Details Modal — reads like a case record, not a table export: only the
+          fields this case actually has, human phrasing instead of database columns,
+          and the same identity/map treatment as the details panel it expands from. */}
       {selectedCase && (
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className={`w-full max-w-5xl sm:max-w-4xl md:max-w-5xl lg:max-w-6xl max-h-[85vh] overflow-y-auto p-6 md:p-8 ${theme === "dark" ? "bg-[#1e293b] text-slate-100" : "bg-white text-slate-900"}`}>
-            <DialogHeader>
-              <DialogTitle className="font-heading text-xl font-bold border-b pb-4">Case Details: {getCaseId(selectedCase)}</DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mb-3 text-sky-600 dark:text-sky-400">Basic Information</h4>
-                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
-                    <span className="text-slate-500 font-medium">Case ID:</span> <span>{getCaseId(selectedCase)}</span>
-                    <span className="text-slate-500 font-medium">Incident Type:</span> <span>{selectedCase.incidentType}</span>
-                    <span className="text-slate-500 font-medium">Blotter No:</span> <span>{selectedCase.blotterNo || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Date Committed:</span> <span>{formatDate(selectedCase.dateCommitted)}</span>
-                    <span className="text-slate-500 font-medium">Time Committed:</span> <span>{formatTime(selectedCase.timeCommitted)}</span>
-                    <span className="text-slate-500 font-medium">Date Reported:</span> <span>{formatDate(selectedCase.dateReported)}</span>
-                    <span className="text-slate-500 font-medium">Time Reported:</span> <span>{formatTime(selectedCase.timeReported)}</span>
-                    <span className="text-slate-500 font-medium">Date Encoded:</span> <span>{selectedCase.dateEncoded ? formatDate(selectedCase.dateEncoded) : "N/A"}</span>
-                  </div>
-                </div>
+          <DialogContent
+            className={`sm:max-w-4xl lg:max-w-5xl max-h-[85vh] overflow-y-auto p-6 sm:p-8 ${
+              dark ? "bg-[#1e293b] border-white/[0.06]" : "bg-white border-slate-200"
+            }`}
+          >
+            {(() => {
+              const c = selectedCase;
+              const hasMap = Boolean(c.latitude && c.longitude);
+              const body = dark ? "text-slate-300" : "text-slate-700";
+              const valueClass = `mt-0.5 text-[0.82rem] font-medium ${dark ? "text-slate-100" : "text-slate-800"}`;
 
-                <div>
-                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Location</h4>
-                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
-                    <span className="text-slate-500 font-medium">Barangay:</span> <span>{selectedCase.barangay}</span>
-                    <span className="text-slate-500 font-medium">Street:</span> <span>{selectedCase.street || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">City/Municipality:</span> <span>{selectedCase.municipal || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Province:</span> <span>{selectedCase.province || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Region:</span> <span>{selectedCase.region || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Type of Place:</span> <span>{selectedCase.typeOfPlace || "N/A"}</span>
-                  </div>
-                </div>
+              // Text-only, no pill — a full-detail header reads as part of the record,
+              // not as a strip of compact-card badges.
+              const flagTone: Record<"rose" | "amber" | "purple", string> = {
+                rose: "text-rose-600 dark:text-rose-400",
+                amber: "text-amber-600 dark:text-amber-400",
+                purple: "text-purple-600 dark:text-purple-400",
+              };
+              const flags = (
+                [
+                  c.heinous && { label: "Heinous crime", tone: "rose" },
+                  c.sensational && { label: "Sensational", tone: "amber" },
+                  c.threatGrp && { label: "Threat group involved", tone: "purple" },
+                ] as const
+              ).filter((f): f is { label: string; tone: "rose" | "amber" | "purple" } => Boolean(f));
 
-                <div>
-                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Police Unit</h4>
-                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
-                    <span className="text-slate-500 font-medium">PCP:</span> <span>{selectedCase.pcp || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Station:</span> <span>{selectedCase.stn || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">PPO:</span> <span>{selectedCase.ppo || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">PRO:</span> <span>{selectedCase.pro || "N/A"}</span>
-                  </div>
-                </div>
-              </div>
+              // Long-form fields, read as prose — only the ones this case has.
+              const narrative = [
+                { label: "Description", text: c.offense },
+                { label: "Modus operandi", text: c.modus },
+                {
+                  label: "Suspect motive",
+                  text: [c.suspectMotive, c.suspectSubMotive].filter(Boolean).join(" — ") || undefined,
+                },
+              ].filter((p) => p.text);
 
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mb-3 text-sky-600 dark:text-sky-400">Case Status & Legal</h4>
-                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm items-center">
-                    <span className="text-slate-500 font-medium">Status:</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold w-max ${getStatusColor(selectedCase.caseStatus)} text-white shadow-sm`}>{getStatusLabel(selectedCase.caseStatus)}</span>
-                    <span className="text-slate-500 font-medium">Offense:</span> <span>{selectedCase.offense || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Offense Type:</span> <span>{selectedCase.offenseType || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Section:</span> <span>{selectedCase.section || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Stage of Felony:</span> <span>{selectedCase.stageOfFelony || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Is Crime:</span> <span>{selectedCase.isCrime ? "Yes" : "No"}</span>
-                    <span className="text-slate-500 font-medium">Heinous:</span> <span>{selectedCase.heinous ? "Yes" : "No"}</span>
-                    <span className="text-slate-500 font-medium">Sensational:</span> <span>{selectedCase.sensational ? "Yes" : "No"}</span>
-                  </div>
-                </div>
+              const classification = [
+                { label: "Offense classification", value: c.offenseType },
+                { label: "Legal section", value: c.section },
+                { label: "Stage of felony", value: c.stageOfFelony },
+              ].filter((f) => f.value);
 
-                <div>
-                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Details & Suspects</h4>
-                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
-                    <span className="text-slate-500 font-medium">Modus:</span> <span className="break-words leading-relaxed">{selectedCase.modus || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Suspect Motive:</span> <span className="break-words leading-relaxed">{selectedCase.suspectMotive || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Sub-Motive:</span> <span className="break-words leading-relaxed">{selectedCase.suspectSubMotive || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">No. of Suspects:</span> <span>{selectedCase.suspectCount ?? "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Suspect Arrested:</span> <span>{selectedCase.suspectArrested !== undefined ? (selectedCase.suspectArrested ? "Yes" : "No") : "N/A"}</span>
-                    <span className="text-slate-500 font-medium">No. of Victims:</span> <span>{selectedCase.victimCount ?? "N/A"}</span>
-                  </div>
-                </div>
+              const people = [
+                { label: "Investigator", value: c.investigator },
+                { label: "Lead investigator", value: c.headInves },
+                { label: "No. of suspects", value: c.suspectCount },
+                { label: "No. of victims", value: c.victimCount },
+                { label: "Group affiliation", value: c.grpAffiliation },
+              ].filter((f) => f.value !== undefined && f.value !== null && f.value !== "");
 
-                <div>
-                  <h4 className="font-heading text-[0.72rem] font-bold uppercase tracking-[0.11em] border-b pb-2 mt-8 mb-3 text-sky-600 dark:text-sky-400">Management</h4>
-                  <div className="grid grid-cols-[1fr_2fr] gap-3 text-sm">
-                    <span className="text-slate-500 font-medium">Investigator:</span> <span>{selectedCase.investigator || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Head Investigator:</span> <span>{selectedCase.headInves || "N/A"}</span>
-                    <span className="text-slate-500 font-medium">Threat Group:</span> <span>{selectedCase.threatGrp ? "Yes" : "No"}</span>
-                    <span className="text-slate-500 font-medium">Group Affiliation:</span> <span>{selectedCase.grpAffiliation || "N/A"}</span>
+              // Bureaucratic record-keeping fields — real, but not what a reader comes
+              // for. Grouped last, in a quieter card, instead of mixed into the story.
+              const filing = [
+                { label: "Blotter number", value: c.blotterNo },
+                { label: "Type of place", value: c.typeOfPlace },
+                { label: "Police community precinct", value: c.pcp },
+                { label: "Station", value: c.stn },
+                { label: "Provincial police office", value: c.ppo },
+                { label: "Police regional office", value: c.pro },
+                { label: "Province", value: c.province },
+                { label: "Region", value: c.region },
+                { label: "Logged into system", value: c.dateEncoded ? formatDate(c.dateEncoded) : undefined },
+              ].filter((f) => f.value);
+
+              return (
+                <>
+                  <DialogHeader className={`pb-6 border-b ${hairline}`}>
+                    {/* Case ID is a reference caption, not part of what the two columns
+                        below should align to — kept on its own line so the row underneath
+                        starts at the type and status, not at this label. */}
+                    <p className={`${labelClass} tabular-nums`}>{getCaseId(c)}</p>
+
+                    {/* Identity on the left, the when/where on the right — side by side
+                        instead of one long stack, so the header uses the card's width
+                        instead of just its height. */}
+                    {/* pr-8 keeps this clear of the dialog's own close button, which sits
+                        inset from the card's outer edge rather than this padded content
+                        area — without it, the right-aligned column (and, stacked on
+                        mobile, the title itself) runs straight under the X. */}
+                    <div className="mt-1 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6 pr-8">
+                      <div className="min-w-0">
+                        <DialogTitle
+                          className={`font-heading text-2xl font-bold leading-snug ${dark ? "text-white" : "text-slate-900"}`}
+                        >
+                          {extractCrimeType(c.incidentType)}
+                        </DialogTitle>
+                        {/* Status and flags as plain, colored text — a pill reads like a
+                            compact-card widget; this is a full record, not a table row. */}
+                        <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-semibold">
+                          <span className={statusTextTone(c.caseStatus)}>{getStatusLabel(c.caseStatus)}</span>
+                          {flags.map((f) => (
+                            <React.Fragment key={f.label}>
+                              <span className={`font-normal ${mutedText}`}>·</span>
+                              <span className={flagTone[f.tone]}>{f.label}</span>
+                            </React.Fragment>
+                          ))}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col gap-2 text-[0.85rem] sm:items-end sm:text-right shrink-0">
+                        <span className={`flex items-center gap-2 ${mutedText}`}>
+                          <Calendar className="h-3.5 w-3.5 shrink-0" />
+                          Committed {formatDate(c.dateCommitted)} · {formatTime(c.timeCommitted)}
+                          {c.dateReported && ` — reported ${formatDate(c.dateReported)} · ${formatTime(c.timeReported)}`}
+                        </span>
+                        <span className={`flex items-start gap-2 ${body}`}>
+                          <MapPin className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${mutedText}`} />
+                          <span>
+                            {c.street ? `${c.street}, ` : ""}Brgy. {c.barangay}
+                            {c.municipal ? `, ${c.municipal}` : ""}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </DialogHeader>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-8 pt-6">
+                    {/* What happened, and who's involved */}
+                    <div className="space-y-5">
+                      {narrative.length > 0 && (
+                        <div className="space-y-4">
+                          {narrative.map((p) => (
+                            <div key={p.label}>
+                              <h4 className={`${labelClass} mb-1.5`}>{p.label}</h4>
+                              <p className={`text-[0.88rem] leading-relaxed ${body}`}>{p.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {classification.length > 0 && (
+                        <div className={`border-t pt-4 ${hairline}`}>
+                          <h4 className={`${sectionLabelClass} mb-3`}>Classification</h4>
+                          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            {classification.map((f) => (
+                              <div key={f.label} className="min-w-0">
+                                <dt className={labelClass}>{f.label}</dt>
+                                <dd className={valueClass}>{f.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      )}
+
+                      {people.length > 0 && (
+                        <div className={`border-t pt-4 ${hairline}`}>
+                          <h4 className={`${sectionLabelClass} mb-3`}>People & investigation</h4>
+                          <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                            {people.map((f) => (
+                              <div key={f.label} className="min-w-0">
+                                <dt className={labelClass}>{f.label}</dt>
+                                <dd className={valueClass}>{f.value}</dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Where, and the paperwork trail */}
+                    <div className="space-y-4">
+                      {hasMap && (
+                        <div className={`relative h-48 rounded-lg border overflow-hidden ${hairline}`}>
+                          <iframe
+                            title="Case location"
+                            className="pointer-events-none h-full w-full"
+                            frameBorder="0"
+                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${c.longitude! - 0.008},${c.latitude! - 0.005},${c.longitude! + 0.008},${c.latitude! + 0.005}&layer=mapnik&marker=${c.latitude},${c.longitude}`}
+                          />
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=17/${c.latitude}/${c.longitude}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="absolute bottom-2 right-3 rounded bg-white/90 px-2 py-0.5 text-[0.65rem] font-semibold text-slate-700 shadow-sm hover:bg-white dark:bg-slate-900/85 dark:text-slate-200"
+                          >
+                            Open map ↗
+                          </a>
+                        </div>
+                      )}
+
+                      {filing.length > 0 && (
+                        <div
+                          className={`rounded-lg border p-4 ${
+                            dark ? "border-white/[0.06] bg-white/[0.02]" : "border-slate-100 bg-slate-50"
+                          }`}
+                        >
+                          <h4 className={`${sectionLabelClass} mb-3`}>Filing record</h4>
+                          <dl className="space-y-2.5 text-[0.78rem]">
+                            {filing.map((f) => (
+                              <div key={f.label} className="flex items-baseline justify-between gap-3">
+                                <dt className={mutedText}>{f.label}</dt>
+                                <dd className={`text-right font-medium ${dark ? "text-slate-200" : "text-slate-700"}`}>
+                                  {f.value}
+                                </dd>
+                              </div>
+                            ))}
+                          </dl>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
+                </>
+              );
+            })()}
           </DialogContent>
         </Dialog>
       )}
