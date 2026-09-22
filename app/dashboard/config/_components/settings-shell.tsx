@@ -33,7 +33,7 @@ export const NAV_GROUPS: NavGroup[] = [
 			{
 				href: "/dashboard/config/preferences",
 				label: "Account Preferences",
-				description: "Theme & display settings",
+				description: "Theme, accessibility & display settings",
 				adminOnly: false,
 			},
 		],
