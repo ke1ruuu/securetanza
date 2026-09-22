@@ -27,6 +27,7 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     hotspotMonth,
     hotspotYear,
     hoveredThreatLevel,
+    hoveredBarangay,
     setHoveredBarangay,
     timeFilterDate,
     timeFilterHour,
@@ -35,6 +36,16 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     selectedYear,
     timeRange,
   } = useMapContext();
+
+  // Registered per polygon in onEachFeature, so a hover that originates
+  // *outside* the map — e.g. a row in the crime-type breakdown list — can
+  // apply the exact same highlight a direct map hover would, by calling
+  // Leaflet's setStyle directly instead of remounting the whole GeoJSON
+  // layer (which the key below already does for the rarer, discrete
+  // hoveredThreatLevel case — too heavy to also do on every casual mouse
+  // pass over the map).
+  const layerRegistryRef = React.useRef<Map<string, { layer: L.Path; feature: any }>>(new Map());
+  const previousHoverKeyRef = React.useRef<string | null>(null);
   
   const { barangayCrimeCounts, filteredBarangayCrimeCounts, thresholds, loading } = useThreatLevels();
   const { crimeTypeCounts, loading: crimeTypeLoading } = useCrimeTypeByBarangay();
@@ -130,10 +141,12 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     return false;
   };
 
-  // Don't render the layer until data is loaded to prevent color flickering
-  if (loading && Object.keys(barangayCrimeCounts).length === 0) {
-    return null;
-  }
+  // Don't render the layer until data is loaded to prevent color flickering.
+  // Checked again just before the JSX return below, not here — every hook in
+  // this component (including the hoveredBarangay effect further down) has
+  // to run on every render regardless, or React's hook-order tracking breaks
+  // the moment `loading` flips between renders.
+  const skipRender = loading && Object.keys(barangayCrimeCounts).length === 0;
 
   const styleFeature = (feature: any) => {
     const name = feature.properties?.adm4_en;
@@ -237,25 +250,15 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     if (!(layer instanceof L.Path)) return;
     const name = feature.properties?.adm4_en;
 
+    if (name) {
+      layerRegistryRef.current.set(name.toLowerCase().trim(), { layer, feature });
+    }
+
     layer.on({
-      mouseover: (e) => {
-        const target = e.target;
-        // Set hovered barangay for stats panel
-        setHoveredBarangay(name);
-        
-        // Apply a subtle hover effect only, while respecting the focus style
-        target.setStyle({
-          fillOpacity: 0.5, // Keep it high
-          opacity: 1,
-          weight: 6, // Slightly thicker for hover awareness
-        });
-        target.bringToFront();
-      },
-      mouseout: (e) => {
-        // Clear hovered barangay
-        setHoveredBarangay(null);
-        e.target.setStyle(styleFeature(feature));
-      },
+      // The actual highlight is applied by the hoveredBarangay effect below —
+      // this just reports the hover, the same way a list row hovering it would.
+      mouseover: () => setHoveredBarangay(name),
+      mouseout: () => setHoveredBarangay(null),
       click: () => {
         if (onClickBarangay) onClickBarangay(name);
       },
@@ -298,9 +301,47 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     }
   };
 
+  // Applies/clears the hover highlight from wherever hoveredBarangay was set —
+  // a direct map hover (via onEachFeature above) or an external one, like a
+  // row in the crime-type breakdown list. One place decides what "hovered"
+  // looks like, regardless of who reported it.
+  React.useEffect(() => {
+    const nextKey = hoveredBarangay ? hoveredBarangay.toLowerCase().trim() : null;
+    const prevKey = previousHoverKeyRef.current;
+
+    if (prevKey && prevKey !== nextKey) {
+      const prevEntry = layerRegistryRef.current.get(prevKey);
+      if (prevEntry) {
+        prevEntry.layer.setStyle(styleFeature(prevEntry.feature));
+      }
+    }
+
+    if (nextKey) {
+      const nextEntry = layerRegistryRef.current.get(nextKey);
+      if (nextEntry) {
+        nextEntry.layer.setStyle({ fillOpacity: 0.5, opacity: 1, weight: 6 });
+        nextEntry.layer.bringToFront();
+      }
+    }
+
+    previousHoverKeyRef.current = nextKey;
+    // styleFeature is intentionally omitted: it's a new function identity every
+    // render, so including it would fire this on every render instead of only
+    // when the hover actually changes. It's still always the current render's
+    // styleFeature via closure — any staleness self-corrects on the next data
+    // change anyway, since that remounts the whole layer via the key below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hoveredBarangay]);
+
   const timeRangeKey = `${timeRange.mode}-${timeRange.selections.map(s => `${s.year}_${s.quarter ?? ''}_${s.month ?? ''}_${s.halfYear ?? ''}_${s.day ? new Date(s.day).getTime() : ''}`).join(',')}`;
   const crimeCountsKey = Object.entries(crimeTypeCounts).map(([b, c]) => `${b}:${c}`).join('|');
   const baseCountsKey = Object.entries(barangayCrimeCounts).map(([b, c]) => `${b}:${c}`).join('|');
+
+  // The actual "don't render the layer until data is loaded" bail-out — see
+  // the skipRender comment above for why this can't happen any earlier.
+  if (skipRender) {
+    return null;
+  }
 
   return (
     <Pane name="barangay-pane" style={{ zIndex: 450 }}>

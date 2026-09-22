@@ -4,6 +4,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { useCrimeTypeByBarangay } from "@/hooks/useCrimeTypeByBarangay";
 import { extractCrimeType, getCrimeTypeColor } from "@/hooks/useCrimeTypes";
+import { useMapContext } from "@/context/MapContext";
 import { OVERLAY_SURFACE, OVERLAY_LABEL } from "@/lib/map-overlay";
 
 // Helper function to format numbers in standard notation
@@ -30,6 +31,7 @@ interface CrimeTypeBreakdownProps {
  */
 export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBreakdownProps) {
 	const { crimeTypeCounts, loading, hasLoaded } = useCrimeTypeByBarangay();
+	const { hoveredBarangay, setHoveredBarangay } = useMapContext();
 
 	// Treat "not settled yet" as loading so the panel never flashes an empty state
 	// between the click and the first response.
@@ -45,6 +47,12 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 				.sort((a, b) => b[1] - a[1]),
 		[crimeTypeCounts],
 	);
+
+	// Whatever exit path takes this panel away mid-hover — the close button,
+	// picking a different crime type, deselecting it entirely — the map
+	// shouldn't be left with a polygon stuck highlighted for a row that's no
+	// longer there to hover.
+	React.useEffect(() => () => setHoveredBarangay(null), [setHoveredBarangay]);
 
 	const total = rows.reduce((sum, [, count]) => sum + count, 0);
 
@@ -97,11 +105,11 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 				</div>
 			</div>
 
-			{/* Column labels */}
-			<div className="flex items-center justify-between px-3 py-1 bg-slate-50/70 dark:bg-white/[0.02] border-b border-slate-100 dark:border-white/[0.06]">
-				<span className={`${OVERLAY_LABEL} !text-[0.62rem]`}>Barangay</span>
-				<span className={`${OVERLAY_LABEL} !text-[0.62rem]`}>Count</span>
-			</div>
+			{/* No separate column-header row here — it repeated "Barangays" from the
+			    totals directly above ("Barangay") in the same tiny caption style, close
+			    enough together to read as a stray duplicate rather than two things. The
+			    totals already teach the vocabulary, and the list's own layout (name
+			    left, number right) mirrors it directly. */}
 
 			{/* Barangay list */}
 			{isPending ? (
@@ -118,25 +126,37 @@ export default function CrimeTypeBreakdown({ crimeType, onClose }: CrimeTypeBrea
 				</div>
 			) : (
 				<div className="custom-scrollbar max-h-[min(300px,40vh)] overflow-y-auto divide-y divide-slate-100 dark:divide-white/[0.04]">
-					{rows.map(([barangay, count], index) => (
-						<div
-							key={barangay}
-							className="flex items-center gap-2 px-3 h-[28px] hover:bg-slate-50 dark:hover:bg-white/[0.04] transition-colors">
-							<span
-								className="w-3 shrink-0 text-[10.5px] font-bold tabular-nums text-slate-300 dark:text-slate-600"
-								style={index < 3 ? { color } : undefined}>
-								{index + 1}
-							</span>
-							<span
-								className="min-w-0 flex-1 truncate text-[12px] font-medium text-slate-700 dark:text-slate-300"
-								title={barangay}>
-								{barangay}
-							</span>
-							<span className="shrink-0 text-[12px] font-bold tabular-nums text-slate-900 dark:text-white">
-								{formatNumber(count)}
-							</span>
-						</div>
-					))}
+					{rows.map(([barangay, count], index) => {
+						// Two-way: hovering a row highlights its polygon on the map (via
+						// setHoveredBarangay below), and hovering the polygon directly sets
+						// the same state, so this also lights the row back up.
+						const isHovered = hoveredBarangay?.toLowerCase().trim() === barangay.toLowerCase().trim();
+						return (
+							<div
+								key={barangay}
+								onMouseEnter={() => setHoveredBarangay(barangay)}
+								onMouseLeave={() => setHoveredBarangay(null)}
+								className={`flex items-center gap-2 px-3 h-[28px] transition-colors ${
+									isHovered
+										? "bg-sky-50 shadow-[inset_3px_0_0_#0369a1] dark:bg-sky-400/[0.08] dark:shadow-[inset_3px_0_0_#38bdf8]"
+										: "hover:bg-slate-50 dark:hover:bg-white/[0.04]"
+								}`}>
+								<span
+									className="w-3 shrink-0 text-[10.5px] font-bold tabular-nums text-slate-300 dark:text-slate-600"
+									style={index < 3 ? { color } : undefined}>
+									{index + 1}
+								</span>
+								<span
+									className="min-w-0 flex-1 truncate text-[12px] font-medium text-slate-700 dark:text-slate-300"
+									title={barangay}>
+									{barangay}
+								</span>
+								<span className="shrink-0 text-[12px] font-bold tabular-nums text-slate-900 dark:text-white">
+									{formatNumber(count)}
+								</span>
+							</div>
+						);
+					})}
 				</div>
 			)}
 		</div>
