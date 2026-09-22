@@ -135,21 +135,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    const resetTimer = () => {
-      clearTimeout(timeoutId);
-      // Only run idle timeout if we are not already on the login page
-      if (window.location.pathname !== "/login") {
-        timeoutId = setTimeout(handleIdleLogout, IDLE_TIMEOUT_MS);
+    // Extremely lightweight activity recorder (avoids constant clearTimeout/setTimeout churn)
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const updateActivity = () => {
+      if (!throttleTimeout) {
+        lastActivity = Date.now();
+        throttleTimeout = setTimeout(() => {
+          throttleTimeout = null;
+        }, 1000);
       }
     };
 
-    resetTimer();
+    // Check for idle timeout periodically instead of resetting a timer constantly
+    const intervalId = setInterval(() => {
+      if (Date.now() - lastActivity >= IDLE_TIMEOUT_MS) {
+        clearInterval(intervalId);
+        handleIdleLogout();
+      }
+    }, 30000); // Check every 30 seconds
+
     const events = ["mousemove", "keydown", "scroll", "click", "touchstart"];
-    events.forEach((event) => window.addEventListener(event, resetTimer, { passive: true }));
+    events.forEach((event) => window.addEventListener(event, updateActivity, { passive: true }));
 
     return () => {
-      clearTimeout(timeoutId);
-      events.forEach((event) => window.removeEventListener(event, resetTimer));
+      clearInterval(intervalId);
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      events.forEach((event) => window.removeEventListener(event, updateActivity));
     };
   }, [user?.autoLogoutTimer]);
 
@@ -157,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && typeof window !== "undefined" && window.location.pathname !== "/login") {
       const hasTabSession = sessionStorage.getItem("tabSessionActive");
-      
+
       if (!hasTabSession) {
         // This is a new tab or the session was lost (tab closed previously).
         // We explicitly log out to destroy the persistent cookie session.

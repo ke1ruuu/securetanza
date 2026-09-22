@@ -68,18 +68,27 @@ function removeLocal(key: string) {
 }
 
 // Resolves once `selector` exists in the DOM, or after `timeoutMs` elapses.
-function waitForElement(selector: string | undefined, timeoutMs = 10000, intervalMs = 150): Promise<void> {
+function waitForElement(selector: string | undefined, timeoutMs = 10000): Promise<void> {
 	if (!selector) return Promise.resolve();
+	if (document.querySelector(selector)) return Promise.resolve();
+
 	return new Promise((resolve) => {
-		const start = Date.now();
-		const check = () => {
-			if (document.querySelector(selector) || Date.now() - start >= timeoutMs) {
+		const observer = new MutationObserver(() => {
+			if (document.querySelector(selector)) {
+				observer.disconnect();
 				resolve();
-				return;
 			}
-			window.setTimeout(check, intervalMs);
-		};
-		check();
+		});
+
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+		});
+
+		setTimeout(() => {
+			observer.disconnect();
+			resolve();
+		}, timeoutMs);
 	});
 }
 
@@ -101,14 +110,17 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 		return getUserRole(user);
 	}, [user]);
 
+	// Stable reference for permissions to avoid re-running hooks when heartbeat creates a new user object
+	const permissionsKey = user?.permissions ? user.permissions.join(",") : "";
+
 	const getActiveStages = useCallback((): { stages: TourStage[]; role: UserRoleType } => {
 		const storedRole = readLocal(TOUR_ROLE_KEY) as UserRoleType | null;
 		const role: UserRoleType = storedRole || currentRole;
 		return {
-			stages: getTourStagesForRole(role, user?.permissions || []),
+			stages: getTourStagesForRole(role, permissionsKey.split(",").filter(Boolean)),
 			role,
 		};
-	}, [currentRole, user?.permissions]);
+	}, [currentRole, permissionsKey]);
 
 	const runStage = useCallback(
 		(stageIndex: number) => {
@@ -242,7 +254,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 			}
 
 			const effectiveRole = roleOverride || currentRole;
-			const stages = getTourStagesForRole(effectiveRole, user?.permissions || []);
+			const stages = getTourStagesForRole(effectiveRole, permissionsKey.split(",").filter(Boolean));
 			if (stages.length === 0) return;
 
 			const firstStage = stages[0];
@@ -260,7 +272,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
 			writeLocal(TOUR_PENDING_KEY, "1");
 			router.push(firstStage.path);
 		},
-		[currentRole, user?.permissions, pathname, router, runStage],
+		[currentRole, permissionsKey, pathname, router, runStage],
 	);
 
 	return (
