@@ -110,34 +110,41 @@ export default function UnifiedFilterBar() {
     >
       {/* ── 1. BARANGAY FILTER SEGMENT ── */}
       <div className="relative" data-tour="barangay-filter">
-        <button
-          onClick={() => toggleDropdown("barangay")}
-          className={segmentClass(isBarangayActive, activeDropdown === "barangay")}
-          title={selectedBarangay || "Filter by Barangay"}
-        >
-          <MapPin className={`h-4 w-4 shrink-0 ${isBarangayActive ? "" : "text-slate-400"}`} />
-          <span className="truncate max-w-[110px] sm:max-w-[140px]" style={{ fontFamily: "var(--font-inter)" }}>
-            {selectedBarangay || "Barangay"}
-          </span>
-          <ChevronDown
-            className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-              isBarangayActive ? "" : "text-slate-400"
-            } ${activeDropdown === "barangay" ? "rotate-180" : ""}`}
-          />
+        {/* The clear chip used to be a <div onClick> nested inside this trigger
+            button — invalid HTML (a button can't contain another interactive
+            control) and unreachable by keyboard regardless of any tabIndex,
+            since browsers don't give nested content inside a <button> its own
+            tab stop. Two sibling buttons in one styled wrapper instead. */}
+        <div className={segmentClass(isBarangayActive, activeDropdown === "barangay")}>
+          <button
+            type="button"
+            onClick={() => toggleDropdown("barangay")}
+            className="flex min-w-0 flex-1 items-center gap-2 cursor-pointer"
+            title={selectedBarangay || "Filter by Barangay"}
+          >
+            <MapPin className={`h-4 w-4 shrink-0 ${isBarangayActive ? "" : "text-slate-400"}`} />
+            <span className="truncate max-w-[110px] sm:max-w-[140px]" style={{ fontFamily: "var(--font-inter)" }}>
+              {selectedBarangay || "Barangay"}
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
+                isBarangayActive ? "" : "text-slate-400"
+              } ${activeDropdown === "barangay" ? "rotate-180" : ""}`}
+            />
+          </button>
 
           {isBarangayActive && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedBarangay(null);
-              }}
+            <button
+              type="button"
+              onClick={() => setSelectedBarangay(null)}
               className={CLEAR_CHIP}
               title="Clear barangay filter"
+              aria-label="Clear barangay filter"
             >
               <X className="h-2.5 w-2.5" />
-            </div>
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Barangay Dropdown */}
         {activeDropdown === "barangay" && (
@@ -205,41 +212,43 @@ export default function UnifiedFilterBar() {
 
       {/* ── 2. CRIME TYPE FILTER SEGMENT ── */}
       <div className="relative" data-tour="crime-type-filter">
-        <button
-          onClick={() => toggleDropdown("crime")}
-          className={segmentClass(isCrimeActive, activeDropdown === "crime")}
-          title={selectedCrimeType || "Filter by Crime Type"}
-        >
-          {isCrimeActive ? (
-            <div
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{ backgroundColor: getCrimeTypeColor(selectedCrimeType || "") }}
+        <div className={segmentClass(isCrimeActive, activeDropdown === "crime")}>
+          <button
+            type="button"
+            onClick={() => toggleDropdown("crime")}
+            className="flex min-w-0 flex-1 items-center gap-2 cursor-pointer"
+            title={selectedCrimeType || "Filter by Crime Type"}
+          >
+            {isCrimeActive ? (
+              <div
+                className="w-2.5 h-2.5 rounded-full shrink-0"
+                style={{ backgroundColor: getCrimeTypeColor(selectedCrimeType || "") }}
+              />
+            ) : (
+              <Filter className="h-4 w-4 shrink-0 text-slate-400" />
+            )}
+            <span className="truncate max-w-[110px] sm:max-w-[140px]" style={{ fontFamily: "var(--font-inter)" }}>
+              {selectedCrimeType || "Crime Type"}
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
+                isCrimeActive ? "" : "text-slate-400"
+              } ${activeDropdown === "crime" ? "rotate-180" : ""}`}
             />
-          ) : (
-            <Filter className="h-4 w-4 shrink-0 text-slate-400" />
-          )}
-          <span className="truncate max-w-[110px] sm:max-w-[140px]" style={{ fontFamily: "var(--font-inter)" }}>
-            {selectedCrimeType || "Crime Type"}
-          </span>
-          <ChevronDown
-            className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-              isCrimeActive ? "" : "text-slate-400"
-            } ${activeDropdown === "crime" ? "rotate-180" : ""}`}
-          />
+          </button>
 
           {isCrimeActive && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedCrimeType(null);
-              }}
+            <button
+              type="button"
+              onClick={() => setSelectedCrimeType(null)}
               className={CLEAR_CHIP}
               title="Clear crime type filter"
+              aria-label="Clear crime type filter"
             >
               <X className="h-2.5 w-2.5" />
-            </div>
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Crime Type Dropdown */}
         {activeDropdown === "crime" && (
@@ -320,34 +329,36 @@ export default function UnifiedFilterBar() {
 
       {/* ── 3. TIME SELECTOR FILTER SEGMENT ── */}
       <div className="relative" data-tour="time-selector">
-        <button
-          onClick={() => toggleDropdown("time")}
-          className={segmentClass(isTimeActive, activeDropdown === "time")}
-          title={isTimeDefault ? "Showing the latest year — click to change the time range" : timeText}
-        >
-          <Clock className={`h-4 w-4 shrink-0 ${isTimeActive ? "" : "text-slate-400"}`} />
-          <span className="truncate max-w-[110px] sm:max-w-[160px]" style={{ fontFamily: "var(--font-inter)" }}>
-            {isTimeDefault ? "Latest year" : timeText}
-          </span>
-          <ChevronDown
-            className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
-              isTimeActive ? "" : "text-slate-400"
-            } ${activeDropdown === "time" ? "rotate-180" : ""}`}
-          />
+        <div className={segmentClass(isTimeActive, activeDropdown === "time")}>
+          <button
+            type="button"
+            onClick={() => toggleDropdown("time")}
+            className="flex min-w-0 flex-1 items-center gap-2 cursor-pointer"
+            title={isTimeDefault ? "Showing the latest year — click to change the time range" : timeText}
+          >
+            <Clock className={`h-4 w-4 shrink-0 ${isTimeActive ? "" : "text-slate-400"}`} />
+            <span className="truncate max-w-[110px] sm:max-w-[160px]" style={{ fontFamily: "var(--font-inter)" }}>
+              {isTimeDefault ? "Latest year" : timeText}
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
+                isTimeActive ? "" : "text-slate-400"
+              } ${activeDropdown === "time" ? "rotate-180" : ""}`}
+            />
+          </button>
 
           {isTimeActive && (
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                resetTime();
-              }}
+            <button
+              type="button"
+              onClick={() => resetTime()}
               className={CLEAR_CHIP}
               title="Back to the latest year"
+              aria-label="Back to the latest year"
             >
               <X className="h-2.5 w-2.5" />
-            </div>
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Time Selector Dropdown — the same picker the dashboard pages use */}
         {activeDropdown === "time" && (

@@ -29,16 +29,26 @@ export default function DashboardBarangaySelector({ currentBarangay }: Dashboard
     setIsClient(true);
   }, []);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
         setSearchQuery("");
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        setSearchQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
   // Filter barangays based on search
@@ -62,50 +72,58 @@ export default function DashboardBarangaySelector({ currentBarangay }: Dashboard
 
   return (
     <div ref={dropdownRef} className="relative">
-      {/* Trigger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-3 h-11 pl-4 pr-3 rounded-xl border transition-all duration-300 cursor-pointer group ${
+      {/* Trigger + clear-to-general: two sibling buttons in one styled wrapper,
+          not a <div onClick> nested inside the trigger — that was invalid HTML
+          and unreachable by keyboard regardless of any tabIndex, since a
+          button's contents don't get their own tab stop in the browser. */}
+      <div
+        className={`flex items-center gap-3 h-11 pl-4 pr-3 rounded-xl border transition-all duration-300 group ${
           theme === "dark"
             ? "bg-white/[0.04] border-white/[0.08] hover:border-blue-500/30 hover:bg-white/[0.06]"
             : "bg-white border-slate-200 hover:border-blue-400 hover:shadow-sm"
         }`}
       >
-        {isGeneralDashboard ? (
-          <Globe className={`h-4 w-4 ${theme === "dark" ? "text-blue-400" : "text-blue-500"}`} />
-        ) : (
-          <MapPin className={`h-4 w-4 ${theme === "dark" ? "text-blue-400" : "text-blue-500"}`} />
-        )}
-        <span
-          className={`text-sm font-semibold whitespace-nowrap ${
-            theme === "dark" ? "text-slate-200" : "text-slate-700"
-          }`}
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex min-w-0 flex-1 items-center gap-3 cursor-pointer"
         >
-          {isGeneralDashboard ? "All Barangays" : currentBarangay}
-        </span>
-        <ChevronDown
-          className={`h-3.5 w-3.5 transition-all duration-300 ${
-            isOpen ? "rotate-180" : ""
-          } ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}
-        />
+          {isGeneralDashboard ? (
+            <Globe className={`h-4 w-4 ${theme === "dark" ? "text-blue-400" : "text-blue-500"}`} />
+          ) : (
+            <MapPin className={`h-4 w-4 ${theme === "dark" ? "text-blue-400" : "text-blue-500"}`} />
+          )}
+          <span
+            className={`text-sm font-semibold whitespace-nowrap ${
+              theme === "dark" ? "text-slate-200" : "text-slate-700"
+            }`}
+          >
+            {isGeneralDashboard ? "All Barangays" : currentBarangay}
+          </span>
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-all duration-300 ${
+              isOpen ? "rotate-180" : ""
+            } ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}
+          />
+        </button>
 
         {/* Clear to General button */}
         {!isGeneralDashboard && (
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSelect(null);
-            }}
-            className={`ml-1 w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+          <button
+            type="button"
+            onClick={() => handleSelect(null)}
+            aria-label="Clear barangay, show General Dashboard"
+            title="Clear barangay, show General Dashboard"
+            className={`ml-1 w-5 h-5 shrink-0 rounded-full flex items-center justify-center transition-all ${
               theme === "dark"
                 ? "bg-white/10 hover:bg-red-500/20 text-slate-400 hover:text-red-400"
                 : "bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500"
             }`}
           >
             <X className="h-3 w-3" />
-          </div>
+          </button>
         )}
-      </button>
+      </div>
 
       {/* Dropdown */}
       <div

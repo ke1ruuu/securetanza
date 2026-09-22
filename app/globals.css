@@ -461,7 +461,7 @@ body {
   outline-offset: 2px;
 }
 
-/* Reduce motion for users who prefer it */
+/* Reduce motion for users who prefer it at the OS level */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -470,6 +470,18 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Reduce motion — explicit in-app override via Settings → Account Preferences
+   (AccessibilityContext). Independent of, and layered on top of, the OS-level
+   media query above: either one alone is enough to turn this on. */
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
 }
 
 /* Better loading states */
@@ -660,4 +672,106 @@ body {
   .settings-surface * {
     transition-duration: 0.01ms !important;
   }
+}
+
+html[data-reduce-motion="true"] .settings-enter,
+html[data-reduce-motion="true"] .settings-dialog {
+  animation: none;
+}
+html[data-reduce-motion="true"] .settings-surface * {
+  transition-duration: 0.01ms !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Accessibility settings (AccessibilityContext) — applied the same
+   way dark mode is: one attribute on <html>, read here so every
+   component reacts automatically without a per-component opt-in.
+   ───────────────────────────────────────────────────────────── */
+
+/* Text size: a straight root font-size scale. Nearly everything in this
+   app sizes type in rem, so this alone reaches the whole app — no
+   per-component change needed. */
+html[data-text-size="large"] {
+  font-size: 112.5%; /* 16px -> 18px base */
+}
+html[data-text-size="larger"] {
+  font-size: 125%; /* 16px -> 20px base */
+}
+
+/* High contrast: strengthen focus visibility, hairline borders/dividers, and
+   muted text — the things that actually carry meaning here — by overriding
+   the specific low-contrast utility classes this app uses, surveyed from
+   real usage (250+ instances of text-slate-400/500, 230+ of border-slate-200,
+   etc.). This app doesn't drive its colors from CSS variables, so this is a
+   direct, class-targeted override rather than a token swap.
+   This replaced an earlier `filter: contrast()` approach: a blind pixel
+   filter doesn't know what a border or a shadow *is* — for anything already
+   subtle (a hairline border, a soft box-shadow), it pushes the value further
+   toward the background instead of away from it, making things fade rather
+   than strengthen. Named classes with deliberately stronger colors are the
+   only way to guarantee the direction is actually "more visible". */
+html[data-high-contrast="true"] *:focus-visible {
+  outline: 3px solid #0ea5e9 !important;
+  outline-offset: 2px !important;
+}
+html[data-high-contrast="true"] .settings-surface :focus-visible {
+  outline: 3px solid #0ea5e9 !important;
+  outline-offset: 2px !important;
+}
+
+/* Light mode: hairline borders/dividers -> a clearly visible slate.
+   *= (substring) is fine here — these bracket/prefix patterns don't collide
+   with any other class name in this codebase. */
+html[data-high-contrast="true"]:not(.dark) [class*="border-slate-50"],
+html[data-high-contrast="true"]:not(.dark) [class*="border-slate-100"],
+html[data-high-contrast="true"]:not(.dark) [class*="border-slate-200"],
+html[data-high-contrast="true"]:not(.dark) [class*="divide-slate-100"],
+html[data-high-contrast="true"]:not(.dark) [class*="divide-slate-200"] {
+  border-color: #64748b !important; /* slate-500 */
+}
+
+/* Light mode: muted/secondary text -> real body-text contrast against white.
+   ~= (exact class token), not *= — text-slate-400 is also a *substring* of
+   the unrelated compound token "dark:text-slate-400", which *= would also
+   match here even though that token has no effect outside dark mode. */
+html[data-high-contrast="true"]:not(.dark) [class~="text-slate-400"],
+html[data-high-contrast="true"]:not(.dark) [class~="text-slate-500"] {
+  color: #334155 !important; /* slate-700 */
+}
+
+/* Dark mode: hairline borders/dividers. Two conventions coexist in this
+   codebase — translucent white (bracket opacity, still *= safe) and plain
+   slate-700/800 (exact token, same substring risk as the text case above). */
+html.dark[data-high-contrast="true"] [class*="dark:border-white/[0."],
+html.dark[data-high-contrast="true"] [class*="dark:divide-white/[0."],
+html.dark[data-high-contrast="true"] [class~="dark:border-slate-600"],
+html.dark[data-high-contrast="true"] [class~="dark:border-slate-700"],
+html.dark[data-high-contrast="true"] [class~="dark:border-slate-800"],
+html.dark[data-high-contrast="true"] [class~="dark:divide-slate-800"] {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+/* Dark mode: muted/secondary text -> real body-text contrast against dark. */
+html.dark[data-high-contrast="true"] [class~="dark:text-slate-400"],
+html.dark[data-high-contrast="true"] [class~="dark:text-slate-500"] {
+  color: #e2e8f0 !important; /* slate-200 */
+}
+
+/* Hover feedback — same gap as the base state above, just for :hover.
+   These only apply while actually hovered (the :hover pseudo-class still has
+   to match), so nothing changes about resting-state appearance. */
+html[data-high-contrast="true"]:not(.dark) [class*="hover:bg-slate-50"]:hover,
+html[data-high-contrast="true"]:not(.dark) [class*="hover:bg-slate-100"]:hover {
+  background-color: #cbd5e1 !important; /* slate-300 */
+}
+html[data-high-contrast="true"]:not(.dark) [class*="hover:border-slate-200"]:hover,
+html[data-high-contrast="true"]:not(.dark) [class*="hover:border-slate-300"]:hover {
+  border-color: #64748b !important; /* slate-500 */
+}
+html.dark[data-high-contrast="true"] [class*="dark:hover:bg-white/[0."]:hover,
+html.dark[data-high-contrast="true"] [class*="hover:bg-white/[0."]:hover {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+}
+html.dark[data-high-contrast="true"] [class*="dark:hover:border-white/2"]:hover {
+  border-color: rgba(255, 255, 255, 0.5) !important;
 }

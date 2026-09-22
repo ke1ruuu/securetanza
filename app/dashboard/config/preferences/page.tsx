@@ -3,9 +3,13 @@
 import React, { useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import { useAccessibility, type TextSize } from "@/context/AccessibilityContext";
+import { Switch } from "@/components/ui/switch";
 import {
 	PageHeader,
 	Section,
+	Row,
+	Rows,
 	btnPrimary,
 	PAGE_FORM,
 	SplitLayout,
@@ -13,9 +17,17 @@ import {
 import { cn } from "@/lib/utils";
 import { landingOptions, themes } from "../_components/preview-thumbnails";
 
+const TEXT_SIZES: { id: TextSize; label: string }[] = [
+	{ id: "default", label: "Default" },
+	{ id: "large", label: "Large" },
+	{ id: "larger", label: "Larger" },
+];
+
 export default function PreferencesPage() {
 	const { theme, setTheme } = useTheme();
 	const { user, refreshSession } = useAuth();
+	const { reduceMotion, setReduceMotion, highContrast, setHighContrast, textSize, setTextSize } =
+		useAccessibility();
 	const [savedSync, setSavedSync] = useState(false);
 	const [draftSync, setDraftSync] = useState(false);
 
@@ -159,6 +171,60 @@ export default function PreferencesPage() {
 							<Preview />
 						</PickerTile>
 					))}
+				</div>
+			</Section>
+
+			<Section
+				title="Accessibility"
+				description="Applied immediately, app-wide — no need to save. Reduced motion and higher contrast also follow your system settings automatically until you choose one here."
+			>
+				<Rows>
+					<Row
+						label="Reduce Motion"
+						description="Turn off animations and transitions across the app."
+						htmlFor="a11y-reduce-motion"
+					>
+						<Switch
+							id="a11y-reduce-motion"
+							checked={reduceMotion}
+							onCheckedChange={setReduceMotion}
+						/>
+					</Row>
+					<Row
+						label="High Contrast"
+						description="Stronger focus outlines and edge definition throughout the interface."
+						htmlFor="a11y-high-contrast"
+					>
+						<Switch
+							id="a11y-high-contrast"
+							checked={highContrast}
+							onCheckedChange={setHighContrast}
+						/>
+					</Row>
+				</Rows>
+
+				<div className="mt-5">
+					<span className="block text-[13px] font-medium text-slate-700 dark:text-slate-300">
+						Text Size
+					</span>
+					<div role="radiogroup" aria-label="Text size" className="mt-2 flex max-w-[380px] gap-1.5">
+						{TEXT_SIZES.map(({ id, label }) => (
+							<button
+								key={id}
+								type="button"
+								role="radio"
+								aria-checked={textSize === id}
+								onClick={() => setTextSize(id)}
+								className={`h-9 flex-1 rounded-md border text-[13px] font-medium transition-colors ${
+									textSize === id
+										? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
+										: "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-white/[0.12] dark:text-slate-300 dark:hover:border-white/25"
+								}`}
+							>
+								{label}
+							</button>
+						))}
+					</div>
 				</div>
 			</Section>
 
