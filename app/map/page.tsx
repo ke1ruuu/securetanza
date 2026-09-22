@@ -146,16 +146,34 @@ function HomeContent() {
 					</div>
 				)}
 
-				{/* Top Right Legend - tucked away in Focus Mode */}
-				{!isFocusMode && (
-					<div
-						data-tour="map-legend"
-						className={`absolute right-3 sm:right-4 lg:right-6 transition-all duration-500 ease-in-out ${
-							isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
-						}`}>
-						<CrimeLegend />
+				{/* Right edge: legend up top, zoom controls pinned to the bottom of this
+				    SAME flex column. Sharing one container guarantees the legend can
+				    never grow into the controls, no matter how many crime types there
+				    are — it scrolls internally within whatever space flexbox actually
+				    leaves it, instead of a guessed pixel reservation that has no idea
+				    how tall the controls column really is. */}
+				<div
+					className={`absolute right-3 sm:right-4 lg:right-6 bottom-3 sm:bottom-4 lg:bottom-6 flex flex-col items-end gap-3 transition-all duration-500 ease-in-out ${
+						isFilterActive ? "top-3 sm:top-4 lg:top-6" : "top-[72px] sm:top-20"
+					}`}>
+					{/* min-h-0 (no overflow here) — the barangay-breakdown popup escapes to
+					    the left of the legend via right-full, and CSS forces overflow-x to
+					    also clip once overflow-y is non-visible on the same box, which
+					    would cut that popup off. The real scroll boundary lives inside
+					    CrimeLegend itself, scoped to just the card. */}
+					{!isFocusMode && (
+						<div data-tour="map-legend" className="min-h-0">
+							<CrimeLegend />
+						</div>
+					)}
+
+					<div className="mt-auto flex shrink-0 items-end gap-2.5 sm:gap-3">
+						{!isFilterActive && !isFocusMode && <LastUploadIndicator />}
+						<div data-tour="map-zoom-controls">
+							<RightSidebarControls isFocusMode={isFocusMode} onToggleFocusMode={handleFocusModeToggle} />
+						</div>
 					</div>
-				)}
+				</div>
 
 				{/* Bottom centre: one-line threat scale. Hidden below lg, where the clock and
 				    data pill already fill the bottom edge. Tucked away in Focus Mode. */}
@@ -164,15 +182,6 @@ function HomeContent() {
 						<ThreatScale />
 					</div>
 				)}
-
-				{/* Bottom Right: Last Upload Indicator beside Zoom Controls (zoom column, with the
-				    Focus Mode toggle, stays available even inside Focus Mode) */}
-				<div className="absolute bottom-3 sm:bottom-4 lg:bottom-6 right-3 sm:right-4 lg:right-6 flex items-end gap-2.5 sm:gap-3">
-					{!isFilterActive && !isFocusMode && <LastUploadIndicator />}
-					<div data-tour="map-zoom-controls">
-						<RightSidebarControls isFocusMode={isFocusMode} onToggleFocusMode={handleFocusModeToggle} />
-					</div>
-				</div>
 
 				{/* Real Time Clock - hidden while the temporal filter is open (it closes via its own X)
 				    or while Focus Mode is on */}

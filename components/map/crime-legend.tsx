@@ -33,10 +33,17 @@ export default function CrimeLegend() {
 	};
 
 	return (
-		<div className="relative pointer-events-auto w-[180px] sm:w-[228px]">
-			<div className={`relative ${CARD}`}>
-				{/* Header */}
-				<div className="flex items-center justify-between gap-2 px-3 py-2.5 border-b border-slate-100 dark:border-white/[0.06]">
+		// h-full: takes on whatever height the page-level wrapper (in app/page.tsx)
+		// was flex-shrunk to, so it can never grow taller than the space actually
+		// left above the zoom controls pinned below it in that shared column.
+		<div className="relative pointer-events-auto w-[180px] sm:w-[228px] h-full flex flex-col min-h-0">
+			{/* flex-1 min-h-0: fills whatever height the root above was given. The
+			    breakdown popup below is position:absolute — outside this box, and
+			    outside this flow — so it's never affected by this card's own scroll
+			    boundary, only the card's own content is. */}
+			<div className={`relative ${CARD} flex flex-col min-h-0 flex-1`}>
+				{/* Header — fixed size, stays pinned above the scrolling rows */}
+				<div className="shrink-0 flex items-center justify-between gap-2 px-3 py-2.5 border-b border-slate-100 dark:border-white/[0.06]">
 					<span className={OVERLAY_LABEL}>Crime Types</span>
 					{selectedCrimeType ? (
 						<button
@@ -52,19 +59,23 @@ export default function CrimeLegend() {
 					)}
 				</div>
 
-				{/* Crime type rows */}
+				{/* Crime type rows — the one part of this card that actually scrolls,
+				    capped to whatever's left after the header and hint below take
+				    their natural size. This is a real, flex-computed constraint, not
+				    a guessed pixel number — it can't drift out of sync with the
+				    controls column the way a hardcoded vh calculation could. */}
 				{loading ? (
-					<div className="flex flex-col gap-2 px-3 py-3">
+					<div className="shrink-0 flex flex-col gap-2 px-3 py-3">
 						{[1, 2, 3, 4, 5].map((i) => (
 							<div key={i} className="h-3.5 rounded-md bg-slate-200/70 dark:bg-white/[0.05] animate-pulse" />
 						))}
 					</div>
 				) : stats.length === 0 ? (
-					<div className="px-3 py-3">
+					<div className="shrink-0 px-3 py-3">
 						<p className="text-[11.5px] text-slate-500 dark:text-slate-400">No incidents in the selected period.</p>
 					</div>
 				) : (
-					<div className="custom-scrollbar max-h-[calc(100vh-290px)] overflow-y-auto divide-y divide-slate-100 dark:divide-white/[0.04]">
+					<div className="custom-scrollbar flex-1 min-h-0 overflow-y-auto divide-y divide-slate-100 dark:divide-white/[0.04]">
 						{stats.map((item) => {
 							const isActive = selectedCrimeType === item.type;
 							const isDimmed = Boolean(selectedCrimeType) && !isActive;
@@ -129,9 +140,9 @@ export default function CrimeLegend() {
 					</div>
 				)}
 
-				{/* Hint */}
+				{/* Hint — fixed size, stays pinned below the scrolling rows */}
 				{!loading && stats.length > 0 && (
-					<div className="border-t border-slate-100 dark:border-white/[0.06] px-3 py-1.5">
+					<div className="shrink-0 border-t border-slate-100 dark:border-white/[0.06] px-3 py-1.5">
 						<p className="text-[0.62rem] font-semibold text-slate-400 dark:text-slate-500">
 							{selectedCrimeType ? "Showing barangay breakdown" : "Click a type for barangay detail"}
 						</p>
