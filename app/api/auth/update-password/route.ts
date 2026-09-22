@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { getSession, hashPassword, verifyPassword } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 import { z } from 'zod';
 
 const updatePasswordSchema = z.object({
@@ -38,10 +39,7 @@ export async function POST(request: NextRequest) {
 
     // Verify current password
     const isPasswordCorrect = await verifyPassword(currentPassword, user.passwordHash);
-    console.log('[DEBUG] currentPassword entered:', currentPassword);
-    console.log('[DEBUG] user password hash in DB:', user.passwordHash);
-    console.log('[DEBUG] isPasswordCorrect:', isPasswordCorrect);
-    
+
     if (!isPasswordCorrect) {
       return NextResponse.json({ error: 'Incorrect current password' }, { status: 400 });
     }
@@ -58,13 +56,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Audit log
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
     await prisma.auditLog.create({
       data: {
         action: 'Auth',
         user: session.accountNumber,
-        ip,
+        ip: getClientIp(request) || 'unknown',
         session: session.sessionId,
+        userAgent: getUserAgent(request),
         details: 'User successfully updated their password from settings',
         outcome: 'success',
       },

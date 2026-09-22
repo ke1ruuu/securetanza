@@ -4572,6 +4572,7 @@ export namespace Prisma {
     createdAt: Date | null
     ip: string | null
     session: string | null
+    userAgent: string | null
     resource: string | null
     severity: string | null
     outcome: string | null
@@ -4589,6 +4590,7 @@ export namespace Prisma {
     createdAt: Date | null
     ip: string | null
     session: string | null
+    userAgent: string | null
     resource: string | null
     severity: string | null
     outcome: string | null
@@ -4606,6 +4608,7 @@ export namespace Prisma {
     createdAt: number
     ip: number
     session: number
+    userAgent: number
     resource: number
     severity: number
     outcome: number
@@ -4635,6 +4638,7 @@ export namespace Prisma {
     createdAt?: true
     ip?: true
     session?: true
+    userAgent?: true
     resource?: true
     severity?: true
     outcome?: true
@@ -4652,6 +4656,7 @@ export namespace Prisma {
     createdAt?: true
     ip?: true
     session?: true
+    userAgent?: true
     resource?: true
     severity?: true
     outcome?: true
@@ -4669,6 +4674,7 @@ export namespace Prisma {
     createdAt?: true
     ip?: true
     session?: true
+    userAgent?: true
     resource?: true
     severity?: true
     outcome?: true
@@ -4773,6 +4779,7 @@ export namespace Prisma {
     createdAt: Date
     ip: string | null
     session: string | null
+    userAgent: string | null
     resource: string | null
     severity: string | null
     outcome: string | null
@@ -4809,6 +4816,7 @@ export namespace Prisma {
     createdAt?: boolean
     ip?: boolean
     session?: boolean
+    userAgent?: boolean
     resource?: boolean
     severity?: boolean
     outcome?: boolean
@@ -4828,6 +4836,7 @@ export namespace Prisma {
     createdAt?: boolean
     ip?: boolean
     session?: boolean
+    userAgent?: boolean
     resource?: boolean
     severity?: boolean
     outcome?: boolean
@@ -4845,6 +4854,7 @@ export namespace Prisma {
     createdAt?: boolean
     ip?: boolean
     session?: boolean
+    userAgent?: boolean
     resource?: boolean
     severity?: boolean
     outcome?: boolean
@@ -4862,6 +4872,7 @@ export namespace Prisma {
     createdAt?: boolean
     ip?: boolean
     session?: boolean
+    userAgent?: boolean
     resource?: boolean
     severity?: boolean
     outcome?: boolean
@@ -4871,7 +4882,7 @@ export namespace Prisma {
     errorMessage?: boolean
   }
 
-  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "action" | "details" | "user" | "createdAt" | "ip" | "session" | "resource" | "severity" | "outcome" | "fileName" | "fileSize" | "recordsImported" | "errorMessage", ExtArgs["result"]["auditLog"]>
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "action" | "details" | "user" | "createdAt" | "ip" | "session" | "userAgent" | "resource" | "severity" | "outcome" | "fileName" | "fileSize" | "recordsImported" | "errorMessage", ExtArgs["result"]["auditLog"]>
   export type AuditLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     notifications?: boolean | AuditLog$notificationsArgs<ExtArgs>
     _count?: boolean | AuditLogCountOutputTypeDefaultArgs<ExtArgs>
@@ -4892,6 +4903,7 @@ export namespace Prisma {
       createdAt: Date
       ip: string | null
       session: string | null
+      userAgent: string | null
       resource: string | null
       severity: string | null
       outcome: string | null
@@ -5330,6 +5342,7 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"AuditLog", 'DateTime'>
     readonly ip: FieldRef<"AuditLog", 'String'>
     readonly session: FieldRef<"AuditLog", 'String'>
+    readonly userAgent: FieldRef<"AuditLog", 'String'>
     readonly resource: FieldRef<"AuditLog", 'String'>
     readonly severity: FieldRef<"AuditLog", 'String'>
     readonly outcome: FieldRef<"AuditLog", 'String'>
@@ -13862,6 +13875,7 @@ export namespace Prisma {
     createdAt: 'createdAt',
     ip: 'ip',
     session: 'session',
+    userAgent: 'userAgent',
     resource: 'resource',
     severity: 'severity',
     outcome: 'outcome',
@@ -14519,6 +14533,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AuditLog"> | Date | string
     ip?: StringNullableFilter<"AuditLog"> | string | null
     session?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
     resource?: StringNullableFilter<"AuditLog"> | string | null
     severity?: StringNullableFilter<"AuditLog"> | string | null
     outcome?: StringNullableFilter<"AuditLog"> | string | null
@@ -14537,6 +14552,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     ip?: SortOrderInput | SortOrder
     session?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
     resource?: SortOrderInput | SortOrder
     severity?: SortOrderInput | SortOrder
     outcome?: SortOrderInput | SortOrder
@@ -14558,6 +14574,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"AuditLog"> | Date | string
     ip?: StringNullableFilter<"AuditLog"> | string | null
     session?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
     resource?: StringNullableFilter<"AuditLog"> | string | null
     severity?: StringNullableFilter<"AuditLog"> | string | null
     outcome?: StringNullableFilter<"AuditLog"> | string | null
@@ -14576,6 +14593,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     ip?: SortOrderInput | SortOrder
     session?: SortOrderInput | SortOrder
+    userAgent?: SortOrderInput | SortOrder
     resource?: SortOrderInput | SortOrder
     severity?: SortOrderInput | SortOrder
     outcome?: SortOrderInput | SortOrder
@@ -14601,6 +14619,7 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"AuditLog"> | Date | string
     ip?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     session?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     resource?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     severity?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     outcome?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
@@ -15600,6 +15619,7 @@ export namespace Prisma {
     createdAt?: Date | string
     ip?: string | null
     session?: string | null
+    userAgent?: string | null
     resource?: string | null
     severity?: string | null
     outcome?: string | null
@@ -15618,6 +15638,7 @@ export namespace Prisma {
     createdAt?: Date | string
     ip?: string | null
     session?: string | null
+    userAgent?: string | null
     resource?: string | null
     severity?: string | null
     outcome?: string | null
@@ -15636,6 +15657,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ip?: NullableStringFieldUpdateOperationsInput | string | null
     session?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     resource?: NullableStringFieldUpdateOperationsInput | string | null
     severity?: NullableStringFieldUpdateOperationsInput | string | null
     outcome?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15654,6 +15676,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ip?: NullableStringFieldUpdateOperationsInput | string | null
     session?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     resource?: NullableStringFieldUpdateOperationsInput | string | null
     severity?: NullableStringFieldUpdateOperationsInput | string | null
     outcome?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15672,6 +15695,7 @@ export namespace Prisma {
     createdAt?: Date | string
     ip?: string | null
     session?: string | null
+    userAgent?: string | null
     resource?: string | null
     severity?: string | null
     outcome?: string | null
@@ -15689,6 +15713,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ip?: NullableStringFieldUpdateOperationsInput | string | null
     session?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     resource?: NullableStringFieldUpdateOperationsInput | string | null
     severity?: NullableStringFieldUpdateOperationsInput | string | null
     outcome?: NullableStringFieldUpdateOperationsInput | string | null
@@ -15706,6 +15731,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ip?: NullableStringFieldUpdateOperationsInput | string | null
     session?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     resource?: NullableStringFieldUpdateOperationsInput | string | null
     severity?: NullableStringFieldUpdateOperationsInput | string | null
     outcome?: NullableStringFieldUpdateOperationsInput | string | null
@@ -16795,6 +16821,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     ip?: SortOrder
     session?: SortOrder
+    userAgent?: SortOrder
     resource?: SortOrder
     severity?: SortOrder
     outcome?: SortOrder
@@ -16817,6 +16844,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     ip?: SortOrder
     session?: SortOrder
+    userAgent?: SortOrder
     resource?: SortOrder
     severity?: SortOrder
     outcome?: SortOrder
@@ -16834,6 +16862,7 @@ export namespace Prisma {
     createdAt?: SortOrder
     ip?: SortOrder
     session?: SortOrder
+    userAgent?: SortOrder
     resource?: SortOrder
     severity?: SortOrder
     outcome?: SortOrder
@@ -18058,6 +18087,7 @@ export namespace Prisma {
     createdAt?: Date | string
     ip?: string | null
     session?: string | null
+    userAgent?: string | null
     resource?: string | null
     severity?: string | null
     outcome?: string | null
@@ -18075,6 +18105,7 @@ export namespace Prisma {
     createdAt?: Date | string
     ip?: string | null
     session?: string | null
+    userAgent?: string | null
     resource?: string | null
     severity?: string | null
     outcome?: string | null
@@ -18108,6 +18139,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ip?: NullableStringFieldUpdateOperationsInput | string | null
     session?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     resource?: NullableStringFieldUpdateOperationsInput | string | null
     severity?: NullableStringFieldUpdateOperationsInput | string | null
     outcome?: NullableStringFieldUpdateOperationsInput | string | null
@@ -18125,6 +18157,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     ip?: NullableStringFieldUpdateOperationsInput | string | null
     session?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     resource?: NullableStringFieldUpdateOperationsInput | string | null
     severity?: NullableStringFieldUpdateOperationsInput | string | null
     outcome?: NullableStringFieldUpdateOperationsInput | string | null

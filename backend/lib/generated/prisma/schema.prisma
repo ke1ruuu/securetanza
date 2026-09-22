@@ -126,11 +126,12 @@ model AuditLog {
   user      String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  ip       String?
-  session  String?
-  resource String?
-  severity String? @default("low") // "low", "medium", "high"
-  outcome  String? @default("success")
+  ip        String?
+  session   String?
+  userAgent String? @map("user_agent")
+  resource  String?
+  severity  String? @default("low") // "low", "medium", "high"
+  outcome   String? @default("success")
 
   // Specific import fields
   fileName        String? @map("file_name")

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { verifyPassword, createSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 
 /** Consecutive wrong passwords tolerated before the account is locked. */
 const MAX_FAILED_ATTEMPTS = 3;
@@ -11,7 +12,8 @@ const LOCKED_MESSAGE =
 export async function POST(request: NextRequest) {
   try {
     const { accountNumber, password } = await request.json();
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = getClientIp(request) || 'unknown';
+    const userAgent = getUserAgent(request);
 
     // Validate input
     if (!accountNumber || !password) {
@@ -39,6 +41,7 @@ export async function POST(request: NextRequest) {
           action: 'Auth',
           user: accountNumber,
           ip,
+          userAgent,
           details: 'Failed login attempt',
           errorMessage: 'Invalid credentials (User not found)',
           outcome: 'failed',
@@ -59,6 +62,7 @@ export async function POST(request: NextRequest) {
           action: 'Auth',
           user: user.accountNumber,
           ip,
+          userAgent,
           details: 'Sign-in attempt on a locked account',
           errorMessage: 'Account locked - awaiting administrator unlock',
           outcome: 'failed',
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest) {
           action: 'Auth',
           user: user.accountNumber,
           ip,
+          userAgent,
           details: nowLocked
             ? `Account locked after ${attempts} consecutive failed sign-in attempts`
             : `Failed login attempt (${attempts} of ${MAX_FAILED_ATTEMPTS})`,
@@ -131,6 +136,7 @@ export async function POST(request: NextRequest) {
           action: 'Auth',
           user: user.accountNumber,
           ip,
+          userAgent,
           details: 'Failed login attempt - Access revoked / No permissions assigned',
           errorMessage: 'Account access has been revoked',
           outcome: 'failed',
@@ -160,6 +166,7 @@ export async function POST(request: NextRequest) {
         user: user.accountNumber,
         ip,
         session: sessionId,
+        userAgent,
         details: 'User logged in successfully',
         outcome: 'success',
       },

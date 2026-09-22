@@ -1,0 +1,34 @@
+[Unit]
+Description=SecureTanza (Next.js app + scheduled-export cron worker)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=securetanza
+Group=securetanza
+WorkingDirectory=/opt/securetanza
+
+# DATABASE_URL, JWT secrets, etc. Keep this file out of git; mode 600, owned
+# by the securetanza user. See deploy/README.md.
+EnvironmentFile=/opt/securetanza/.env.production
+Environment=NODE_ENV=production
+
+# Runs BOTH the Next.js server and the cron worker together, same as local
+# `npm start` — package.json's start script now passes concurrently
+# --kill-others-on-fail, so if either process dies, the whole thing exits
+# non-zero and systemd restarts both together instead of silently running
+# with a dead cron worker.
+ExecStart=/usr/bin/npm start
+Restart=on-failure
+RestartSec=5
+
+# worker.ts already traps SIGTERM/SIGINT and disconnects Prisma before
+# exiting — give it a moment to do that instead of sending SIGKILL right away.
+TimeoutStopSec=15
+KillSignal=SIGTERM
+
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

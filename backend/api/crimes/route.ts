@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CrimeService } from '@/backend/services/crime.service';
 import { prisma } from '@/backend/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 
 // Validation schema for crime incident
 const crimeIncidentSchema = z.object({
@@ -78,6 +80,18 @@ export async function GET(request: NextRequest) {
 // POST /api/crimes - Create a new crime incident (with cache invalidation)
 export async function POST(request: NextRequest) {
   try {
+    // /api/crimes is in middleware.ts's publicApiRoutes allowlist (so the public
+    // map's GET reads work without login) — but that allowlist matches by prefix,
+    // which was also silently waiving auth on this write endpoint. Checked here
+    // explicitly, same as the sibling upload route.
+    const session = await getSession();
+    if (!session || (!session.permissions.includes('admin_operational_officer') && !session.permissions.includes('admin'))) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized - Administrative access required' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = crimeIncidentSchema.parse(body);
 
@@ -108,15 +122,15 @@ export async function POST(request: NextRequest) {
       longitude: validatedData.longitude,
     });
 
-    const ip = request.headers.get('x-forwarded-for') || (request as any).ip || 'Unknown IP';
     await prisma.auditLog.create({
       data: {
         action: 'Import',
         details: `Created single crime incident in ${validatedData.barangay}`,
-        user: 'System/API',
+        user: session.fullName || session.accountNumber,
         resource: `CrimeData:${crime.id}`,
-        ip,
-        session: 'Unknown',
+        ip: getClientIp(request) || 'unknown',
+        session: session.sessionId,
+        userAgent: getUserAgent(request),
         outcome: 'success',
       },
     });

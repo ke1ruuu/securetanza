@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { ConfigService } from '@/backend/services/config.service';
 import { getSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 
 // PUT /api/notifications/rules/[id] - Update a notification rule (Admin only, with cache invalidation)
 export async function PUT(
@@ -40,8 +41,9 @@ export async function PUT(
       data: {
         action: 'Settings',
         user: session.accountNumber,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        ip: getClientIp(request) || 'unknown',
         session: session.sessionId,
+        userAgent: getUserAgent(request),
         resource: `NotificationRule:${id}`,
         details: `Updated notification rule settings for ${updatedRule.name || id}`,
         outcome: 'success',

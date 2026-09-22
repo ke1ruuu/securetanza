@@ -18,6 +18,7 @@ import {
 	Hash,
 	Info,
 	KeyRound,
+	Monitor,
 	RefreshCw,
 	Search,
 	Shield,
@@ -61,6 +62,7 @@ interface UnifiedLog {
 	time: string;
 	ip: string;
 	session: string;
+	userAgent?: string | null;
 	resource: string;
 	severity: "low" | "medium" | "high";
 	outcome: "success" | "failure" | "warning";
@@ -127,6 +129,41 @@ function formatTimeAgo(dateString: string) {
 	if (diffInHours < 24) return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
 	const diffInDays = Math.floor(diffInHours / 24);
 	return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+}
+
+/**
+ * "Chrome on Windows" instead of the full raw User-Agent string — enough to
+ * spot an unexpected browser/OS on an account at a glance. The full string
+ * is still shown in the detail view for anyone who needs it verbatim.
+ */
+function parseUserAgent(ua?: string | null): string {
+	if (!ua) return "Unknown device";
+
+	const browser = ua.includes("Edg/")
+		? "Edge"
+		: ua.includes("OPR/") || ua.includes("Opera")
+			? "Opera"
+			: ua.includes("Firefox/")
+				? "Firefox"
+				: ua.includes("Chrome/")
+					? "Chrome"
+					: ua.includes("Safari/")
+						? "Safari"
+						: "Unknown browser";
+
+	const os = ua.includes("Windows")
+		? "Windows"
+		: ua.includes("Mac OS X")
+			? "macOS"
+			: ua.includes("Android")
+				? "Android"
+				: /iPhone|iPad|iPod/.test(ua)
+					? "iOS"
+					: ua.includes("Linux")
+						? "Linux"
+						: "Unknown OS";
+
+	return `${browser} on ${os}`;
 }
 
 function formatFileSize(bytes: number) {
@@ -248,6 +285,7 @@ function AuditLogs() {
 				(l.user && l.user.toLowerCase().includes(lowerQuery)) ||
 				(l.details && l.details.toLowerCase().includes(lowerQuery)) ||
 				(l.ip && l.ip.toLowerCase().includes(lowerQuery)) ||
+				(l.userAgent && l.userAgent.toLowerCase().includes(lowerQuery)) ||
 				(l.resource && l.resource.toLowerCase().includes(lowerQuery)) ||
 				(l.action && l.action.toLowerCase().includes(lowerQuery))
 		);
@@ -748,6 +786,11 @@ function AuditCard({ log }: { log: UnifiedLog }) {
 					<AuditField icon={<Info className="h-3 w-3" />} label="IP Address" value={log.ip} />
 					<AuditField icon={<Hash className="h-3 w-3" />} label="Session" value={log.session} mono />
 					<AuditField
+						icon={<Monitor className="h-3 w-3" />}
+						label="Device"
+						value={parseUserAgent(log.userAgent)}
+					/>
+					<AuditField
 						icon={<Shield className="h-3 w-3" />}
 						label="Severity"
 						value={
@@ -902,6 +945,7 @@ function AuditDetail({ log, onClose }: { log: UnifiedLog; onClose: () => void })
 						<DetailField label="Time" value={log.time} />
 						<DetailField label="IP Address" value={log.ip} />
 						<DetailField label="Session" value={log.session} mono />
+						<DetailField label="Device" value={parseUserAgent(log.userAgent)} />
 						<DetailField
 							label="Severity"
 							value={
@@ -924,6 +968,15 @@ function AuditDetail({ log, onClose }: { log: UnifiedLog; onClose: () => void })
 							<FieldLabel>Target Resource</FieldLabel>
 							<code className="mt-1 block font-mono text-[13px] break-all text-[#0369A1] dark:text-[#7DD3FC]">
 								{log.resource}
+							</code>
+						</div>
+					)}
+
+					{log.userAgent && (
+						<div>
+							<FieldLabel>User Agent</FieldLabel>
+							<code className="mt-1 block font-mono text-[12px] leading-relaxed break-all text-slate-500 dark:text-slate-400">
+								{log.userAgent}
 							</code>
 						</div>
 					)}

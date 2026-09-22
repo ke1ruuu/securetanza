@@ -144,19 +144,25 @@ const task = cron.schedule('* * * * *', async () => {
           `[CRON] Archived export ${backup.fileName} (${snapshot.rowCount} incidents, ${backup.sizeBytes} bytes)`
         );
 
-        if (schedule.deliveryMode === 'auto') {
-          // Notify user
-          await prisma.notification.create({
-            data: {
-              category: 'SYSTEM',
-              severity: 'INFO',
-              title: 'Scheduled Export Ready',
-              message: `Your scheduled ${schedule.frequency} data export is ready in Settings → Backups (${snapshot.rowCount} incidents).`,
-              metadata: { link: `/api/backups/${backup.id}`, backupId: backup.id, userId: schedule.userId },
-              isRead: false,
-            },
-          });
-        }
+        // Both modes notify — "prompt me to download" has to mean *something* the
+        // next time the user opens the app, and the notification bell is the only
+        // surface that currently offers that. The bell reads metadata.targetUrl
+        // specifically (see components/notifications/notification-bell.tsx), not
+        // "link" — using the wrong key here silently made every past notification
+        // un-clickable.
+        const isPrompt = schedule.deliveryMode === 'prompt';
+        await prisma.notification.create({
+          data: {
+            category: 'SYSTEM',
+            severity: 'INFO',
+            title: isPrompt ? 'Your export is ready to download' : 'Scheduled Export Ready',
+            message: isPrompt
+              ? `Your scheduled ${schedule.frequency} data export (${snapshot.rowCount} incidents) is ready. Click to download it now.`
+              : `Your scheduled ${schedule.frequency} data export is ready in Settings → Backups (${snapshot.rowCount} incidents).`,
+            metadata: { targetUrl: `/api/backups/${backup.id}`, backupId: backup.id, userId: schedule.userId },
+            isRead: false,
+          },
+        });
       } catch (scheduleError) {
         console.error(`[CRON] Error processing schedule for user ${schedule.userId}:`, scheduleError);
       }

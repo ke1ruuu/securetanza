@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 import { BackupService, XLSX_MIME } from '@/backend/services/backup.service';
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/components/upload/upload-meta';
 
@@ -118,8 +119,9 @@ export async function POST(request: NextRequest) {
       data: {
         action: 'Export',
         user: session.accountNumber,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        ip: getClientIp(request) || 'unknown',
         session: session.sessionId,
+        userAgent: getUserAgent(request),
         resource: `Backup:${created.id}`,
         details: `Archived ${created.kind === 'report' ? 'PDF report' : 'crime data snapshot'} ${created.fileName}`,
         fileName: created.fileName,
