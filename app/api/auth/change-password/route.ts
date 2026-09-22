@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { getSession, hashPassword, createSession, invalidateSessionCache } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 import { z } from 'zod';
 
 const changePasswordSchema = z.object({
@@ -55,13 +56,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Audit log
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
     await prisma.auditLog.create({
       data: {
         action: 'Auth',
         user: session.accountNumber,
-        ip,
+        ip: getClientIp(request) || 'unknown',
         session: sessionId,
+        userAgent: getUserAgent(request),
         details: 'User successfully completed forced password change',
         outcome: 'success',
       },

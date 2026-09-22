@@ -190,6 +190,7 @@ exports.Prisma.AuditLogScalarFieldEnum = {
   createdAt: 'createdAt',
   ip: 'ip',
   session: 'session',
+  userAgent: 'userAgent',
   resource: 'resource',
   severity: 'severity',
   outcome: 'outcome',

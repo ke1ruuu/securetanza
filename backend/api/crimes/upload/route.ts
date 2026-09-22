@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx'
 import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper'
 import { NotificationEngine, BatchRecordItem } from '@/backend/lib/notification-engine'
 import { getSession } from '@/lib/auth'
+import { getClientIp, getUserAgent } from '@/lib/request-context'
 import { cacheService, CacheKeys } from '@/backend/cache'
 import { generateCrimeFingerprint, findExistingCrimeFingerprints } from '@/backend/lib/crime-deduplication'
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/components/upload/upload-meta'
@@ -285,7 +286,6 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Record AuditLog
-    const ip = request.headers.get('x-forwarded-for') || (request as any).ip || 'Unknown IP';
     const auditDetails = results.duplicatesSkipped > 0
       ? `Imported ${results.inserted} records from ${file.name} (${results.duplicatesSkipped} duplicate(s) rejected)`
       : `Imported ${results.inserted} records from ${file.name}`;
@@ -302,8 +302,12 @@ export async function POST(request: NextRequest) {
         details: auditDetails,
         user: session?.fullName || session?.accountNumber || 'Operational Officer',
         resource: 'CrimeData',
-        ip: ip,
-        session: session?.accountNumber || 'Unknown',
+        ip: getClientIp(request) || 'unknown',
+        // session.accountNumber was stored here before — that's who, which the
+        // `user` field already captures. This should be which login session did
+        // it, for correlating actions within one sign-in.
+        session: session?.sessionId || 'unknown',
+        userAgent: getUserAgent(request),
         fileName: file.name,
         fileSize: file.size,
         recordsImported: results.inserted,

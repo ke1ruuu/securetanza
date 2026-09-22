@@ -128,6 +128,7 @@ model AuditLog {
   
   ip              String?
   session         String?
+  userAgent       String?  @map("user_agent")
   resource        String?
   severity        String?  @default("low") // "low", "medium", "high"
   outcome         String?  @default("success")

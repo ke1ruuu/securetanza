@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
+import { getClientIp, getUserAgent } from "@/lib/request-context";
 import { prisma } from "@/backend/lib/prisma";
 
 const ALLOWED_LANDING_PAGES = ["map", "overview", "dashboard", "analytics"];
@@ -74,12 +75,13 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Audit log
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
     await prisma.auditLog.create({
       data: {
         action: "Settings",
         user: session.accountNumber,
-        ip,
+        ip: getClientIp(request) || "unknown",
+        session: session.sessionId,
+        userAgent: getUserAgent(request),
         details: `Updated default landing page preference to ${landingPage}`,
         outcome: "success",
         severity: "low",

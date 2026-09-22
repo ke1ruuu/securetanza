@@ -1,19 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, deleteSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 import { prisma } from '@/backend/lib/prisma';
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     await deleteSession();
-    
+
     if (session) {
       await prisma.auditLog.create({
         data: {
           action: 'Auth',
           user: session.accountNumber,
-          ip: request.headers.get('x-forwarded-for') || (request as any).ip || 'unknown',
+          ip: getClientIp(request) || 'unknown',
           session: session.sessionId,
+          userAgent: getUserAgent(request),
           details: 'User logged out',
           outcome: 'success',
         },

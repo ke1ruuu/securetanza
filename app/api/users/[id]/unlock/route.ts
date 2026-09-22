@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { getSession, invalidateSessionCache } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 import { hash } from 'bcryptjs';
 
 /** Mirrors the generator used when an account is first created. */
@@ -68,8 +69,9 @@ export async function POST(
       data: {
         action: 'Settings',
         user: session.accountNumber,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        ip: getClientIp(request) || 'unknown',
         session: session.sessionId,
+        userAgent: getUserAgent(request),
         resource: `User:${existingUser.accountNumber}`,
         details: `Unlocked account ${existingUser.accountNumber} and issued a temporary password`,
         severity: 'high',

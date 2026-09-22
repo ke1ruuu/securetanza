@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,12 +67,23 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    // This had no auth check at all before, and trusted `user`/`ip`/`session`
+    // verbatim from the client body — any signed-in caller could forge an
+    // entry claiming to be a different user, from a different IP, in a
+    // different session. Identity and connection info now come from the
+    // authenticated session and the request itself; the body only supplies
+    // what the server genuinely can't know on its own (what happened).
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    
+
     // Basic validation
-    if (!body.action || !body.details || !body.user) {
+    if (!body.action || !body.details) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields (action, details, user)' },
+        { success: false, error: 'Missing required fields (action, details)' },
         { status: 400 }
       );
     }
@@ -80,9 +92,10 @@ export async function POST(request: NextRequest) {
       data: {
         action: body.action,
         details: body.details,
-        user: body.user,
-        ip: body.ip,
-        session: body.session,
+        user: session.fullName || session.accountNumber,
+        ip: getClientIp(request) || 'unknown',
+        session: session.sessionId,
+        userAgent: getUserAgent(request),
         resource: body.resource,
         severity: body.severity || 'low',
         outcome: body.outcome || 'success',

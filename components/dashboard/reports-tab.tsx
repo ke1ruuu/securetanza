@@ -440,14 +440,14 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // Audit log
+      // Audit log — who/ip/session are derived server-side from the
+      // authenticated session now, not sent from here.
       try {
         await fetch('/api/audit-logs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'Export',
-            user: user?.accountNumber || 'system',
             resource: `Report:${locationSlug}`,
             details: `Generated and downloaded PDF report for ${locationName}`,
             outcome: 'success',

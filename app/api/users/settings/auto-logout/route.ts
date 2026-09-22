@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession, invalidateSessionCache } from "@/lib/auth";
+import { getClientIp, getUserAgent } from "@/lib/request-context";
 import { prisma } from "@/backend/lib/prisma";
 
 export async function GET() {
@@ -73,12 +74,13 @@ export async function PATCH(request: NextRequest) {
     invalidateSessionCache(session.userId);
 
     // Audit log
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
     await prisma.auditLog.create({
       data: {
         action: "Settings",
         user: session.accountNumber,
-        ip,
+        ip: getClientIp(request) || "unknown",
+        session: session.sessionId,
+        userAgent: getUserAgent(request),
         details: `Updated auto-logout timer preference to ${autoLogoutTimer} minutes`,
         outcome: "success",
         severity: "low",

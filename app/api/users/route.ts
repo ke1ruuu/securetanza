@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/backend/lib/prisma';
 import { getSession } from '@/lib/auth';
+import { getClientIp, getUserAgent } from '@/lib/request-context';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
@@ -137,8 +138,9 @@ export async function POST(request: NextRequest) {
       data: {
         action: 'Settings',
         user: session.accountNumber,
-        ip: request.headers.get('x-forwarded-for') || 'unknown',
+        ip: getClientIp(request) || 'unknown',
         session: session.sessionId,
+        userAgent: getUserAgent(request),
         resource: `User:${user.accountNumber}`,
         details: `Created new user account for ${user.fullName}`,
         outcome: 'success',
