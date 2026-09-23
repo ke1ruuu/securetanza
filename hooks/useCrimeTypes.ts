@@ -84,21 +84,20 @@ export function useCrimeTypes(): CrimeTypesData {
 
         if (isTimeFilterActive && timeFilterDate) {
           // 1. Time Filter takes precedence
+          // `dateCommitted` only carries the date (stored at local midnight); the hour
+          // of day lives in a separate field, so the day stays whole here and the hour
+          // is passed on its own below — narrowing this range to the hour would never
+          // match anything and made this panel go blank while the map still had data.
           const startDate = new Date(timeFilterDate);
+          startDate.setHours(0, 0, 0, 0);
           const endDate = new Date(timeFilterDate);
-
-          if (timeFilterHour !== null) {
-            startDate.setHours(timeFilterHour, 0, 0, 0);
-            endDate.setHours(timeFilterHour, 59, 59, 999);
-          } else {
-            startDate.setHours(0, 0, 0, 0);
-            endDate.setHours(23, 59, 59, 999);
-          }
+          endDate.setHours(23, 59, 59, 999);
 
           const params = new URLSearchParams();
           if (selectedBarangay) params.append("barangay", selectedBarangay);
           params.append("startDate", startDate.toISOString());
           params.append("endDate", endDate.toISOString());
+          if (timeFilterHour !== null) params.append("hour", timeFilterHour.toString());
 
           const response = await fetch(`/api/crimes/stats?${params.toString()}`);
           if (!response.ok) throw new Error("Failed to fetch crime types");

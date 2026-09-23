@@ -83,12 +83,14 @@ export class CrimeService {
     startDate?: string | null;
     endDate?: string | null;
     year?: string | null;
+    hour?: string | null;
   }): Promise<CrimeStatsResult> {
     const cacheKey = CacheKeys.crimes.stats({
       barangay: filters.barangay,
       startDate: filters.startDate,
       endDate: filters.endDate,
       year: filters.year,
+      hour: filters.hour,
     });
 
     return cacheService.getOrSet(cacheKey, TTL.CRIME_STATS, async () => {
@@ -114,6 +116,21 @@ export class CrimeService {
           gte: new Date(yearNum, 0, 1),
           lte: new Date(yearNum, 11, 31, 23, 59, 59, 999),
         };
+      }
+
+      // `dateCommitted` only carries the date (ingest writes it at local midnight); the
+      // hour of day lives in the separate `timeCommitted` string, so it's matched here
+      // rather than by narrowing the dateCommitted range.
+      if (filters.hour !== null && filters.hour !== undefined && filters.hour !== '') {
+        const targetHour = parseInt(String(filters.hour), 10);
+        if (!isNaN(targetHour)) {
+          const padded = targetHour.toString().padStart(2, '0');
+          const unpadded = targetHour.toString();
+          where.OR = [
+            { timeCommitted: { startsWith: `${padded}:` } },
+            { timeCommitted: { startsWith: `${unpadded}:` } },
+          ];
+        }
       }
 
       const sevenDaysAgo = new Date();
