@@ -19,6 +19,34 @@ interface IncidentsTabProps {
   barangayName?: string;
 }
 
+/** How wide a window (in degrees) the case-location thumbnail shows around its pin. */
+const CASE_MAP_LON_SPAN = 0.016;
+const CASE_MAP_LAT_SPAN = 0.01;
+
+/**
+ * Builds the OSM embed URL for a case's location thumbnail, centred exactly on the
+ * coordinate. No `marker` param — OSM's own pin is a teardrop of uncertain size anchored
+ * at its tip, which never lines up with the frame's true centre. `CaseLocationPin` below
+ * draws the actual pin as an overlay we control instead, anchored precisely on this point.
+ */
+function caseLocationEmbedUrl(lat: number, lon: number) {
+  const minLon = lon - CASE_MAP_LON_SPAN / 2;
+  const maxLon = lon + CASE_MAP_LON_SPAN / 2;
+  const minLat = lat - CASE_MAP_LAT_SPAN / 2;
+  const maxLat = lat + CASE_MAP_LAT_SPAN / 2;
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${minLon},${minLat},${maxLon},${maxLat}&layer=mapnik`;
+}
+
+/** The pin itself, overlaid dead-centre on the map frame — its tip anchored exactly on the coordinate the iframe is centred on. */
+function CaseLocationPin() {
+  return (
+    <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full">
+      <MapPin className="h-7 w-7 fill-red-500 text-red-700 drop-shadow-md" strokeWidth={1.75} />
+    </div>
+  );
+}
+
 /**
  * A labelled filter dropdown on Radix Select, so the open list is a rounded,
  * themed popover instead of the browser's square native menu.
@@ -762,14 +790,14 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                     {/* Location map — last, so nothing competes with the header above */}
                     {hasMap && (
                       <div className={`relative h-36 border-t ${hairline}`}>
-                        {/* A thumbnail, not a control: it stays inert so it never traps the
-                            page scroll, and the link opens the real map. */}
+                        {/* Interactive (pan/zoom) so it doubles as a quick look; the link still opens the real map for the full view. */}
                         <iframe
                           title="Case location"
-                          className="pointer-events-none h-full w-full"
+                          className="h-full w-full"
                           frameBorder="0"
-                          src={`https://www.openstreetmap.org/export/embed.html?bbox=${c.longitude! - 0.008},${c.latitude! - 0.005},${c.longitude! + 0.008},${c.latitude! + 0.005}&layer=mapnik&marker=${c.latitude},${c.longitude}`}
+                          src={caseLocationEmbedUrl(c.latitude!, c.longitude!)}
                         />
+                        <CaseLocationPin />
                         <a
                           href={`https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=17/${c.latitude}/${c.longitude}`}
                           target="_blank"
@@ -962,10 +990,11 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                         <div className={`relative h-48 rounded-lg border overflow-hidden ${hairline}`}>
                           <iframe
                             title="Case location"
-                            className="pointer-events-none h-full w-full"
+                            className="h-full w-full"
                             frameBorder="0"
-                            src={`https://www.openstreetmap.org/export/embed.html?bbox=${c.longitude! - 0.008},${c.latitude! - 0.005},${c.longitude! + 0.008},${c.latitude! + 0.005}&layer=mapnik&marker=${c.latitude},${c.longitude}`}
+                            src={caseLocationEmbedUrl(c.latitude!, c.longitude!)}
                           />
+                          <CaseLocationPin />
                           <a
                             href={`https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=17/${c.latitude}/${c.longitude}`}
                             target="_blank"

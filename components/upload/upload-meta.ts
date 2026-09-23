@@ -9,8 +9,8 @@
  * Largest workbook the register accepts, enforced on both sides of the wire:
  * the dialog refuses it before reading, the route refuses it before parsing.
  */
-export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
-export const MAX_UPLOAD_LABEL = "50 MB";
+export const MAX_UPLOAD_BYTES =  50 * 1024 * 1024;
+export const MAX_UPLOAD_LABEL = "50 MB"
 
 /** Columns the crime register accepts. Mirrors the scalar fields read by backend/api/crimes/upload/route.ts. */
 export const EXPECTED_COLUMNS = [
@@ -134,7 +134,7 @@ export interface ColumnCheck {
   missingRequired: string[];
   /** Not blocking: rows import without them. */
   missingOptional: string[];
-  /** Blocking: the register has nowhere to put these. */
+  /** Not blocking: the register has nowhere to put these, so they're dropped and every other column still imports. */
   unknown: string[];
   isValid: boolean;
 }
@@ -159,7 +159,9 @@ export function checkColumns(headers: string[]): ColumnCheck {
     missingRequired,
     missingOptional,
     unknown,
-    isValid: missingRequired.length === 0 && unknown.length === 0,
+    // Unknown columns are dropped at import rather than refused, so they no
+    // longer block the file — only a missing required column does.
+    isValid: missingRequired.length === 0,
   };
 }
 
@@ -170,7 +172,9 @@ export function columnCheckSummary(check: ColumnCheck): string {
   if (missingRequired.length && unknown.length) {
     return `Add the ${missingRequired.length} required column${
       missingRequired.length === 1 ? "" : "s"
-    } and remove the ${unknown.length} the register does not hold, then choose the file again.`;
+    } to the header row, then choose the file again. The ${unknown.length} column${
+      unknown.length === 1 ? "" : "s"
+    } the register doesn't hold will be skipped, not refused.`;
   }
   if (missingRequired.length) {
     return `Add the required column${
@@ -178,9 +182,9 @@ export function columnCheckSummary(check: ColumnCheck): string {
     } to the header row, then choose the file again. Rows without them cannot be placed on the map or the clock.`;
   }
   if (unknown.length) {
-    return `The register has nowhere to put ${
-      unknown.length === 1 ? "this column" : "these columns"
-    }. Remove them from the header row, then choose the file again.`;
+    return `The register has no field for ${
+      unknown.length === 1 ? "one column" : `${unknown.length} columns`
+    } in the file. ${unknown.length === 1 ? "It" : "They"} will be skipped — every other column still imports.`;
   }
   if (missingOptional.length) {
     return `Every required column is present. The ${missingOptional.length} optional column${
