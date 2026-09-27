@@ -24,10 +24,9 @@ const CASE_MAP_LON_SPAN = 0.016;
 const CASE_MAP_LAT_SPAN = 0.01;
 
 /**
- * Builds the OSM embed URL for a case's location thumbnail, centred exactly on the
- * coordinate. No `marker` param — OSM's own pin is a teardrop of uncertain size anchored
- * at its tip, which never lines up with the frame's true centre. `CaseLocationPin` below
- * draws the actual pin as an overlay we control instead, anchored precisely on this point.
+ * Builds the OSM embed URL for a case's location thumbnail, centred on the coordinate
+ * with a `marker` — OSM draws that pin itself (via its own Leaflet instance), so unlike a
+ * CSS overlay, it stays correctly placed if the map is panned or zoomed.
  */
 function caseLocationEmbedUrl(lat: number, lon: number) {
   const minLon = lon - CASE_MAP_LON_SPAN / 2;
@@ -35,14 +34,20 @@ function caseLocationEmbedUrl(lat: number, lon: number) {
   const minLat = lat - CASE_MAP_LAT_SPAN / 2;
   const maxLat = lat + CASE_MAP_LAT_SPAN / 2;
 
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${minLon},${minLat},${maxLon},${maxLat}&layer=mapnik`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${minLon},${minLat},${maxLon},${maxLat}&layer=mapnik&marker=${lat},${lon}`;
 }
 
-/** The pin itself, overlaid dead-centre on the map frame — its tip anchored exactly on the coordinate the iframe is centred on. */
-function CaseLocationPin() {
+/** Interactive (pan/zoom) case-location thumbnail, marker included by OSM's own embed. */
+function CaseLocationFrame({ lat, lon }: { lat: number; lon: number }) {
   return (
-    <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full">
-      <MapPin className="h-7 w-7 fill-red-500 text-red-700 drop-shadow-md" strokeWidth={1.75} />
+    <div className="absolute inset-0">
+      <iframe
+        title="Case location"
+        className="h-full w-full"
+        frameBorder="0"
+        loading="lazy"
+        src={caseLocationEmbedUrl(lat, lon)}
+      />
     </div>
   );
 }
@@ -791,13 +796,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                     {hasMap && (
                       <div className={`relative h-36 border-t ${hairline}`}>
                         {/* Interactive (pan/zoom) so it doubles as a quick look; the link still opens the real map for the full view. */}
-                        <iframe
-                          title="Case location"
-                          className="h-full w-full"
-                          frameBorder="0"
-                          src={caseLocationEmbedUrl(c.latitude!, c.longitude!)}
-                        />
-                        <CaseLocationPin />
+                        <CaseLocationFrame lat={c.latitude!} lon={c.longitude!} />
                         <a
                           href={`https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=17/${c.latitude}/${c.longitude}`}
                           target="_blank"
@@ -988,13 +987,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
                     <div className="space-y-4">
                       {hasMap && (
                         <div className={`relative h-48 rounded-lg border overflow-hidden ${hairline}`}>
-                          <iframe
-                            title="Case location"
-                            className="h-full w-full"
-                            frameBorder="0"
-                            src={caseLocationEmbedUrl(c.latitude!, c.longitude!)}
-                          />
-                          <CaseLocationPin />
+                          <CaseLocationFrame lat={c.latitude!} lon={c.longitude!} />
                           <a
                             href={`https://www.openstreetmap.org/?mlat=${c.latitude}&mlon=${c.longitude}#map=17/${c.latitude}/${c.longitude}`}
                             target="_blank"
