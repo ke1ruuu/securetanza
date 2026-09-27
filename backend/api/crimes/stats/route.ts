@@ -9,12 +9,14 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const year = searchParams.get('year');
+    const hour = searchParams.get('hour');
 
     const stats = await CrimeService.getStats({
       barangay,
       startDate,
       endDate,
       year,
+      hour,
     });
 
     return NextResponse.json({

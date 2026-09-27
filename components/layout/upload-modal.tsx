@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronDown, FileSpreadsheet, Loader2, X } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -28,13 +28,27 @@ interface UploadModalProps {
   onUploaded?: () => void;
 }
 
-/** idle → reading → staged → importing → done. One value, so two states can never both be true. */
-type Phase = "idle" | "reading" | "staged" | "importing" | "done";
+/** idle → reading → staged → confirming → importing → done. One value, so two states can never both be true. */
+type Phase = "idle" | "reading" | "staged" | "confirming" | "importing" | "done";
+
+/** How long the officer has to undo before "Import dataset" actually writes to the register. */
+const IMPORT_COUNTDOWN_SECONDS = 3;
 
 interface SheetFacts {
   name: string;
   headerCount: number;
   rowCount: number;
+}
+
+/** A blank cell, whatever shape the sheet library handed back for it. */
+function isEmptyCell(value: unknown): boolean {
+  return value === undefined || value === null || String(value).trim() === "";
+}
+
+/** One column of the preview: its name and how many data rows left it blank. */
+interface ColumnPreview {
+  name: string;
+  emptyCount: number;
 }
 
 interface Receipt {
@@ -113,9 +127,11 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
   const [file, setFile] = useState<File | null>(null);
   const [sheet, setSheet] = useState<SheetFacts | null>(null);
   const [check, setCheck] = useState<ColumnCheck | null>(null);
+  const [previewColumns, setPreviewColumns] = useState<ColumnPreview[]>([]);
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [undoSecondsLeft, setUndoSecondsLeft] = useState(IMPORT_COUNTDOWN_SECONDS);
   const inputRef = useRef<HTMLInputElement>(null);
   /** Bumped whenever a read is superseded, so a resolved read cannot repopulate a cleared dialog. */
   const readToken = useRef(0);
@@ -126,8 +142,10 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
     setFile(null);
     setSheet(null);
     setCheck(null);
+    setPreviewColumns([]);
     setReceipt(null);
     setError(null);
+    setUndoSecondsLeft(IMPORT_COUNTDOWN_SECONDS);
     if (inputRef.current) inputRef.current.value = "";
   }, []);
 
@@ -136,8 +154,9 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
       onOpenChange(true);
       return;
     }
-    // Never abandon a write that is already in flight.
-    if (phase === "importing") return;
+    // Never abandon a write that is already in flight, and never let the
+    // backdrop swallow a countdown the officer might still want to undo.
+    if (phase === "importing" || phase === "confirming") return;
 
     const wasFiled = phase === "done";
     clearFile();
@@ -154,6 +173,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
       setError(null);
       setCheck(null);
       setSheet(null);
+      setPreviewColumns([]);
       setReceipt(null);
 
       if (!/\.(xlsx|xls)$/i.test(candidate.name)) {
@@ -193,12 +213,27 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
 
         const headers = (rows[0] ?? []).map(normaliseHeader);
 
+        // Blank header cells (spacer columns officers sometimes leave in the
+        // sheet) carry no field, so the preview skips them along with the count.
+        const columnIndexes = headers.reduce<number[]>((acc, header, index) => {
+          if (header) acc.push(index);
+          return acc;
+        }, []);
+
+        const dataRows = rows.slice(1);
+
         setSheet({
           name: sheetName || "Sheet 1",
-          headerCount: headers.filter(Boolean).length,
-          rowCount: Math.max(0, rows.length - 1),
+          headerCount: columnIndexes.length,
+          rowCount: dataRows.length,
         });
         setCheck(checkColumns(headers));
+        setPreviewColumns(
+          columnIndexes.map((index) => ({
+            name: headers[index],
+            emptyCount: dataRows.reduce((count, row) => count + (isEmptyCell(row[index]) ? 1 : 0), 0),
+          }))
+        );
         setPhase("staged");
       } catch (err) {
         if (readToken.current !== token) return;
@@ -212,8 +247,8 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
     [clearFile]
   );
 
-  const importDataset = async () => {
-    if (!file || !check?.isValid || phase !== "staged") return;
+  const runImport = useCallback(async () => {
+    if (!file || !check?.isValid) return;
 
     setPhase("importing");
     setError(null);
@@ -245,7 +280,32 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
       setError(err instanceof Error ? err.message : "The import did not finish. Try again.");
       setPhase("staged");
     }
-  };
+  }, [file, check, sheet]);
+
+  /** "Import dataset" starts a 3-second countdown rather than writing immediately, so a slip of the mouse is still recoverable via Undo. */
+  const beginImportCountdown = useCallback(() => {
+    if (!file || !check?.isValid || phase !== "staged") return;
+    setUndoSecondsLeft(IMPORT_COUNTDOWN_SECONDS);
+    setPhase("confirming");
+  }, [file, check, phase]);
+
+  const undoImport = useCallback(() => {
+    setUndoSecondsLeft(IMPORT_COUNTDOWN_SECONDS);
+    setPhase("staged");
+  }, []);
+
+  // Ticks the countdown down to zero, then hands off to the real write.
+  useEffect(() => {
+    if (phase !== "confirming") return;
+
+    if (undoSecondsLeft <= 0) {
+      runImport();
+      return;
+    }
+
+    const timer = setTimeout(() => setUndoSecondsLeft((seconds) => seconds - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [phase, undoSecondsLeft, runImport]);
 
   const busy = phase === "reading" || phase === "importing";
 
@@ -261,18 +321,25 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
   const verdictMeta = uploadStatusMeta(check?.isValid ? "success" : "failed");
   const verdictLabel = check?.isValid ? "Ready" : "Blocked";
 
+  // Only the columns worth a second look — fully-populated, recognised columns
+  // say nothing new and would just bury the ones that need attention.
+  const emptyColumns = previewColumns.filter((column) => column.emptyCount > 0);
+  const unrecognisedColumns = check?.unknown ?? [];
+
   const statusLine =
     phase === "reading"
       ? "Reading the header row."
-      : phase === "importing"
-        ? "Writing rows to the register. A large workbook can take a minute."
-        : phase === "done"
-          ? "Entry filed."
-          : check && !check.isValid
-            ? "Correct the header row in Excel, then choose the file again."
-            : check && sheet
-              ? `${sheet.rowCount.toLocaleString("en-US")} rows ready to import.`
-              : "";
+      : phase === "confirming"
+        ? `Writing to the register in ${undoSecondsLeft}s — Undo to stop.`
+        : phase === "importing"
+          ? "Writing rows to the register. A large workbook can take a minute."
+          : phase === "done"
+            ? "Entry filed."
+            : check && !check.isValid
+              ? "Correct the header row in Excel, then choose the file again."
+              : check && sheet
+                ? `${sheet.rowCount.toLocaleString("en-US")} rows ready to import.`
+                : "";
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -294,7 +361,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
           <button
             type="button"
             onClick={() => handleOpenChange(false)}
-            disabled={phase === "importing"}
+            disabled={phase === "importing" || phase === "confirming"}
             className={`cursor-pointer rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-white/[0.06] dark:hover:text-white ${FOCUS}`}
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -302,10 +369,17 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
           </button>
         </header>
 
-        {/* Indeterminate, because neither the read nor the write reports real progress. */}
+        {/* Indeterminate for reading/writing, since neither reports real progress — determinate
+            (and shrinking) during the undo countdown, since that one really does have an end. */}
         <div className="h-[2px] shrink-0 overflow-hidden" aria-hidden="true">
           {busy && (
             <div className="h-full w-1/3 animate-pulse rounded-full bg-[#4e86fd] dark:bg-[#0EA5E9]" />
+          )}
+          {phase === "confirming" && (
+            <div
+              className="h-full rounded-full bg-amber-500 transition-[width] duration-1000 ease-linear dark:bg-amber-400"
+              style={{ width: `${(undoSecondsLeft / IMPORT_COUNTDOWN_SECONDS) * 100}%` }}
+            />
           )}
         </div>
 
@@ -375,7 +449,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                   <h3 className="min-w-0 font-heading text-[13.5px] leading-snug font-semibold break-all text-slate-900 dark:text-white">
                     {file.name}
                   </h3>
-                  {phase !== "importing" && (
+                  {phase !== "importing" && phase !== "confirming" && (
                     <button
                       type="button"
                       onClick={clearFile}
@@ -444,7 +518,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     <LedgerRow
                       label="Not in the register"
                       value={String(check.unknown.length)}
-                      tone="text-red-700 dark:text-red-400"
+                      tone="text-amber-700 dark:text-amber-400"
                     />
                   )}
                 </dl>
@@ -460,8 +534,8 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
 
                 {check.unknown.length > 0 && (
                   <div className="mt-4">
-                    <p className={SECTION}>Remove these from the header row</p>
-                    <p className={`${MONO_LIST} text-red-700 dark:text-red-400`}>
+                    <p className={SECTION}>Skipped — no field in the register</p>
+                    <p className={`${MONO_LIST} text-amber-700 dark:text-amber-400`}>
                       {check.unknown.join(", ")}
                     </p>
                   </div>
@@ -494,6 +568,57 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                 )}
               </section>
             )}
+
+            {(phase === "staged" || phase === "confirming") &&
+              (emptyColumns.length > 0 || unrecognisedColumns.length > 0) && (
+                <section className="py-4">
+                  <p className={SECTION}>Data preview</p>
+                  <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                    Only the columns worth a second look — blank somewhere in the sheet, or not a
+                    field the register holds.
+                  </p>
+
+                  {emptyColumns.length > 0 && (
+                    <div className="mt-3">
+                      <p className={MICRO}>Columns without data</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {emptyColumns.map((column) => (
+                          <span
+                            key={column.name}
+                            title={`${column.emptyCount.toLocaleString("en-US")} of ${(sheet?.rowCount ?? 0).toLocaleString("en-US")} rows leave this column blank`}
+                            className="inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 font-mono text-[11px] text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300"
+                          >
+                            {column.name}
+                            <span className="font-sans text-[10px] font-semibold tabular-nums">
+                              {column.emptyCount}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {unrecognisedColumns.length > 0 && (
+                    <div className="mt-3">
+                      <p className={MICRO}>Not in the database</p>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {unrecognisedColumns.map((name) => (
+                          <span
+                            key={name}
+                            title="The register has no field for this column — it will be skipped, the rest of the row still imports"
+                            className="inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-2 py-1 font-mono text-[11px] text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-300"
+                          >
+                            {name}
+                            <span className="font-sans text-[10px] font-semibold tracking-wide uppercase">
+                              ignored
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
 
             {receipt && phase === "done" && (
               <section className="relative py-4 pl-4">
@@ -605,6 +730,15 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                 <button type="button" onClick={() => handleOpenChange(false)} className={`${PRIMARY} ${FOCUS}`}>
                   Done
                 </button>
+              ) : phase === "confirming" ? (
+                <button
+                  type="button"
+                  onClick={undoImport}
+                  autoFocus
+                  className={`rounded-lg bg-amber-500 px-3.5 py-1.5 text-[12.5px] font-semibold text-white transition-colors hover:bg-amber-600 dark:bg-amber-500 dark:hover:bg-amber-600 ${FOCUS}`}
+                >
+                  Undo ({undoSecondsLeft}s)
+                </button>
               ) : (
                 <>
                   <button
@@ -617,7 +751,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                   </button>
                   <button
                     type="button"
-                    onClick={importDataset}
+                    onClick={beginImportCountdown}
                     disabled={phase !== "staged" || !check?.isValid}
                     className={`${PRIMARY} ${FOCUS}`}
                   >
