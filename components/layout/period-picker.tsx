@@ -415,7 +415,7 @@ export function PeriodPanel({ period, allowCustomRange = false }: { period: Peri
 
           {/* ── Specific days (pages without a custom range) ── */}
           {panel === "days" && (
-            <div className="max-h-[300px] space-y-3 overflow-y-auto custom-scrollbar">
+            <div className="max-h-[300px] space-y-3 overflow-y-auto dropdown-scroll">
               <div>
                 <label className="mb-2 block text-xs font-semibold text-slate-600 dark:text-slate-400">Select Date</label>
                 <input
@@ -452,7 +452,7 @@ export function PeriodPanel({ period, allowCustomRange = false }: { period: Peri
                   <label className="mb-2 block text-xs font-semibold text-slate-600 dark:text-slate-400">
                     Selected Days ({timeRange.selections.length})
                   </label>
-                  <div className="max-h-28 space-y-1 overflow-y-auto custom-scrollbar">
+                  <div className="max-h-28 space-y-1 overflow-y-auto dropdown-scroll">
                     {timeRange.selections.map((selection, idx) => (
                       <div
                         key={idx}

@@ -453,7 +453,7 @@ export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggl
 						</button>
 
 						{isDatePickerOpen && (
-							<div className="custom-scrollbar absolute bottom-[calc(100%+6px)] left-0 right-0 z-50 max-h-[270px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-white/[0.08] dark:bg-[#0F172A]">
+							<div className="dropdown-scroll absolute bottom-[calc(100%+6px)] left-0 right-0 z-50 max-h-[270px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl dark:border-white/[0.08] dark:bg-[#0F172A]">
 								{days.map((day, index) => {
 									const isActive = index === dateIndex;
 									return (
@@ -495,7 +495,7 @@ export default function TimeFilter({ onFilterChange, isPlaying, onPlayPauseToggl
 
 			{/* ── Timeline: only the hours that recorded incidents ── */}
 			<div
-				className="custom-scrollbar min-h-0 flex-1 overflow-y-auto border-t border-slate-100 px-3 py-2 dark:border-white/[0.06]"
+				className="dropdown-scroll min-h-0 flex-1 overflow-y-auto border-t border-slate-100 px-3 py-2 dark:border-white/[0.06]"
 				role="group"
 				aria-label={`Hours with incidents on ${formatFullDate(currentDay.date)}`}>
 				{activeHours.map((hour, position) =>

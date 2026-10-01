@@ -135,6 +135,7 @@ export async function fetchCrimeStats(params?: {
   startDate?: string
   endDate?: string
   year?: number
+  incidentType?: string
 }): Promise<CrimeStats | null> {
   try {
     const searchParams = new URLSearchParams()
@@ -142,6 +143,7 @@ export async function fetchCrimeStats(params?: {
     if (params?.startDate) searchParams.set('startDate', params.startDate)
     if (params?.endDate) searchParams.set('endDate', params.endDate)
     if (params?.year) searchParams.set('year', params.year.toString())
+    if (params?.incidentType) searchParams.set('incidentType', params.incidentType)
 
     const response = await fetch(`/api/crimes/stats?${searchParams}`)
     if (!response.ok) {

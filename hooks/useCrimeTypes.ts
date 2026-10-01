@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMapContext } from "@/context/MapContext";
 import { useTimeRangeData } from "@/hooks/useTimeRangeData";
+import { getCrimeGroup } from "@/lib/crime-groups";
 
 export interface CrimeTypeStats {
   type: string;
@@ -42,6 +43,9 @@ export function extractCrimeType(incidentType: string): string {
 
 // Helper function to get color for a crime type
 export function getCrimeTypeColor(type: string): string {
+  const group = getCrimeGroup(type);
+  if (group) return group.color;
+
   // Extract the actual crime type (remove prefix)
   const crimeType = extractCrimeType(type);
   

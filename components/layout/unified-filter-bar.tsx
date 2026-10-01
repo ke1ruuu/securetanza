@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { MapPin, Filter, Clock, Search, X, ChevronDown, Check, RotateCcw } from "lucide-react";
 import { useMapContext } from "@/context/MapContext";
 import { useCrimeTypes, getCrimeTypeColor } from "@/hooks/useCrimeTypes";
+import { CRIME_GROUPS } from "@/lib/crime-groups";
 import { usePeriod, PeriodPanel } from "./period-picker";
 import {
   OVERLAY_SURFACE,
@@ -166,7 +167,7 @@ export default function UnifiedFilterBar() {
             </div>
 
             {/* List */}
-            <div className="overflow-y-auto max-h-[260px] p-1 custom-scrollbar">
+            <div className="overflow-y-auto max-h-[260px] p-1 dropdown-scroll">
               {/* Option to clear / All */}
               <button
                 onClick={() => {
@@ -252,7 +253,7 @@ export default function UnifiedFilterBar() {
 
         {/* Crime Type Dropdown */}
         {activeDropdown === "crime" && (
-          <div className={`${DROPDOWN} left-0 sm:left-auto sm:right-0 min-w-[280px] sm:min-w-[300px] origin-top-left sm:origin-top-right`}>
+          <div className={`${DROPDOWN} left-0 w-[300px] max-w-[calc(100vw-24px)] origin-top-left`}>
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/[0.06]">
               <span className={OVERLAY_LABEL}>Incident Classification</span>
               {selectedCrimeType && (
@@ -266,7 +267,7 @@ export default function UnifiedFilterBar() {
             </div>
 
             {/* List */}
-            <div className="overflow-y-auto max-h-[300px] p-1 custom-scrollbar">
+            <div className="overflow-y-auto overscroll-contain max-h-[300px] p-1 dropdown-scroll">
               {/* All Crime Types option */}
               <button
                 onClick={() => {
@@ -283,6 +284,31 @@ export default function UnifiedFilterBar() {
                 </div>
                 {!selectedCrimeType && <Check className="h-3.5 w-3.5" />}
               </button>
+
+              {/* Preset groups */}
+              {CRIME_GROUPS.map((group) => {
+                const isSelected = selectedCrimeType === group.label;
+                return (
+                  <button
+                    key={group.label}
+                    onClick={() => {
+                      setSelectedCrimeType(group.label);
+                      setActiveDropdown(null);
+                    }}
+                    title={group.description}
+                    className={`flex items-center justify-between w-full text-left px-3 py-2.5 text-[13px] ${
+                      isSelected ? OVERLAY_ITEM_ACTIVE : `${OVERLAY_ITEM} font-medium`
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate pr-2">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: group.color }} />
+                      <span className="truncate">{group.label}</span>
+                    </div>
+                    {isSelected && <Check className="h-3.5 w-3.5" />}
+                  </button>
+                );
+              })}
+              <div className="my-1 h-px bg-slate-100 dark:bg-white/[0.06]" />
 
               {crimeLoading ? (
                 <div className="p-4 text-[13px] text-slate-400 text-center">Loading crime types...</div>

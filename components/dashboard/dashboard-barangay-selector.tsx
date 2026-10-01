@@ -194,7 +194,7 @@ export default function DashboardBarangaySelector({ currentBarangay }: Dashboard
         </div>
 
         {/* Barangay List */}
-        <div className="overflow-y-auto max-h-[260px] py-1 custom-scrollbar" suppressHydrationWarning>
+        <div className="overflow-y-auto max-h-[260px] py-1 dropdown-scroll" suppressHydrationWarning>
           {!isClient || barangayNames.length === 0 ? (
             <div className={`p-4 text-[13px] text-center ${
               theme === "dark" ? "text-slate-600" : "text-slate-400"

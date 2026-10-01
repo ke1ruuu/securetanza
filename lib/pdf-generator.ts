@@ -59,6 +59,8 @@ export interface AnalyticsData {
 export interface ReportData {
   barangayName: string;
   timeRange: string;
+  /** Display name of the crime type / group the data is narrowed to, or null for all types. */
+  crimeType?: string | null;
   analyticsData: AnalyticsData;
   totalCrimes: number;
   generatedBy?: string;
@@ -724,6 +726,10 @@ export class PDFReportGenerator {
     this.doc.text(scope, MARGIN_X, ty);
     ty += T.lead.lead;
     this.doc.text(`Reporting period: ${data.timeRange}`, MARGIN_X, ty);
+    if (data.crimeType) {
+      ty += T.lead.lead;
+      this.doc.text(`Crime type: ${data.crimeType}`, MARGIN_X, ty);
+    }
 
     this.stroke(ACCENT, 1.4);
     this.doc.line(MARGIN_X, ty + 12, MARGIN_X + 42, ty + 12);
@@ -817,7 +823,7 @@ export class PDFReportGenerator {
         : `Barangay ${data.barangayName}`;
 
     this.paragraph(
-      `${data.totalCrimes.toLocaleString()} incidents were recorded across ${scope} during ${data.timeRange}. ` +
+      `${data.totalCrimes.toLocaleString()} incidents${data.crimeType ? ` (${data.crimeType})` : ''} were recorded across ${scope} during ${data.timeRange}. ` +
         `The current quarterly threat rating is ${trends.currentThreatLevel.toLowerCase()}, ` +
         `${
           trends.trendDirection === 'improved' ? 'down from' : trends.trendDirection === 'worsened' ? 'up from' : 'unchanged against'
@@ -1136,7 +1142,7 @@ export class PDFReportGenerator {
 
       if (opts.includeText) {
         this.paragraph(
-          `Barangay ${data.barangayName} recorded ${count.toLocaleString()} incident${count === 1 ? '' : 's'} in ${data.timeRange}, ` +
+          `Barangay ${data.barangayName} recorded ${count.toLocaleString()}${data.crimeType ? ` ${data.crimeType}` : ''} incident${count === 1 ? '' : 's'} in ${data.timeRange}, ` +
             `placing it in the ${level} risk band relative to other barangays this period.`,
           { width: MEASURE }
         );
@@ -1323,7 +1329,7 @@ export class PDFReportGenerator {
     this.y += T.sub.lead + 1;
 
     this.note(
-      `Figures are drawn from incident records held in the Secure Tanza system for ${data.timeRange}, filtered to the reporting scope stated on the cover. Counts reflect records present at the time of generation and will move as cases are updated.`
+      `Figures are drawn from incident records held in the Secure Tanza system for ${data.timeRange}, filtered to the reporting scope stated on the cover${data.crimeType ? `, and limited to the crime type ${data.crimeType}. Quarterly threat ratings still use the thresholds set for all crime types combined, so they read lower for a single type or group` : ''}. Counts reflect records present at the time of generation and will move as cases are updated.`
     );
 
     const definitions: Array<[string, string]> = [
@@ -1447,10 +1453,10 @@ export class PDFReportGenerator {
 
     this.doc.setProperties({
       title: `Incident Pattern and Trend Report — ${data.barangayName}`,
-      subject: `Crime analytics case study · ${data.timeRange}`,
+      subject: `Crime analytics case study · ${data.timeRange}${data.crimeType ? ` · ${data.crimeType}` : ''}`,
       author: 'Secure Tanza',
       creator: 'Secure Tanza crime analytics system',
-      keywords: ['crime analytics', 'Tanza', 'Cavite', data.barangayName].join(', '),
+      keywords: ['crime analytics', 'Tanza', 'Cavite', data.barangayName, ...(data.crimeType ? [data.crimeType] : [])].join(', '),
     });
 
     // Needed by the choropleth in Comparative Analysis and by Geographic

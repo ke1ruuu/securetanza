@@ -360,7 +360,7 @@ export class ImageExporter {
       data.barangayName === 'All Barangays' || data.barangayName === 'General Dashboard'
         ? 'Tanza, Cavite — all barangays'
         : `Barangay ${data.barangayName}, Tanza, Cavite`;
-    return `${scope} · ${data.timeRange}`;
+    return `${scope} · ${data.timeRange}${data.crimeType ? ` · ${data.crimeType}` : ''}`;
   }
 
   async exportTrendChart(data: ReportData): Promise<ExportedImage> {
@@ -495,7 +495,7 @@ export class ImageExporter {
     const W = 1200;
     const H = 1200;
     const { canvas, ctx } = newCanvas(W, H);
-    const bodyY = drawHeader(ctx, W, { kicker: 'Geographic Highlights', title: `Barangay ${barangayName}`, subtitle: data.timeRange });
+    const bodyY = drawHeader(ctx, W, { kicker: 'Geographic Highlights', title: `Barangay ${barangayName}`, subtitle: data.crimeType ? `${data.timeRange} · ${data.crimeType}` : data.timeRange });
 
     const feature = this.geoFeatures?.find((f) => f.name.toUpperCase() === barangayName.toUpperCase());
     if (!feature) {

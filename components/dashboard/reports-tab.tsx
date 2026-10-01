@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMapContext } from "@/context/MapContext";
+import { extractCrimeType } from "@/hooks/useCrimeTypes";
 import { useAnalyticsData } from "@/hooks/useAnalyticsData";
 import { useCrimeMatrix } from "@/hooks/useCrimeMatrix";
 import { PDFReportGenerator, type ReportData } from "@/lib/pdf-generator";
@@ -170,7 +171,7 @@ const IMAGE_ITEMS: Array<{ key: ImageItemKey; label: string; desc: string }> = [
 
 export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const { user } = useAuth();
-  const { selectedYear, timeRange } = useMapContext();
+  const { selectedYear, timeRange, selectedCrimeType } = useMapContext();
   const [loading, setLoading] = useState(false);
   const [previewing, setPreviewing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -212,6 +213,11 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const locationSlug = isGeneralDashboard
     ? "All-Barangays"
     : barangayName?.replace(/\s+/g, "-") || "Unknown";
+
+  // Crime type / group picked in the page header. The analytics and matrix hooks
+  // already narrow their data to it; this is what the report says it covers.
+  const crimeTypeLabel = selectedCrimeType ? extractCrimeType(selectedCrimeType) : null;
+  const crimeTypeSlug = crimeTypeLabel ? `-${crimeTypeLabel.replace(/[^A-Za-z0-9]+/g, "-").replace(/^-|-$/g, "")}` : "";
 
   // Resolved after mount so the server and client agree on the date.
   useEffect(() => {
@@ -261,7 +267,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   const needsMatrix = reportConfig.includeCrimeMatrix.enabled;
   const waitingForData = analyticsData.loading || (needsMatrix && matrixLoading);
   const imagesWaitingForData = analyticsData.loading || (selectedImages.has("matrixHeatmap") && matrixLoading);
-  const fileName = today ? `Crime-Report-${locationSlug}-${today}.pdf` : null;
+  const fileName = today ? `Crime-Report-${locationSlug}${crimeTypeSlug}-${today}.pdf` : null;
 
   /** Same data the PDF is built from — shared with the image exporter below
    *  so a chart or map image reflects exactly the same numbers the report would. */
@@ -276,6 +282,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
     return {
       barangayName: locationName,
       timeRange: timeRangeText,
+      crimeType: crimeTypeLabel,
       analyticsData: {
         crimesByType: analyticsData.crimesByType,
         crimesByMonth: analyticsData.crimesByMonth,
@@ -355,7 +362,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
         images.push(await exporter.exportBarangayMap(data, name));
       }
 
-      await exporter.downloadAsZip(images, `Crime-Report-Images-${locationSlug}-${today || ""}.zip`);
+      await exporter.downloadAsZip(images, `Crime-Report-Images-${locationSlug}${crimeTypeSlug}-${today || ""}.zip`);
     } catch (err) {
       setImageError(err instanceof Error ? err.message : "Failed to export images. Please try again.");
     } finally {
@@ -374,9 +381,9 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
 
       setStep("Archiving");
       const body = new FormData();
-      const name = `Crime-Report-${locationSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
+      const name = `Crime-Report-${locationSlug}${crimeTypeSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
       body.append("file", new File([pdfBlob], name, { type: "application/pdf" }));
-      body.append("label", isGeneralDashboard ? "All barangays" : `Brgy. ${locationName}`);
+      body.append("label", (isGeneralDashboard ? "All barangays" : `Brgy. ${locationName}`) + (crimeTypeLabel ? ` · ${crimeTypeLabel}` : ""));
       if (!isGeneralDashboard) body.append("barangay", locationName);
       body.append("periodLabel", timeRangeText);
 
@@ -434,7 +441,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `Crime-Report-${locationSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
+      link.download = `Crime-Report-${locationSlug}${crimeTypeSlug}-${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -448,8 +455,8 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'Export',
-            resource: `Report:${locationSlug}`,
-            details: `Generated and downloaded PDF report for ${locationName}`,
+            resource: `Report:${locationSlug}${crimeTypeSlug}`,
+            details: `Generated and downloaded PDF report for ${locationName}${crimeTypeLabel ? ` (${crimeTypeLabel})` : ''}`,
             outcome: 'success',
           }),
         });
@@ -500,7 +507,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full max-w-[1400px] mx-auto">
       <header data-tour="reports-header" className="flex flex-wrap items-end justify-between gap-6 pb-6">
         <div className="max-w-lg">
           <h2 className="text-3xl font-bold tracking-tight mb-1 text-slate-900 dark:text-white">
@@ -511,14 +518,26 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
           </p>
         </div>
 
-        <dl className="text-right">
-          <dt className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Period
-          </dt>
-          <dd className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
-            {timeRangeText}
-          </dd>
-        </dl>
+        <div className="flex items-end gap-8">
+          {crimeTypeLabel && (
+            <dl className="text-right">
+              <dt className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                Crime type
+              </dt>
+              <dd className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
+                {crimeTypeLabel}
+              </dd>
+            </dl>
+          )}
+          <dl className="text-right">
+            <dt className="text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              Period
+            </dt>
+            <dd className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">
+              {timeRangeText}
+            </dd>
+          </dl>
+        </div>
       </header>
 
       <div
@@ -769,6 +788,12 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                     : `Barangay ${locationName}, Tanza, Cavite`}
                   <br />
                   Reporting period: {timeRangeText}
+                  {crimeTypeLabel && (
+                    <>
+                      <br />
+                      Crime type: {crimeTypeLabel}
+                    </>
+                  )}
                 </p>
                 <div className="mt-2 h-[2px] w-8 bg-[#0EA5E9]" />
 
@@ -1037,6 +1062,7 @@ export default function ReportsTab({ barangayName }: ReportsTabProps) {
                   {isGeneralDashboard ? "Tanza, Cavite — all barangays" : `Barangay ${locationName}, Tanza, Cavite`}
                   <br />
                   {timeRangeText}
+                  {crimeTypeLabel && ` · ${crimeTypeLabel}`}
                 </p>
               </div>
             </div>

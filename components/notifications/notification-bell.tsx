@@ -291,7 +291,7 @@ export default function NotificationBell() {
                 </p>
               </div>
             ) : (
-              <ul className="custom-scrollbar max-h-[22rem] divide-y divide-slate-100 overflow-y-auto dark:divide-white/[0.05]">
+              <ul className="dropdown-scroll max-h-[22rem] divide-y divide-slate-100 overflow-y-auto dark:divide-white/[0.05]">
                 {visible.map((item) => {
                   const category = categoryMeta(item.category);
                   const severity = severityMeta(item.severity);

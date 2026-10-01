@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useMapContext } from "@/context/MapContext";
 import { useTimeRangeData } from "@/hooks/useTimeRangeData";
+import { toIncidentTypeParam } from "@/lib/crime-groups";
 
 export interface BarangayCrimeTypeCounts {
   [barangay: string]: number;
@@ -50,7 +51,7 @@ export function useCrimeTypeByBarangay() {
           endDate.setHours(23, 59, 59, 999);
 
           const params = new URLSearchParams();
-          params.append("incidentType", selectedCrimeType);
+          params.append("incidentType", toIncidentTypeParam(selectedCrimeType));
           params.append("startDateCommitted", startDate.toISOString());
           params.append("endDateCommitted", endDate.toISOString());
           if (timeFilterHour !== null) {
@@ -68,7 +69,7 @@ export function useCrimeTypeByBarangay() {
           const results = await Promise.all(
             dateRanges.map(async ({ start, end }) => {
               const params = new URLSearchParams();
-              params.append("incidentType", selectedCrimeType);
+              params.append("incidentType", toIncidentTypeParam(selectedCrimeType));
               params.append("startDateCommitted", start.toISOString());
               params.append("endDateCommitted", end.toISOString());
 
@@ -88,7 +89,7 @@ export function useCrimeTypeByBarangay() {
         } else if (selectedYear) {
           // 3. Fallback to Year Filter
           const params = new URLSearchParams();
-          params.append("incidentType", selectedCrimeType);
+          params.append("incidentType", toIncidentTypeParam(selectedCrimeType));
           params.append("year", selectedYear.toString());
 
           const response = await fetch(`/api/crimes/barangay-counts?${params.toString()}`);

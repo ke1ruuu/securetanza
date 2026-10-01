@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
+import { toIncidentTypeParam } from '@/lib/crime-groups'
 import { useTimeRangeData } from './useTimeRangeData'
 
 interface ModusData {
@@ -20,7 +21,7 @@ interface ModusAndPlaceData {
 }
 
 export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
-  const { timeRange } = useMapContext()
+  const { timeRange, selectedCrimeType } = useMapContext()
   const dateRanges = useTimeRangeData()
   const [data, setData] = useState<ModusAndPlaceData>({
     modusList: [],
@@ -41,9 +42,10 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
 
         // Fetch data for all date ranges in parallel
         const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const incidentType = selectedCrimeType ? toIncidentTypeParam(selectedCrimeType) : undefined
           const params = barangayName && barangayName !== "General Dashboard" 
-            ? { barangay: barangayName, startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() } 
-            : { startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() }
+            ? { barangay: barangayName, startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString(), incidentType } 
+            : { startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString(), incidentType }
 
           return fetchCrimes(params)
         })
@@ -98,7 +100,7 @@ export function useModusAndPlace(barangayName?: string): ModusAndPlaceData {
     }
 
     loadData()
-  }, [barangayName, timeRange, dateRanges])
+  }, [barangayName, timeRange, dateRanges, selectedCrimeType])
 
   return data
 }
