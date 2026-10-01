@@ -75,7 +75,17 @@ interface MapContextType {
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
 
-export function MapProvider({ children }: { children: ReactNode }) {
+interface MapProviderProps {
+  children: ReactNode;
+  /** Off where a page runs more than one map (the compare view): each map keeps
+   *  its own period, and none of them overwrites the main map's saved one. */
+  persistPeriod?: boolean;
+  /** The period to open on once the years with data are known. Used whenever a
+   *  saved period isn't restored; without it the map opens on the latest year. */
+  initialPeriod?: (availableYears: number[]) => TimeRange;
+}
+
+export function MapProvider({ children, persistPeriod = true, initialPeriod }: MapProviderProps) {
   const [geoJsonData, setGeoJsonData] = useState<any>(null);
   const [barangayNames, setBarangayNames] = useState<string[]>([]);
   const [selectedBarangay, setSelectedBarangay] = useState<string | null>(null);
@@ -103,6 +113,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
   // Wrapper for setTimeRange that also saves to localStorage
   const setTimeRange = useCallback((newTimeRange: TimeRange) => {
     setTimeRangeState(newTimeRange);
+    if (!persistPeriod) return;
     
     // Save to localStorage (serialize Date objects)
     const serialized = {
@@ -118,17 +129,18 @@ export function MapProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('timeRange', JSON.stringify(serialized));
     
     console.log('💾 Saved timeRange to localStorage:', serialized);
-  }, []);
+  }, [persistPeriod]);
 
   // Wrapper for setSelectedYear that also saves to localStorage
   const setSelectedYearWithPersistence = useCallback((year: number | null) => {
     setSelectedYear(year);
+    if (!persistPeriod) return;
     if (year !== null) {
       localStorage.setItem('selectedYear', year.toString());
     } else {
       localStorage.removeItem('selectedYear');
     }
-  }, []);
+  }, [persistPeriod]);
 
   const setHotspotDate = useCallback((month: string, year: string) => {
     setHotspotMonth(month);
@@ -159,7 +171,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
           setAvailableYears(data.years);
           
           // Try to restore timeRange from localStorage first
-          const savedTimeRange = localStorage.getItem('timeRange');
+          const savedTimeRange = persistPeriod ? localStorage.getItem('timeRange') : null;
           if (savedTimeRange) {
             try {
               const parsed = JSON.parse(savedTimeRange);
@@ -195,6 +207,15 @@ export function MapProvider({ children }: { children: ReactNode }) {
             }
           }
           
+          if (initialPeriod) {
+            const opening = initialPeriod(data.years);
+            if (opening.selections.length > 0) {
+              setTimeRangeState(opening);
+              setSelectedYear(Math.max(...opening.selections.map((s) => s.year)));
+              return;
+            }
+          }
+
           // Otherwise, set current year as default if available, or use the most recent year
           const currentYear = new Date().getFullYear();
           if (data.years.includes(currentYear)) {
@@ -207,6 +228,8 @@ export function MapProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(console.error);
+    // Read once on mount: the opening period is decided a single time, when the years arrive.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

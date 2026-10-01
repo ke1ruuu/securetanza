@@ -211,7 +211,8 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
           return;
         }
 
-        const headers = (rows[0] ?? []).map(normaliseHeader);
+        const rawHeaders = rows[0] ?? [];
+        const headers = rawHeaders.map(normaliseHeader);
 
         // Blank header cells (spacer columns officers sometimes leave in the
         // sheet) carry no field, so the preview skips them along with the count.
@@ -227,7 +228,7 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
           headerCount: columnIndexes.length,
           rowCount: dataRows.length,
         });
-        setCheck(checkColumns(headers));
+        setCheck(checkColumns(rawHeaders));
         setPreviewColumns(
           columnIndexes.map((index) => ({
             name: headers[index],
@@ -503,6 +504,12 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     label="Recognised"
                     value={String(check.recognised.length)}
                   />
+                  {check.renamed.length > 0 && (
+                    <LedgerRow
+                      label="Renamed to match the register"
+                      value={String(check.renamed.length)}
+                    />
+                  )}
                   {check.missingRequired.length > 0 && (
                     <LedgerRow
                       label="Required, not present"
@@ -546,6 +553,14 @@ export default function UploadModal({ open, onOpenChange, onUploaded }: UploadMo
                     label="Optional columns left empty"
                     columns={check.missingOptional}
                     tone="text-slate-500 dark:text-slate-400"
+                  />
+                )}
+
+                {check.renamed.length > 0 && (
+                  <ColumnDisclosure
+                    label="Renamed to match the register"
+                    columns={check.renamed.map(({ from, to }) => `${from} → ${to}`)}
+                    tone="text-slate-600 dark:text-slate-300"
                   />
                 )}
 
