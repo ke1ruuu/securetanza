@@ -9,6 +9,7 @@ import {
   loadTanzaGeography,
   makeGeoProjector,
 } from './geo-threat';
+import { buildHeatLevels, levelRangeLabel } from './heat-levels';
 import { INK, INK_MID, INK_SOFT, HAIR, RULE, PAPER, RAMP_LO, RAMP_HI, mix, rampColor, rgbToCss, type RGB } from './report-theme';
 
 /** Renders individual chart/map PNGs for admins to drop into a PPT, sharing
@@ -200,7 +201,7 @@ function drawMatrixGrid(ctx: CanvasRenderingContext2D, rows: Array<{ crimeType: 
   const totalW = 90;
   const cellW = (box.w - labelW - totalW) / 12;
   const cellH = 46;
-  const max = Math.max(1, ...rows.flatMap((r) => r.monthlyData));
+  const { levels, levelOf } = buildHeatLevels(rows);
 
   const headY = box.y;
   MONTHS_SHORT.forEach((month, i) => {
@@ -218,12 +219,13 @@ function drawMatrixGrid(ctx: CanvasRenderingContext2D, rows: Array<{ crimeType: 
     row.monthlyData.forEach((value, m) => {
       const x = box.x + labelW + m * cellW;
       if (value > 0) {
-        ctx.fillStyle = rgbToCss(rampColor(value / max));
+        const intensity = levels[levelOf(value)]?.intensity ?? 0.5;
+        ctx.fillStyle = rgbToCss(rampColor(intensity));
         ctx.fillRect(x + 2, y + 3, cellW - 4, cellH - 8);
         text(ctx, String(value), x + cellW / 2, y + cellH - 16, {
           size: 18,
           weight: 'bold',
-          color: value / max > 0.55 ? PAPER : INK,
+          color: intensity >= 0.6 ? PAPER : INK,
           align: 'center',
         });
       } else {
@@ -239,7 +241,20 @@ function drawMatrixGrid(ctx: CanvasRenderingContext2D, rows: Array<{ crimeType: 
     text(ctx, String(total), box.x + box.w, y + cellH - 14, { size: 22, weight: 'bold', color: INK, align: 'right' });
   });
 
-  return top + rows.length * cellH + 20;
+  // Legend: one swatch per level in use, labelled with the counts it covers
+  const legendY = top + rows.length * cellH + 22;
+  capsLabel(ctx, 'Fewer', box.x, legendY, INK_SOFT);
+  const swatchW = 78;
+  const legendX = box.x + 100;
+  levels.forEach((level, i) => {
+    const x = legendX + i * (swatchW + 8);
+    ctx.fillStyle = rgbToCss(rampColor(level.intensity));
+    ctx.fillRect(x, legendY - 14, swatchW, 16);
+    text(ctx, levelRangeLabel(level), x + swatchW / 2, legendY + 24, { size: 16, color: INK_SOFT, align: 'center' });
+  });
+  capsLabel(ctx, 'More', legendX + levels.length * (swatchW + 8) + 8, legendY, INK_SOFT);
+
+  return legendY + 40;
 }
 
 /* ── Map bodies ─────────────────────────────────────────────────────────── */

@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useMapContext } from '@/context/MapContext'
 import { useTimeRangeData } from '@/hooks/useTimeRangeData'
+import { useCrimeTypeByBarangay } from '@/hooks/useCrimeTypeByBarangay'
+import { calculateDynamicThresholds } from '@/lib/geo-threat'
 
 export interface ThreatLevelStats {
   secure: number
@@ -17,37 +19,9 @@ export interface ThreatThresholds {
   critical: number
 }
 
-// Calculate dynamic thresholds based on quartiles of actual crime data
-export function calculateDynamicThresholds(crimeCounts: number[]): ThreatThresholds {
-  // Filter out zeros and sort
-  const nonZeroCounts = crimeCounts.filter(count => count > 0).sort((a, b) => a - b);
-  
-  if (nonZeroCounts.length === 0) {
-    // Fallback to fixed thresholds if no data
-    return {
-      low: 2,
-      moderate: 5,
-      high: 10,
-      critical: 15
-    };
-  }
-  
-  // Calculate quartiles (Q1, Q2/median, Q3)
-  const q1Index = Math.floor(nonZeroCounts.length * 0.25);
-  const q2Index = Math.floor(nonZeroCounts.length * 0.50);
-  const q3Index = Math.floor(nonZeroCounts.length * 0.75);
-  
-  const q1 = nonZeroCounts[q1Index] || 1;
-  const q2 = nonZeroCounts[q2Index] || 2;
-  const q3 = nonZeroCounts[q3Index] || 5;
-  
-  return {
-    low: Math.ceil(q1),           // 0-25th percentile
-    moderate: Math.ceil(q2),      // 25th-50th percentile
-    high: Math.ceil(q3),          // 50th-75th percentile
-    critical: Math.ceil(q3) + 1   // 75th+ percentile
-  };
-}
+// Quartile-based thresholds live in lib/geo-threat.ts so the PDF / image exports use the
+// exact same rule as the live map.
+export { calculateDynamicThresholds }
 
 export function useThreatLevels() {
   const [stats, setStats] = useState<ThreatLevelStats>({
@@ -67,7 +41,8 @@ export function useThreatLevels() {
   const [filteredBarangayCrimeCounts, setFilteredBarangayCrimeCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   
-  const { timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear, timeRange } = useMapContext()
+  const { timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear, timeRange, selectedCrimeType } = useMapContext()
+  const { crimeTypeCounts } = useCrimeTypeByBarangay()
   const dateRanges = useTimeRangeData()
 
   // Fetch base crime data (all crimes or filtered by timeRange / year)
@@ -199,9 +174,33 @@ export function useThreatLevels() {
     loadFilteredThreatData()
   }, [timeFilterDate, timeFilterHour, isTimeFilterActive, selectedYear])
 
+  // The scale follows whatever the map is showing: the selected crime type, a single
+  // day / hour, or the whole period. Thresholds, legend ranges and the level tally all
+  // come from that same set of counts, so the key can't disagree with the shading.
+  const TOTAL_BARANGAYS = 24
+  const viewCounts = selectedCrimeType
+    ? crimeTypeCounts
+    : isTimeFilterActive && Object.keys(filteredBarangayCrimeCounts).length > 0
+      ? filteredBarangayCrimeCounts
+      : null
+  const viewThresholds = React.useMemo(
+    () => (viewCounts ? calculateDynamicThresholds(Object.values(viewCounts)) : thresholds),
+    [viewCounts, thresholds]
+  )
+  const viewStats = React.useMemo(() => {
+    if (!viewCounts) return stats
+    const tally: ThreatLevelStats = { secure: 0, low: 0, moderate: 0, high: 0, critical: 0 }
+    const counts = Object.values(viewCounts).filter((c) => c > 0)
+    counts.forEach((count) => {
+      tally[getThreatLevelFromCount(count, viewThresholds)]++
+    })
+    tally.secure = Math.max(0, TOTAL_BARANGAYS - counts.length)
+    return tally
+  }, [viewCounts, viewThresholds, stats])
+
   return { 
-    stats, 
-    thresholds, 
+    stats: viewStats, 
+    thresholds: viewThresholds, 
     barangayCrimeCounts, 
     filteredBarangayCrimeCounts,
     loading 

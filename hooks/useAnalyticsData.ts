@@ -174,13 +174,18 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
 
         const peakHour = hourlyDistribution.indexOf(Math.max(...hourlyDistribution))
 
-        // Threat level thresholds (matching map legend)
-        const THREAT_THRESHOLDS = {
-          low: 2,
-          moderate: 5,
-          high: 10,
-          critical: 15
-        }
+        // Threat level thresholds, scaled to the data being viewed. Fixed cut-offs
+        // (2/5/10/15) rated any quarter above 15 incidents "critical" no matter how
+        // busy the area normally is, so they're taken from the quartiles of the
+        // quarterly counts in the selection instead — same approach the map uses for
+        // barangays (see calculateDynamicThresholds in lib/geo-threat.ts).
+        const quarterCounts = new Map<number, number>()
+        crimes.forEach(crime => {
+          const d = new Date(crime.dateCommitted)
+          const key = d.getFullYear() * 10 + Math.floor(d.getMonth() / 3)
+          quarterCounts.set(key, (quarterCounts.get(key) ?? 0) + 1)
+        })
+        const THREAT_THRESHOLDS = calculateDynamicThresholds(Array.from(quarterCounts.values()))
 
         // Helper function to get threat level from crime count
         const getThreatLevel = (count: number): 'secure' | 'low' | 'moderate' | 'high' | 'critical' => {

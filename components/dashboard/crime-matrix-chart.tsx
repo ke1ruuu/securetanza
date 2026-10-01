@@ -15,6 +15,7 @@ import {
   MONTH_SHORT,
   cleanLabel,
 } from "@/lib/analytics-slice";
+import { buildHeatLevels, levelRangeLabel } from "@/lib/heat-levels";
 import { useChartTooltip } from "./analytics/chart-tooltip";
 
 interface CrimeMatrixData {
@@ -39,11 +40,9 @@ const MONTH_LABELS = MONTH_SHORT;
 // which would make the heaviest months read as the dimmest cells. A zero
 // month still gets the palest ramp step (not literally transparent) so it
 // reads as "an empty box" rather than a gap where a box is missing.
-function cellColor(value: number, max: number, theme: "light" | "dark") {
-  const intensity = value === 0 ? 0 : max > 0 ? value / max : 0;
+function intensityColor(intensity: number, theme: "light" | "dark") {
   return rgbToCss(rampColorForTheme(intensity, theme));
 }
-
 
 export default function CrimeMatrixChart({
   data,
@@ -57,11 +56,7 @@ export default function CrimeMatrixChart({
   // on a matrix you almost always want to compare along one axis or the other).
   const [hoveredCell, setHoveredCell] = useState<{ row: number; col: number } | null>(null);
 
-  const maxValue = useMemo(() => {
-    let max = 0;
-    data.forEach((row) => row.monthlyData.forEach((v) => { if (v > max) max = v; }));
-    return max;
-  }, [data]);
+  const { levels: heatLevels, levelOf } = useMemo(() => buildHeatLevels(data), [data]);
 
   const monthlyTotals = useMemo(() => {
     const totals = Array(12).fill(0);
@@ -195,6 +190,7 @@ export default function CrimeMatrixChart({
                       (hoveredCell.row === rowIdx || hoveredCell.col === colIdx);
                     const dimmed = hoveredCell !== null && !onCross;
                     const clickable = Boolean(onSelect) && value > 0;
+                    const level = levelOf(value);
                     return (
                       <td key={colIdx} style={{ textAlign: "center", padding: 3 }}>
                         <div
@@ -207,8 +203,8 @@ export default function CrimeMatrixChart({
                             borderRadius: 4,
                             fontWeight: 700,
                             fontVariantNumeric: "tabular-nums",
-                            background: cellColor(value, maxValue, theme),
-                            color: value === 0 ? "transparent" : value > maxValue * 0.5 ? "#ffffff" : inkText,
+                            background: intensityColor(level >= 0 ? heatLevels[level].intensity : 0, theme),
+                            color: value === 0 ? "transparent" : level >= 0 && heatLevels[level].intensity >= 0.6 ? "#ffffff" : inkText,
                             opacity: dimmed ? 0.35 : 1,
                             cursor: clickable ? "pointer" : "default",
                           }}
@@ -285,11 +281,15 @@ export default function CrimeMatrixChart({
       {/* Legend */}
       <div className="flex items-center justify-center gap-1.5" style={{ marginTop: 14, fontSize: "0.76rem", color: faintText }}>
         <span>Less</span>
-        {[0.15, 0.4, 0.6, 0.8, 1].map((intensity, idx) => (
-          <span
-            key={idx}
-            style={{ width: 22, height: 11, borderRadius: 2, background: rgbToCss(rampColorForTheme(intensity, theme)) }}
-          />
+        {heatLevels.map((level, idx) => (
+          <span key={idx} className="flex flex-col items-center" style={{ gap: 2 }}>
+            <span
+              style={{ width: 34, height: 11, borderRadius: 2, background: intensityColor(level.intensity, theme) }}
+            />
+            <span style={{ fontSize: "0.64rem", fontVariantNumeric: "tabular-nums" }}>
+              {levelRangeLabel(level)}
+            </span>
+          </span>
         ))}
         <span>More</span>
       </div>

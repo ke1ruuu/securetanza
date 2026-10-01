@@ -11,6 +11,7 @@ import {
   loadTanzaGeography,
   makeGeoProjector,
 } from './geo-threat';
+import { buildHeatLevels, levelRangeLabel } from './heat-levels';
 import { type RGB, INK, INK_MID, INK_SOFT, RULE, HAIR, ACCENT, ACCENT_DEEP, PAPER, RAMP_LO, RAMP_HI, mix, rampColor } from './report-theme';
 
 export type SectionOptions = {
@@ -409,7 +410,7 @@ export class PDFReportGenerator {
     const totalW = 14;
     const cellW = (MEASURE - labelW - totalW) / 12;
     const cellH = 6.4;
-    const max = Math.max(1, ...rows.flatMap((r) => r.monthlyData));
+    const { levels, levelOf } = buildHeatLevels(rows);
 
     this.ensure(rows.length * cellH + 24);
 
@@ -436,10 +437,11 @@ export class PDFReportGenerator {
       row.monthlyData.forEach((value, m) => {
         const x = MARGIN_X + labelW + m * cellW;
         if (value > 0) {
-          this.fill(rampColor(value / max));
+          const intensity = levels[levelOf(value)]?.intensity ?? 0.5;
+          this.fill(rampColor(intensity));
           this.doc.rect(x + 0.35, y + 0.5, cellW - 0.7, cellH - 1.2, 'F');
           this.type(T.micro, 'bold');
-          this.ink(value / max > 0.55 ? PAPER : INK);
+          this.ink(intensity >= 0.6 ? PAPER : INK);
           this.doc.text(String(value), x + cellW / 2, y + cellH - 2.4, { align: 'center' });
         } else {
           this.stroke(HAIR, 0.12);
@@ -456,17 +458,20 @@ export class PDFReportGenerator {
     this.rule(this.y, HAIR, 0.15);
     this.y += 5;
 
-    // Ramp legend
-    const legendW = 34;
-    const steps = 6;
+    // Ramp legend: one swatch per level in use, labelled with the counts it covers
+    const swatchW = 13;
     this.capsLabel('Fewer', MARGIN_X, this.y + 1.8);
     const legendX = MARGIN_X + 14;
-    for (let i = 0; i < steps; i += 1) {
-      this.fill(rampColor((i + 1) / steps));
-      this.doc.rect(legendX + (i * legendW) / steps, this.y - 1.2, legendW / steps - 0.4, 3, 'F');
-    }
-    this.capsLabel('More', legendX + legendW + 2, this.y + 1.8);
-    this.y += 7;
+    levels.forEach((level, i) => {
+      const x = legendX + i * (swatchW + 1);
+      this.fill(rampColor(level.intensity));
+      this.doc.rect(x, this.y - 1.2, swatchW, 3, 'F');
+      this.type(T.micro);
+      this.ink(INK_SOFT);
+      this.doc.text(levelRangeLabel(level), x + swatchW / 2, this.y + 4.2, { align: 'center' });
+    });
+    this.capsLabel('More', legendX + levels.length * (swatchW + 1) + 1, this.y + 1.8);
+    this.y += 9;
   }
 
   /* ── Map: Tanza's barangay boundaries, drawn as vector shapes from the same

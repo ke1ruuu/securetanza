@@ -24,14 +24,25 @@ export interface ThreatThresholds {
   critical: number;
 }
 
-/** Mirrors hooks/useThreatLevels.ts (calculateDynamicThresholds). */
+/** Level cut-offs taken from the quartiles of the counts being shown (zero-count
+ *  barangays ignored), so the scale follows the data's volume instead of fixed numbers.
+ *  The single source for the live map, its legend and the PDF / image exports.
+ *
+ *  With very few barangays the top quartile *is* the largest value, which would leave
+ *  nothing above it — so `high` is held just under the maximum, which keeps the busiest
+ *  barangay in "critical" whenever the counts aren't all equal. */
 export function calculateDynamicThresholds(crimeCounts: number[]): ThreatThresholds {
   const nonZero = crimeCounts.filter((c) => c > 0).sort((a, b) => a - b);
   if (!nonZero.length) return { low: 2, moderate: 5, high: 10, critical: 15 };
+  const max = nonZero[nonZero.length - 1];
   const q1 = nonZero[Math.floor(nonZero.length * 0.25)] || 1;
   const q2 = nonZero[Math.floor(nonZero.length * 0.5)] || 2;
   const q3 = nonZero[Math.floor(nonZero.length * 0.75)] || 5;
-  return { low: Math.ceil(q1), moderate: Math.ceil(q2), high: Math.ceil(q3), critical: Math.ceil(q3) + 1 };
+
+  const low = Math.ceil(q1);
+  const moderate = Math.max(low, Math.ceil(q2));
+  const high = Math.max(moderate, Math.min(Math.ceil(q3), max - 1));
+  return { low, moderate, high, critical: high + 1 };
 }
 
 export function threatLevelOf(count: number, t: ThreatThresholds): ThreatLevel {
