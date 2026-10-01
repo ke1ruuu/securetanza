@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes, fetchCrimeStats, type CrimeIncident } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
-import { calculateDynamicThresholds } from '@/lib/geo-threat'
 import { toIncidentTypeParam } from '@/lib/crime-groups'
 import { useTimeRangeData } from './useTimeRangeData'
 

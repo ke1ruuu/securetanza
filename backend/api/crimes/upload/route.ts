@@ -7,7 +7,7 @@ import { getSession } from '@/lib/auth'
 import { getClientIp, getUserAgent } from '@/lib/request-context'
 import { cacheService, CacheKeys } from '@/backend/cache'
 import { generateCrimeFingerprint, findExistingCrimeFingerprints } from '@/backend/lib/crime-deduplication'
-import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '@/components/upload/upload-meta'
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL, normaliseHeader } from '@/components/upload/upload-meta'
 
 // POST /api/crimes/upload - Upload Excel/CSV file with crime data
 export async function POST(request: NextRequest) {
@@ -85,11 +85,12 @@ export async function POST(request: NextRequest) {
       const row = jsonData[i]
 
       try {
-        // Normalize column names (handle different casing and spacing)
+        // Read every header as the register column it names (dateReported → date_reported,
+        // stn → station). If two headers name the same column, the first one in the sheet wins.
         const normalizedRow: any = {}
         Object.keys(row).forEach(key => {
-          const normalizedKey = key.toLowerCase().trim().replace(/\s+/g, '_')
-          normalizedRow[normalizedKey] = row[key]
+          const column = normaliseHeader(key)
+          if (!(column in normalizedRow)) normalizedRow[column] = row[key]
         })
 
         // Validate required fields
@@ -118,12 +119,14 @@ export async function POST(request: NextRequest) {
         const timeCommitted = normalizeTime(normalizedRow.time_committed)
 
         // Parse boolean fields
-        const isCrime = parseBoolean(normalizedRow.iscime)
+        const isCrime = parseBoolean(normalizedRow.is_crime)
         const heinous = parseBoolean(normalizedRow.heinous)
         const sensational = parseBoolean(normalizedRow.sensational)
         const threatGrp = parseBoolean(normalizedRow.threat_grp)
         const suspectIsEGO = parseBoolean(normalizedRow.suspect_is_ego)
         const victimIsEGO = parseBoolean(normalizedRow.victim_is_ego)
+        // Nullable in the register: a blank cell means not recorded, not "No".
+        const suspectArrested = isBlank(normalizedRow.suspect_arrested) ? null : parseBoolean(normalizedRow.suspect_arrested)
 
         // Parse numeric fields
         const suspectCount = normalizedRow.suspect_count ? parseInt(normalizedRow.suspect_count) : null
@@ -168,6 +171,7 @@ export async function POST(request: NextRequest) {
           suspectEGOPosition: normalizedRow.suspect_ego_position || null,
           suspectEGOClass: normalizedRow.suspect_ego_class || null,
           suspectCount,
+          suspectArrested,
           victimIsEGO,
           victimEGOPosition: normalizedRow.victim_ego_position || null,
           victimEGOClass: normalizedRow.victim_ego_class || null,
@@ -408,6 +412,11 @@ function normalizeTime(value: any): string {
   }
 
   return '00:00:00'
+}
+
+// Helper function to detect an empty cell
+function isBlank(value: unknown): boolean {
+  return value === undefined || value === null || String(value).trim() === ''
 }
 
 // Helper function to parse boolean values

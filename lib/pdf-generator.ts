@@ -1334,7 +1334,7 @@ export class PDFReportGenerator {
     this.y += T.sub.lead + 1;
 
     this.note(
-      `Figures are drawn from incident records held in the Secure Tanza system for ${data.timeRange}, filtered to the reporting scope stated on the cover${data.crimeType ? `, and limited to the crime type ${data.crimeType}` : ''}. Counts reflect records present at the time of generation and will move as cases are updated.`
+      `Figures are drawn from incident records held in the Secure Tanza system for ${data.timeRange}, filtered to the reporting scope stated on the cover${data.crimeType ? `, and limited to the crime type ${data.crimeType}. Quarterly threat ratings still use the thresholds set for all crime types combined, so they read lower for a single type or group` : ''}. Counts reflect records present at the time of generation and will move as cases are updated.`
     );
 
     const definitions: Array<[string, string]> = [

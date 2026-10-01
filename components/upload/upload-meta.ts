@@ -121,15 +121,61 @@ export function formatFileSize(bytes: number): string {
 }
 
 /** Sheet headers arrive in whatever case and spacing the officer typed them. */
-export function normaliseHeader(raw: unknown): string {
+function tidyHeader(raw: unknown): string {
   return String(raw ?? "")
     .toLowerCase()
     .trim()
     .replace(/\s+/g, "_");
 }
 
+/** Case, spacing and punctuation dropped, so dateReported, date_reported and "Date Reported" all meet. */
+function compactHeader(raw: unknown): string {
+  return String(raw ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * Headers in the PNP incident export that no amount of reformatting turns into a
+ * register column — abbreviations, and one misspelling the export has always had.
+ */
+const HEADER_ALIASES: Record<string, string> = {
+  pro: "police_regional_office",
+  ppo: "police_provincial_office",
+  stn: "station",
+  pcp: "police_community_precinct",
+  municipal: "municipality",
+  iscime: "is_crime",
+  headinves: "head_investigator",
+};
+
+const COLUMN_BY_COMPACT_HEADER = new Map<string, string>([
+  ...EXPECTED_COLUMNS.map((column) => [compactHeader(column), column] as const),
+  ...Object.entries(HEADER_ALIASES).map(([alias, column]) => [compactHeader(alias), column] as const),
+]);
+
+/**
+ * The register column a sheet header names, however the export spelled it
+ * (dateReported → date_reported, stn → station). A header that names no register
+ * column comes back only tidied, and is skipped at import. Shared by the dialog and
+ * the upload route, so what the check promises is what the import reads.
+ */
+export function normaliseHeader(raw: unknown): string {
+  const tidy = tidyHeader(raw);
+  return COLUMN_BY_COMPACT_HEADER.get(compactHeader(tidy)) ?? tidy;
+}
+
+export interface HeaderRename {
+  /** The header as typed in the sheet. */
+  from: string;
+  /** The register column it was read as. */
+  to: string;
+}
+
 export interface ColumnCheck {
   recognised: string[];
+  /** Not blocking: headers spelled differently from the register, read as the column they name. */
+  renamed: HeaderRename[];
   /** Blocking: the engine cannot evaluate rows without these. */
   missingRequired: string[];
   /** Not blocking: rows import without them. */
@@ -139,8 +185,18 @@ export interface ColumnCheck {
   isValid: boolean;
 }
 
-export function checkColumns(headers: string[]): ColumnCheck {
-  const present = new Set(headers.filter(Boolean));
+/** Takes the header row exactly as the sheet holds it. */
+export function checkColumns(rawHeaders: unknown[]): ColumnCheck {
+  const present = new Set<string>();
+  const renamed: HeaderRename[] = [];
+
+  for (const raw of rawHeaders) {
+    const header = normaliseHeader(raw);
+    if (!header || present.has(header)) continue;
+    present.add(header);
+    // Case and spacing were always forgiven, so only a real respelling is worth reporting.
+    if (header !== tidyHeader(raw)) renamed.push({ from: String(raw).trim(), to: header });
+  }
 
   const recognised: string[] = [];
   const missingRequired: string[] = [];
@@ -156,6 +212,7 @@ export function checkColumns(headers: string[]): ColumnCheck {
 
   return {
     recognised,
+    renamed,
     missingRequired,
     missingOptional,
     unknown,
