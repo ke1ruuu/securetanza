@@ -87,47 +87,18 @@ const TanzaBarangayLayer: React.FC<BarangayLayerProps> = ({
     // Normalize barangay name to uppercase for matching
     const normalizedName = barangayName.toUpperCase();
     
-    // When crime type is selected, use crime type counts with dynamic thresholds
+    // `thresholds` already follows the active view (crime type, single day / hour, or
+    // the whole period — see useThreatLevels), so the shading always matches the legend.
     if (selectedCrimeType) {
       const count = crimeTypeCounts[normalizedName] || crimeTypeCounts[barangayName] || 0;
-      // Use scaled thresholds for crime type filtering (typically lower counts)
-      const scaledThresholds = {
-        low: Math.max(1, Math.floor(thresholds.low / 2)),
-        moderate: Math.max(2, Math.floor(thresholds.moderate / 2)),
-        high: Math.max(3, Math.floor(thresholds.high / 2)),
-        critical: Math.max(4, Math.floor(thresholds.critical / 2))
-      };
-      return getThreatLevelFromCount(count, scaledThresholds);
+      return getThreatLevelFromCount(count, thresholds);
     }
-    
-    // When time filter is active (hour-based filtering)
-    // Calculate dynamic thresholds based on THIS HOUR's data distribution
+
     if (isTimeFilterActive) {
       const count = filteredBarangayCrimeCounts[normalizedName] || filteredBarangayCrimeCounts[barangayName] || 0;
-      
-      if (count === 0) return 'secure';
-      
-      // Calculate thresholds based on this hour's crime distribution
-      const hourCrimeCounts = Object.values(filteredBarangayCrimeCounts).filter(c => c > 0);
-      
-      if (hourCrimeCounts.length === 0) return 'secure';
-      
-      // Use quartiles of THIS HOUR's data
-      const sortedCounts = [...hourCrimeCounts].sort((a, b) => a - b);
-      const q1Index = Math.floor(sortedCounts.length * 0.25);
-      const q2Index = Math.floor(sortedCounts.length * 0.50);
-      const q3Index = Math.floor(sortedCounts.length * 0.75);
-      
-      const hourThresholds = {
-        low: Math.max(1, sortedCounts[q1Index] || 1),
-        moderate: Math.max(2, sortedCounts[q2Index] || 2),
-        high: Math.max(3, sortedCounts[q3Index] || 3),
-        critical: Math.max(4, (sortedCounts[q3Index] || 3) + 1)
-      };
-      
-      return getThreatLevelFromCount(count, hourThresholds);
+      return getThreatLevelFromCount(count, thresholds);
     }
-    
+
     // Normal mode: use individual barangay counts with dynamic thresholds
     const count = barangayCrimeCounts[normalizedName] || barangayCrimeCounts[barangayName] || 0;
     return getThreatLevelFromCount(count, thresholds);
