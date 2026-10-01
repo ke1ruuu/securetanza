@@ -17,6 +17,7 @@ import { useThreatLevels } from "@/hooks/useThreatLevels";
 import { ACCENT, ACCENT_DEEP, rampColorForTheme, rgbToCss } from "@/lib/report-theme";
 import { SectionHeader, Panel } from "./section-primitives";
 import { useChartTooltip } from "./analytics/chart-tooltip";
+import { cleanLabel } from "@/lib/analytics-slice";
 
 interface OverviewTabProps {
   barangayName: string;
@@ -76,7 +77,7 @@ function OverviewSkeleton({
 
   return (
     <div
-      className="max-w-[1180px] mx-auto space-y-10 animate-pulse"
+      className="w-full max-w-[1400px] mx-auto space-y-10 animate-pulse"
       role="status"
       aria-busy="true"
       aria-label="Loading overview"
@@ -112,7 +113,7 @@ function OverviewSkeleton({
 
       <section>
         <SectionHeader no="02" title="Trends & Composition" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1fr] gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-[18px]">
           <Panel theme={theme} title="Crime Trend" subtitle="Monthly incident activity" bodyClassName="justify-center" footer={footer}>
             <div className="flex items-end" style={{ height: 240, gap: 3 }}>
               {areaHeights.map((h, i) => (
@@ -192,7 +193,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
   const sortedTypes = [...(crimesByType || [])].sort((a, b) => b.count - a.count);
   const totalCrimesCount = sortedTypes.reduce((sum, item) => sum + item.count, 0);
   const topType = sortedTypes[0];
-  const mostFrequentCrime = topType?.type || "N/A";
+  const mostFrequentCrime = topType?.type ? cleanLabel(topType.type) : "N/A";
   const topTypePercent = totalCrimesCount > 0 && topType ? Math.round((topType.count / totalCrimesCount) * 100) : 0;
 
   // Format time to 12-hour with AM/PM
@@ -242,7 +243,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
   const valueClass = `text-[1.3rem] font-bold leading-[1.15] break-words ${dark ? "text-white" : "text-slate-900"}`;
 
   return (
-    <div className="max-w-[1180px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <header
         className={`flex flex-wrap items-end justify-between gap-4 border-b pb-[22px] ${dark ? "border-white/5" : "border-slate-200"}`}
@@ -319,7 +320,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
       {/* ═══ 02 Trends & Composition ═══ */}
       <section data-tour="overview-charts">
         <SectionHeader no="02" title="Trends & Composition" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1fr] gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-[18px]">
           <div data-tour="overview-trend" className="flex flex-col">
             <Panel
               theme={theme}
@@ -410,7 +411,7 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
                         style={{ gap: 10, padding: "6px 0", opacity: dimmed ? 0.4 : 1 }}
                         {...bind(
                           {
-                            title: item.type,
+                            title: cleanLabel(item.type),
                             rows: [
                               { label: "Incidents", value: item.count.toLocaleString(), swatch: fill },
                               { label: "Share", value: `${share}%` },
@@ -423,8 +424,9 @@ export default function OverviewTab({ barangayName }: OverviewTabProps) {
                         <div
                           className={`w-[38%] shrink-0 text-right truncate ${dark ? "text-slate-300" : "text-slate-600"}`}
                           style={{ fontSize: "0.78rem" }}
+                          title={cleanLabel(item.type)}
                         >
-                          {item.type}
+                          {cleanLabel(item.type)}
                         </div>
                         <div className={`flex-1 h-[18px] rounded-[3px] overflow-hidden ${dark ? "bg-sky-400/10" : "bg-sky-50"}`}>
                           <div

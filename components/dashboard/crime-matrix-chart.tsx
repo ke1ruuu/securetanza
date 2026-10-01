@@ -182,8 +182,12 @@ export default function CrimeMatrixChart({
               const rowTotal = row.monthlyData.reduce((s, v) => s + v, 0);
               return (
                 <tr key={rowIdx}>
-                  <td style={{ textAlign: "left", fontWeight: 600, color: midText, paddingRight: 10, whiteSpace: "nowrap", padding: "3px 10px 3px 0" }}>
-                    {label}
+                  <td style={{ textAlign: "left", fontWeight: 600, color: midText, padding: "3px 10px 3px 0" }}>
+                    {/* A block wrapper is what makes the ellipsis reliable: max-width is
+                        ignored on a table cell itself. */}
+                    <div title={label} style={{ maxWidth: 240, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {label}
+                    </div>
                   </td>
                   {row.monthlyData.slice(0, visibleMonths).map((value, colIdx) => {
                     const onCross =

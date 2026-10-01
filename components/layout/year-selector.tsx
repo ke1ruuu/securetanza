@@ -103,7 +103,7 @@ export default function YearSelector() {
         </div>
 
         {/* Year List */}
-        <div className="py-1 max-h-[300px] overflow-y-auto custom-scrollbar">
+        <div className="py-1 max-h-[300px] overflow-y-auto dropdown-scroll">
           {availableYears.map((year) => (
             <button
               key={year}

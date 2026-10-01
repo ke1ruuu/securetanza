@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import OverviewTab from "@/components/dashboard/overview-tab";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
+import DashboardCrimeTypeSelector from "@/components/dashboard/dashboard-crime-type-selector";
 import { MapProvider } from "@/context/MapContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -59,6 +60,7 @@ function OverviewContent() {
 					theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
 				}`}>
 				<DashboardBarangaySelector currentBarangay={barangayName} />
+				<DashboardCrimeTypeSelector />
 				<div className={`h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
 				<span className={`text-sm font-medium ${theme === "dark" ? "text-slate-500" : "text-slate-400"}`}>
 					{barangayName === "General Dashboard"
@@ -70,7 +72,7 @@ function OverviewContent() {
 			<main className={`flex-1 flex flex-col min-w-0 overflow-hidden ${theme === "dark" ? "bg-[#0f172a]" : "bg-[#f1f5f9]"}`}>
 				<div className="flex-1 overflow-y-auto overflow-x-hidden p-6 custom-scrollbar scroll-smooth">
 					{error ? (
-						<div className="max-w-[1400px] mx-auto">
+						<div className="w-full max-w-[1400px] mx-auto">
 							<div className="text-center py-12">
 								<p className="text-lg font-semibold text-red-500 mb-4">Error loading data</p>
 								<p className="text-sm text-slate-500">{error}</p>

@@ -6,6 +6,7 @@ import MapHeader from "@/components/layout/map-header";
 import AnalyticsTab from "@/components/dashboard/analytics-tab";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
 import TimeSelector from "@/components/layout/time-selector";
+import DashboardCrimeTypeSelector from "@/components/dashboard/dashboard-crime-type-selector";
 import { MapProvider } from "@/context/MapContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
@@ -51,10 +52,10 @@ function AnalyticsContent() {
         theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
       }`}>
         <DashboardBarangaySelector currentBarangay={barangayName} />
-        <div className={`h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
         {/* Quick periods (year → day) plus a custom start–end date range; scopes
             every chart, the matrix and the detail view. */}
         <TimeSelector allowCustomRange />
+        <DashboardCrimeTypeSelector />
         <div className={`hidden lg:block h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
         <span className={`hidden lg:block truncate text-sm font-medium ${
           theme === "dark" ? "text-slate-500" : "text-slate-400"

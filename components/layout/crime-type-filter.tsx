@@ -64,7 +64,7 @@ export default function CrimeTypeFilter() {
 				</div>
 
 				{/* List */}
-				<div className="overflow-y-auto max-h-[320px] py-1 custom-scrollbar">
+				<div className="overflow-y-auto max-h-[320px] py-1 dropdown-scroll">
 					{loading ? (
 						<div className="p-4 text-[13px] text-slate-500 dark:text-slate-600 text-center" style={{ fontFamily: "var(--font-inter)" }}>
 							Loading...

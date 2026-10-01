@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import MapHeader from "@/components/layout/map-header";
 import IncidentsTab from "@/components/dashboard/incidents-tab";
 import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay-selector";
+import DashboardCrimeTypeSelector from "@/components/dashboard/dashboard-crime-type-selector";
+import TimeSelector from "@/components/layout/time-selector";
 import { MapProvider, useMapContext } from "@/context/MapContext";
 import { fromInputDate } from "@/lib/date-input";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
@@ -65,8 +67,12 @@ function CasesContent() {
         theme === "dark" ? "bg-[#0f172a]/80 border-white/[0.04]" : "bg-white/60 border-slate-200/60"
       }`}>
         <DashboardBarangaySelector currentBarangay={barangayName} />
-        <div className={`h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
-        <span className={`text-sm font-medium ${
+        {/* Period (incl. the custom range carried over from Analytics) and crime
+            type scope the case list below */}
+        <TimeSelector allowCustomRange />
+        <DashboardCrimeTypeSelector />
+        <div className={`hidden lg:block h-5 w-px ${theme === "dark" ? "bg-white/10" : "bg-slate-200"}`} />
+        <span className={`hidden lg:block truncate text-sm font-medium ${
           theme === "dark" ? "text-slate-500" : "text-slate-400"
         }`}>
           {barangayName === "General Dashboard" 

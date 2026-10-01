@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes, fetchCrimeStats, type CrimeIncident } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
+import { toIncidentTypeParam } from '@/lib/crime-groups'
 import { useTimeRangeData } from './useTimeRangeData'
 
 interface CrimeByType {
@@ -54,7 +55,7 @@ interface AnalyticsData {
 }
 
 export function useAnalyticsData(barangayName?: string): AnalyticsData {
-  const { timeRange } = useMapContext()
+  const { timeRange, selectedCrimeType } = useMapContext()
   const dateRanges = useTimeRangeData()
   const [data, setData] = useState<AnalyticsData>({
     crimesByType: [],
@@ -94,16 +95,18 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
 
         // Fetch data for all date ranges in parallel
         const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const incidentType = selectedCrimeType ? toIncidentTypeParam(selectedCrimeType) : undefined
           const statsParams = barangayName && barangayName !== "General Dashboard" 
-            ? { barangay: barangayName, startDate: start.toISOString(), endDate: end.toISOString() } 
-            : { startDate: start.toISOString(), endDate: end.toISOString() }
+            ? { barangay: barangayName, startDate: start.toISOString(), endDate: end.toISOString(), incidentType } 
+            : { startDate: start.toISOString(), endDate: end.toISOString(), incidentType }
 
           const [stats, crimes] = await Promise.all([
             fetchCrimeStats(statsParams),
             fetchCrimes({ 
               barangay: statsParams?.barangay,
               startDateCommitted: start.toISOString(),
-              endDateCommitted: end.toISOString()
+              endDateCommitted: end.toISOString(),
+              incidentType
             })
           ])
           
@@ -313,7 +316,7 @@ export function useAnalyticsData(barangayName?: string): AnalyticsData {
     }
 
     loadAnalyticsData()
-  }, [barangayName, timeRange, dateRanges])
+  }, [barangayName, timeRange, dateRanges, selectedCrimeType])
 
   return data
 }

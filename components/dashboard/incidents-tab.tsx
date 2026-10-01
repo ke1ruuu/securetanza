@@ -9,6 +9,7 @@ import { useMapContext } from "@/context/MapContext";
 import { useTimeRangeData } from "@/hooks/useTimeRangeData";
 import { extractCrimeType } from "@/hooks/useCrimeTypes";
 import { fetchCrimes, CrimeIncident } from "@/lib/api";
+import { toIncidentTypeParam } from "@/lib/crime-groups";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ function FilterSelect({
   options,
   dark,
   labelClass,
+  inline = false,
 }: {
   label: string;
   value: string;
@@ -70,10 +72,13 @@ function FilterSelect({
   options: string[];
   dark: boolean;
   labelClass: string;
+  /** Drops the label above the control and prefixes it to the value instead, so
+   *  the select can share a row with other controls. */
+  inline?: boolean;
 }) {
   return (
     <div>
-      <span className={`${labelClass} mb-2 block`}>{label}</span>
+      {!inline && <span className={`${labelClass} mb-2 block`}>{label}</span>}
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger
           aria-label={label}
@@ -83,7 +88,7 @@ function FilterSelect({
               : "border-slate-200 bg-white text-slate-900 hover:bg-slate-50"
           }`}
         >
-          <SelectValue />
+          <SelectValue>{inline ? `${label}: ${value}` : undefined}</SelectValue>
         </SelectTrigger>
         <SelectContent
           className={`rounded-xl border p-1 shadow-lg ${
@@ -116,16 +121,16 @@ function FilterSelect({
 
 export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   const { theme } = useTheme();
-  const { timeRange } = useMapContext();
+  const { timeRange, selectedCrimeType, setSelectedCrimeType } = useMapContext();
   const dateRanges = useTimeRangeData();
   const [cases, setCases] = useState<CrimeIncident[]>([]);
   const [filteredCases, setFilteredCases] = useState<CrimeIncident[]>([]);
   const [selectedCase, setSelectedCase] = useState<CrimeIncident | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [crimeTypeFilter, setCrimeTypeFilter] = useState("(All)");
+  // Crime type is picked in the page header and shared through the map context
+  const crimeTypeFilter = selectedCrimeType ?? "(All)";
   const [dateRangeFilter, setDateRangeFilter] = useState("(All)");
-  const [barangayFilter, setBarangayFilter] = useState("(All)");
   const [statusFilter, setStatusFilter] = useState("(All)");
   const [isModalOpen, setIsModalOpen] = useState(false);
   // Pagination state
@@ -187,13 +192,11 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
           // Add barangay filter for specific dashboard
           if (!isGeneralDashboard) {
             params.barangay = barangayName;
-          } else if (barangayFilter !== "(All)") {
-            params.barangay = barangayFilter;
           }
 
           // Add crime type filter
           if (crimeTypeFilter !== "(All)") {
-            params.incidentType = crimeTypeFilter;
+            params.incidentType = toIncidentTypeParam(crimeTypeFilter);
           }
 
           // Add status filter
@@ -232,7 +235,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     }
 
     loadCases();
-  }, [barangayName, isGeneralDashboard, crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter, timeRange, dateRanges]);
+  }, [barangayName, isGeneralDashboard, crimeTypeFilter, dateRangeFilter, statusFilter, timeRange, dateRanges]);
 
   // Filter cases based on search query
   useEffect(() => {
@@ -263,7 +266,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [crimeTypeFilter, dateRangeFilter, barangayFilter, statusFilter]);
+  }, [crimeTypeFilter, dateRangeFilter, statusFilter]);
 
   // Deep link from the analytics detail view (?case=<id>): select that case,
   // jump to the page it's on and open its details. This has to stay below the
@@ -280,8 +283,6 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   }, [targetCaseId, loading, cases, itemsPerPage]);
 
   // Get unique values for filters
-  const crimeTypes = ["(All)", ...Array.from(new Set(cases.map((c) => c.incidentType)))];
-  const barangays = ["(All)", ...Array.from(new Set(cases.map((c) => c.barangay)))];
   const statuses = ["(All)", "Cleared", "Under Investigation", "Filed in Court", "Archived", "Pending"];
 
   // Get status label based on caseStatus
@@ -390,14 +391,12 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     searchQuery !== "" ||
     crimeTypeFilter !== "(All)" ||
     dateRangeFilter !== "(All)" ||
-    statusFilter !== "(All)" ||
-    (isGeneralDashboard && barangayFilter !== "(All)");
+    statusFilter !== "(All)";
 
   const clearFilters = () => {
     setSearchQuery("");
-    setCrimeTypeFilter("(All)");
+    setSelectedCrimeType(null);
     setDateRangeFilter("(All)");
-    setBarangayFilter("(All)");
     setStatusFilter("(All)");
   };
 
@@ -405,7 +404,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
     const bone = dark ? "bg-white/10" : "bg-slate-200";
     return (
       <div
-        className="max-w-[1280px] mx-auto space-y-6 animate-pulse"
+        className="w-full max-w-[1400px] mx-auto space-y-6 animate-pulse"
         role="status"
         aria-busy="true"
         aria-label="Loading cases"
@@ -430,8 +429,8 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
         <section>
           <div className={`${surface} space-y-4`} style={{ padding: 18 }}>
             <div className={`h-11 rounded-lg ${bone}`} />
-            <div className={`grid grid-cols-1 gap-4 ${isGeneralDashboard ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
-              {Array.from({ length: isGeneralDashboard ? 4 : 3 }, (_, i) => (
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {Array.from({ length: 2 }, (_, i) => (
                 <div key={i}>
                   <div className={`mb-2 h-3 w-20 rounded ${bone}`} />
                   <div className={`h-10 rounded-lg ${bone}`} />
@@ -479,7 +478,7 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-[1400px] mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header */}
       <header
         className={`flex flex-wrap items-end justify-between gap-4 border-b pb-[22px] ${dark ? "border-white/5" : "border-slate-200"}`}
@@ -505,7 +504,8 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
       {/* Search & filters */}
       <section data-tour="cases-controls">
         <div className={`${surface} space-y-4`} style={{ padding: 18 }}>
-          <div className="relative">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="relative min-w-0 flex-1">
             <Search className={`absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 ${mutedText}`} />
             <input
               type="text"
@@ -520,21 +520,18 @@ export default function IncidentsTab({ barangayName }: IncidentsTabProps) {
             />
           </div>
 
-          <div className={`grid grid-cols-1 gap-4 ${isGeneralDashboard ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
-            <FilterSelect label="Crime Type" value={crimeTypeFilter} onChange={setCrimeTypeFilter} options={crimeTypes} dark={dark} labelClass={labelClass} />
+          <div className="grid grid-cols-2 gap-3 md:flex md:shrink-0 md:[&>div]:w-[210px]">
             <FilterSelect
-              label="Date Range"
+              inline
+              label="Recent"
               value={dateRangeFilter}
               onChange={setDateRangeFilter}
               options={["(All)", "(Last 7 Days)", "(Last 30 Days)", "(Last 90 Days)"]}
               dark={dark}
               labelClass={labelClass}
             />
-            {/* Barangay Filter - Only show for general dashboard */}
-            {isGeneralDashboard && (
-              <FilterSelect label="Barangay" value={barangayFilter} onChange={setBarangayFilter} options={barangays} dark={dark} labelClass={labelClass} />
-            )}
-            <FilterSelect label="Status" value={statusFilter} onChange={setStatusFilter} options={statuses} dark={dark} labelClass={labelClass} />
+            <FilterSelect inline label="Status" value={statusFilter} onChange={setStatusFilter} options={statuses} dark={dark} labelClass={labelClass} />
+          </div>
           </div>
 
           {filtersActive && (

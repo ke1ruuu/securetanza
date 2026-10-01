@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { fetchCrimes } from '@/lib/api'
 import { useMapContext } from '@/context/MapContext'
+import { toIncidentTypeParam } from '@/lib/crime-groups'
 import { useTimeRangeData } from './useTimeRangeData'
 
 interface CrimeMatrixData {
@@ -9,7 +10,7 @@ interface CrimeMatrixData {
 }
 
 export function useCrimeMatrix(barangayName?: string) {
-  const { timeRange } = useMapContext()
+  const { timeRange, selectedCrimeType } = useMapContext()
   const dateRanges = useTimeRangeData()
   const [matrixData, setMatrixData] = useState<CrimeMatrixData[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,9 +27,10 @@ export function useCrimeMatrix(barangayName?: string) {
 
         // Fetch data for all date ranges in parallel
         const fetchPromises = dateRanges.map(async ({ start, end }) => {
+          const incidentType = selectedCrimeType ? toIncidentTypeParam(selectedCrimeType) : undefined
           const params = barangayName && barangayName !== "General Dashboard" 
-            ? { barangay: barangayName, startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() } 
-            : { startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString() }
+            ? { barangay: barangayName, startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString(), incidentType } 
+            : { startDateCommitted: start.toISOString(), endDateCommitted: end.toISOString(), incidentType }
 
           return fetchCrimes(params)
         })
@@ -77,7 +79,7 @@ export function useCrimeMatrix(barangayName?: string) {
     }
 
     loadMatrixData()
-  }, [barangayName, timeRange, dateRanges])
+  }, [barangayName, timeRange, dateRanges, selectedCrimeType])
 
   return { matrixData, loading }
 }

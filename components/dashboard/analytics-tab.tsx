@@ -321,7 +321,7 @@ function AnalyticsSkeleton({
 
   return (
     <div
-      className="max-w-[1180px] mx-auto space-y-10 animate-pulse"
+      className="w-full max-w-[1400px] mx-auto space-y-10 animate-pulse"
       role="status"
       aria-busy="true"
       aria-label="Loading analytics"
@@ -372,7 +372,7 @@ function AnalyticsSkeleton({
       {/* 02 Temporal Patterns */}
       <section>
         <SectionHeader no="02" title="Temporal Patterns" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1fr] gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-[18px]">
           <Panel
             theme={theme}
             title="Monthly Trend"
@@ -397,7 +397,7 @@ function AnalyticsSkeleton({
       {/* 03 Crime Composition */}
       <section>
         <SectionHeader no="03" title="Crime Composition" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[18px]">
           <Panel theme={theme} title="Crime Types Distribution" subtitle="Most common incident categories" footer={footer}>
             <Ranked rows={8} />
           </Panel>
@@ -410,7 +410,7 @@ function AnalyticsSkeleton({
       {/* 04 Where It Happens */}
       <section>
         <SectionHeader no="04" title="Where It Happens" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[18px]">
           <Panel theme={theme} title="Crime Location Types" subtitle="Where crimes most frequently occur" footer={footer}>
             <Ranked rows={8} />
           </Panel>
@@ -539,7 +539,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
         : theme === "dark" ? "text-slate-400" : "text-slate-500";
 
   return (
-    <div className="max-w-[1180px] mx-auto space-y-10 animate-in fade-in slide-in-from-left-4 duration-500">
+    <div className="w-full max-w-[1400px] mx-auto space-y-10 animate-in fade-in slide-in-from-left-4 duration-500">
       {/* Header */}
       <header
         className={`flex flex-wrap items-end justify-between gap-4 border-b pb-[22px] ${theme === "dark" ? "border-white/5" : "border-slate-200"}`}
@@ -777,7 +777,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       {/* ═══ 02 Temporal Patterns ═══ */}
       <section data-tour="analytics-temporal-trends">
         <SectionHeader no="02" title="Temporal Patterns" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1fr] gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-[18px]">
           <Panel
             theme={theme}
             title="Monthly Trend"
@@ -840,7 +840,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       {/* ═══ 03 Crime Composition ═══ */}
       <section data-tour="analytics-crime-types">
         <SectionHeader no="03" title="Crime Composition" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[18px]">
           <Panel
             theme={theme}
             title="Crime Types Distribution"
@@ -924,7 +924,7 @@ export default function AnalyticsTab({ barangayName }: AnalyticsTabProps) {
       {/* ═══ 04 Where It Happens ═══ */}
       <section data-tour="analytics-modus-locations">
         <SectionHeader no="04" title="Where It Happens" theme={theme} />
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-[18px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-[18px]">
           <Panel
             theme={theme}
             title="Crime Location Types"

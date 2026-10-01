@@ -6,6 +6,7 @@
 import { prisma } from '@/backend/lib/prisma';
 import { cacheService, CacheKeys, TTL } from '@/backend/cache';
 import { mapGeoJsonToDb } from '@/backend/lib/barangay-mapper';
+import { buildIncidentTypeWhere } from '@/lib/crime-groups';
 
 export interface CrimeStatsResult {
   totalCrimes: number;
@@ -84,8 +85,10 @@ export class CrimeService {
     endDate?: string | null;
     year?: string | null;
     hour?: string | null;
+    incidentType?: string | null;
   }): Promise<CrimeStatsResult> {
     const cacheKey = CacheKeys.crimes.stats({
+      incidentType: filters.incidentType,
       barangay: filters.barangay,
       startDate: filters.startDate,
       endDate: filters.endDate,
@@ -103,6 +106,10 @@ export class CrimeService {
           equals: dbBarangayName,
           mode: 'insensitive',
         };
+      }
+
+      if (filters.incidentType) {
+        where.AND = [...(where.AND ?? []), buildIncidentTypeWhere(filters.incidentType)];
       }
 
       if (filters.startDate && filters.endDate) {
@@ -280,10 +287,8 @@ export class CrimeService {
       const where: any = {};
 
       if (filters.incidentType) {
-        where.incidentType = {
-          contains: filters.incidentType,
-          mode: 'insensitive',
-        };
+        // AND-ed so a multi-keyword group (OR) can't clobber the hour filter's OR
+        where.AND = [...(where.AND ?? []), buildIncidentTypeWhere(filters.incidentType)];
       }
 
       if (filters.barangay) {
@@ -370,10 +375,7 @@ export class CrimeService {
       }
 
       if (filters.incidentType) {
-        where.incidentType = {
-          contains: filters.incidentType,
-          mode: 'insensitive',
-        };
+        where.AND = [...(where.AND ?? []), buildIncidentTypeWhere(filters.incidentType)];
       }
 
       if (filters.barangay) {
@@ -439,7 +441,7 @@ export class CrimeService {
       if (filters.region) where.region = { contains: filters.region, mode: 'insensitive' };
       if (filters.province) where.province = { contains: filters.province, mode: 'insensitive' };
       if (filters.municipal) where.municipal = { contains: filters.municipal, mode: 'insensitive' };
-      if (filters.incidentType) where.incidentType = { contains: filters.incidentType, mode: 'insensitive' };
+      if (filters.incidentType) where.AND = [...(where.AND ?? []), buildIncidentTypeWhere(filters.incidentType)];
 
       if (filters.startDateReported && filters.endDateReported) {
         where.dateReported = {

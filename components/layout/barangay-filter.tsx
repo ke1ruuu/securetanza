@@ -73,7 +73,7 @@ export default function BarangayFilter() {
 				</div>
 
 				{/* List */}
-				<div className="overflow-y-auto max-h-[260px] py-1 custom-scrollbar">
+				<div className="overflow-y-auto max-h-[260px] py-1 dropdown-scroll">
 					{filteredBarangays.length === 0 ? (
 						<div className="p-4 text-[13px] text-slate-500 dark:text-slate-600 text-center" style={{ fontFamily: "var(--font-inter)" }}>
 							No results found

@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate');
     const year = searchParams.get('year');
     const hour = searchParams.get('hour');
+    const incidentType = searchParams.get('incidentType');
 
     const stats = await CrimeService.getStats({
       barangay,
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
       endDate,
       year,
       hour,
+      incidentType,
     });
 
     return NextResponse.json({
