@@ -116,11 +116,18 @@ export function DocsSettings() {
 
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-              Account Preferences
+              Account Preferences & Accessibility
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
-              Toggle light or dark theme mode and configure interface display settings.
+              Personalize themes and configure immediate app-wide accessibility options without requiring a reload:
             </p>
+            <ul className="mt-2 space-y-1.5 text-xs text-slate-600 dark:text-slate-400 list-disc list-inside">
+              <li><strong className="text-slate-800 dark:text-slate-200">Theme:</strong> Select Light, Dark, or System Sync mode.</li>
+              <li><strong className="text-slate-800 dark:text-slate-200">Reduce Motion:</strong> Suppress UI animations and transitions for reduced vestibular motion.</li>
+              <li><strong className="text-slate-800 dark:text-slate-200">High Contrast:</strong> Strengthen border definitions and focus rings for maximum tactical visibility.</li>
+              <li><strong className="text-slate-800 dark:text-slate-200">Dynamic Text Size:</strong> Choose between Default, Large, or Larger typographic scaling for optimal field readability.</li>
+              <li><strong className="text-slate-800 dark:text-slate-200">Default Landing Page:</strong> Set whether login routes to the GIS Crime Map, Executive Overview, or Case Blotter.</li>
+            </ul>
           </div>
         </div>
       </section>

@@ -6,34 +6,37 @@ Comprehensive, publication-grade user documentation has been deployed for the en
 
 ---
 
-## What Was Updated & Enhanced (Version 1.2.0)
+## What Was Updated & Enhanced (Version 1.3.0)
 
-### 1. Interactive In-App Documentation Portal (`app/docs/page.tsx`)
-- **Live Search & Topic Filtering:** Users can search across all 10 modules and sub-topics with instant tag and title filtering.
-- **Interactive Tour Integration:** Embedded "Start Tour" action button triggering Driver.js multi-module walkthrough.
-- **10 Complete Functional Modules:**
-  1. Introduction & Architecture
+### 1. Interactive Multi-Stage Guided Walkthrough (Driver.js)
+- **Map Comparison Stage Added (`/compare`):** Guides users through baseline vs. target dual-viewport map panes, synchronized map navigation (`MapLink`), harmonized threat scaling, and live Change Ledger delta rankings.
+- **Account Preferences & Accessibility Stage Added (`/dashboard/config/preferences`):** Guides users through interface theme modes (Light, Dark, System Sync), immediate app-wide accessibility options (Reduce Motion, High Contrast), and dynamic typographic scaling (Default, Large, Larger).
+- **Role-Tailored Stage Sequencing:**
+  - *System Administrator Walkthrough (9 Stages):* Map → Compare → Overview → Cases → Analytics → Reports → System Settings → Account Preferences & Accessibility → Docs.
+  - *Operational Officer Walkthrough (8 Stages):* Map → Compare → Overview → Cases → Analytics → Reports → Account Preferences & Accessibility → Docs.
+  - *Privileged User / Analyst Walkthrough (6 Stages):* Dynamically tailored to granted clearances with Map, Compare, Overview, Cases, Analytics, Reports, Preferences, and Docs.
+
+### 2. Interactive In-App Documentation Portal (`app/docs/page.tsx`)
+- **Live Search & Topic Filtering:** Users can search across all modules and sub-topics with instant tag and title filtering (including "compare" and "accessibility" keywords).
+- **Core Modules & Interactive Walkthrough Cards:** Added dedicated module overviews for the Map Comparison Tool (`/compare`) and Account Preferences & Accessibility (`/dashboard/config/preferences`).
+- **Complete Functional Coverage:**
+  1. Introduction & Architecture (with role walkthrough launch triggers)
   2. Interactive GIS Crime Map & Threat Levels
-  3. Executive Dashboard & Overview
-  4. Historical Crime Analytics & Formulas (Resolution Rate, Safety Index)
-  5. Crime Cases Blotter Dossiers & EGO Tracking
-  6. Institutional PDF Report Generator
-  7. Analytical Alert & Notification Rules Engine
-  8. System Administration & Role-Based Access Control (RBAC)
-  9. Batch Data Ingestion & Excel Column Schema
-  10. System Diagnostics, Troubleshooting & Operational Tips
-- **Enhanced Visual Styling:** Light/Dark mode reactive themes, badge indicators, copyable formulas, code snippets, and responsive navigation.
+  3. Map Comparison Tool (`/compare`) with Synchronized Navigation & Change Ledger
+  4. Executive Dashboard & Overview
+  5. Historical Crime Analytics & Formulas (Resolution Rate, Safety Index)
+  6. Crime Cases Blotter Dossiers & EGO Tracking
+  7. Institutional PDF Report Generator
+  8. Analytical Alert & Notification Rules Engine
+  9. System Settings, RBAC & Account Preferences (Accessibility Controls)
+  10. Batch Data Ingestion & Excel Column Schema
+  11. System Diagnostics, Troubleshooting & Operational Tips
 
-### 2. Comprehensive Offline User Guide (`docs/USER_GUIDE.md`)
-- **Role-Based Access Control (RBAC) Matrix:** Complete permissions table covering Admin, Operational Officer, and Privileged User roles.
-- **Standard Excel Ingestion Schema:** Exact column definitions, validation rules, coordinate fallback handling, and sample formats.
-- **Mathematical Formulations:** Explicit formulas for Resolution Rate and Safety Index.
-- **Role-Based Operational Playbooks:**
-  - *Playbook A: Chief of Police / Station Commander Daily Briefing Workflow*
-  - *Playbook B: Crime Intelligence Analyst Strategic Planning*
-  - *Playbook C: Desk Officer Incident Ingestion & Dossier Tracking*
-  - *Playbook D: IT & Security Administrator Clearance & Audit Maintenance*
-- **Comprehensive Diagnostics & Troubleshooting Matrix:** Actionable solutions for map tile timeouts, PDF export memory bounds, session clearance permissions, and Excel schema mismatch errors.
+### 3. Comprehensive Offline User Guide (`docs/USER_GUIDE.md`)
+- **Interactive Map Comparison Tool Section:** Complete operational breakdown of dual-pane comparison, synchronized zoom/pan controls, shared threat scaling, and bidirectional change ledger interactions.
+- **Account Preferences & Accessibility Subsection:** Clear operational instructions for instantaneous theme switching, motion suppression, high contrast borders, and responsive text scaling.
+- **Role-Based Access Control (RBAC) Matrix:** Updated to include the Map Comparison Tool and Account Preferences across clearance tiers.
+- **Role-Based Operational Playbooks:** Updated patrol and analyst playbooks to integrate period comparisons and interface accessibility optimization.
 
 ---
 
@@ -41,17 +44,19 @@ Comprehensive, publication-grade user documentation has been deployed for the en
 
 | Asset | Path | Description |
 | :--- | :--- | :--- |
-| **Interactive Docs Page** | [`app/docs/page.tsx`](file:///C:/Users/Vicente/Desktop/CodeGo/ProjectsCVSU/capstone/securetanza/app/docs/page.tsx) | Next.js 14 client component for `/docs` |
-| **Offline User Guide** | [`docs/USER_GUIDE.md`](file:///C:/Users/Vicente/Desktop/CodeGo/ProjectsCVSU/capstone/securetanza/docs/USER_GUIDE.md) | Standard Markdown documentation & manual |
-| **Header Navigation Button** | [`components/layout/map-header.tsx`](file:///C:/Users/Vicente/Desktop/CodeGo/ProjectsCVSU/capstone/securetanza/components/layout/map-header.tsx) | Desktop book icon button & mobile link |
-| **Guided Tour Context** | [`context/TourContext.tsx`](file:///C:/Users/Vicente/Desktop/CodeGo/ProjectsCVSU/capstone/securetanza/context/TourContext.tsx) | Multi-stage Driver.js product walkthrough |
+| **Interactive Docs Page** | [`app/docs/page.tsx`](file:///E:/Coding/ProjectsCVSU/capstone/securetanza/app/docs/page.tsx) | Next.js 14 client component for `/docs` |
+| **Offline User Guide** | [`docs/USER_GUIDE.md`](file:///E:/Coding/ProjectsCVSU/capstone/securetanza/docs/USER_GUIDE.md) | Standard Markdown documentation & manual |
+| **Tour Step Definitions** | [`lib/tour/steps.ts`](file:///E:/Coding/ProjectsCVSU/capstone/securetanza/lib/tour/steps.ts) | Driver.js step definitions & role-based stage sequences |
+| **Guided Tour Context** | [`context/TourContext.tsx`](file:///E:/Coding/ProjectsCVSU/capstone/securetanza/context/TourContext.tsx) | Multi-stage Driver.js product walkthrough engine |
+| **Compare View** | [`app/compare/page.tsx`](file:///E:/Coding/ProjectsCVSU/capstone/securetanza/app/compare/page.tsx) | Dual-pane map comparison interface & change ledger |
+| **Account Preferences** | [`app/dashboard/config/preferences/page.tsx`](file:///E:/Coding/ProjectsCVSU/capstone/securetanza/app/dashboard/config/preferences/page.tsx) | Theme, accessibility & default landing page settings |
 
 ---
 
 ## Verification & Quality Assurance
 
-- [x] All 10 modules thoroughly documented with accurate system routes.
-- [x] Search filtering validated for instant keyword matching.
-- [x] Dark/Light mode theme switching verified.
-- [x] Mobile and desktop responsive layouts tested.
-- [x] TypeScript type integrity verified across components.
+- [x] Compare tab and Account Preferences -> Accessibility integrated into Driver.js tour.
+- [x] All 9 stages sequenced correctly with proper `readySelector` hooks.
+- [x] Element targeting attributes (`data-tour`) verified on real DOM containers.
+- [x] In-app docs and offline user manual fully aligned with technical implementation.
+- [x] TypeScript type checking and syntax integrity verified.

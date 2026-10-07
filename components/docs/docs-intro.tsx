@@ -37,7 +37,7 @@ export function DocsIntro({ onReplayTour }: DocsIntroProps) {
                 Operational Officer Walkthrough
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Tactical workflows including Excel blotter ingestion, peak-hour alert monitoring, case dossiers, and PDF reporting.
+                Tactical workflows including GIS mapping, dual-period map comparison, overview KPIs, blotter dossiers, PDF reporting, and account preferences with accessibility controls.
               </p>
             </div>
             {onReplayTour && (
@@ -56,7 +56,7 @@ export function DocsIntro({ onReplayTour }: DocsIntroProps) {
                 Privileged Analyst / Viewer Walkthrough
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Analytical tools including 24-hour radar time patterns, monthly crime matrix heatmaps, and case filtering.
+                Analytical tools including side-by-side map comparison, 24-hour radar time patterns, crime matrix heatmaps, case dossiers, and display accessibility settings.
               </p>
             </div>
             {onReplayTour && (
@@ -75,7 +75,7 @@ export function DocsIntro({ onReplayTour }: DocsIntroProps) {
                 System Administrator Walkthrough
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Platform administration covering user provisioning, role-based access control (RBAC), and batch upload audit logs.
+                Full platform administration covering GIS mapping, map comparison, blotter dossiers, RBAC user provisioning, alert rule triggers, and account preferences with accessibility scaling.
               </p>
             </div>
             {onReplayTour && (
@@ -103,6 +103,15 @@ export function DocsIntro({ onReplayTour }: DocsIntroProps) {
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
               Visualizes multi-layer geospatial incident pins, 41 barangay polygon boundaries, threat level risk heatmaps, and timeline playback scrubbers for spatial analysis.
+            </p>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+              Map Comparison Tool
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+              Provides dual-pane side-by-side crime maps with synchronized pan and zoom controls, shared threat color thresholds, and a live change ledger calculating net deltas and barangay shifts.
             </p>
           </div>
 
@@ -144,10 +153,10 @@ export function DocsIntro({ onReplayTour }: DocsIntroProps) {
 
           <div>
             <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-              Data Ingestion & Administration
+              System Settings & Accessibility
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
-              Supports Excel blotter spreadsheet uploads with automated schema verification, coordinate fallback assignment, RBAC permissions, and alert configuration.
+              Manages personnel RBAC clearances, automated alert rules, upload audit logs, and account preferences including themes, reduced motion, high contrast, and dynamic text sizing.
             </p>
           </div>
         </div>

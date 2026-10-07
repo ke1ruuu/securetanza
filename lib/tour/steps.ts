@@ -147,7 +147,7 @@ export const officerSystemSteps: DriveStep[] = [
 		popover: {
 			title: "Officer Command Navigation",
 			description:
-				"Navigate tactical operational modules: Interactive Map, Overview Dashboard, Cases Blotter, Analytics Intelligence, and PDF Reports.",
+				"Navigate tactical operational modules: Interactive Map, Map Comparison, Overview Dashboard, Cases Blotter, Analytics Intelligence, and PDF Reports.",
 			side: "bottom",
 			align: "center",
 		},
@@ -280,7 +280,7 @@ export const privilegedSystemSteps: DriveStep[] = [
 		popover: {
 			title: "Authorized Intelligence Modules",
 			description:
-				"Access your authorized modules: Interactive Map, Overview Metrics, Case Dossiers, Analytics, and Documentation.",
+				"Access your authorized modules: Interactive Map, Map Comparison, Overview Metrics, Case Dossiers, Analytics, and Documentation.",
 			side: "bottom",
 			align: "center",
 		},
@@ -344,7 +344,7 @@ export const adminSystemSteps: DriveStep[] = [
 		popover: {
 			title: "Administrator Command Center",
 			description:
-				"Full access across all platform modules: Map, Overview, Cases, Analytics, Reports, System Settings, and Documentation.",
+				"Full access across all platform modules: Map, Compare, Overview, Cases, Analytics, Reports, System Settings, and Documentation.",
 			side: "bottom",
 			align: "center",
 		},
@@ -419,6 +419,89 @@ export const mapSteps: DriveStep[] = [
 			title: "Crime Types & Timeline",
 			description:
 				"Track incident counts per crime type, click one for its barangay breakdown, and use the time controls to scrub through historical data.",
+			side: "left",
+			align: "start",
+		},
+	},
+];
+
+// ─────────────────────────────────────────────────────────────────────────
+// Stage: Compare Maps (app/compare/page.tsx)
+// ─────────────────────────────────────────────────────────────────────────
+export const compareSteps: DriveStep[] = [
+	{
+		element: '[data-tour="compare-pane-a"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Baseline Map (Period A)",
+			description:
+				"Set your reference time period and crime classification filter. This pane establishes the baseline standard for spatial comparison.",
+			side: "right",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="compare-pane-controls"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Period & Offense Selectors",
+			description:
+				"Quickly switch chronological spans and isolate specific crime categories to evaluate comparative trends side by side.",
+			side: "bottom",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="compare-pane-b"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Target Map (Period B)",
+			description:
+				"Select your comparison timeframe or target crime type. Both maps share a unified threat level color scale for direct visual comparison.",
+			side: "left",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="compare-sync-controls"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Synchronized Map Navigation",
+			description:
+				"Pan and zoom controls are synchronized between both map viewports simultaneously, keeping both views perfectly aligned across all 41 barangays.",
+			side: "left",
+			align: "center",
+		},
+	},
+	{
+		element: '[data-tour="compare-ledger-totals"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Municipal Net Incident Change",
+			description:
+				"Track total incident volume shifts between Period A and Period B, including net delta counts and overall percentage change.",
+			side: "left",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="compare-ledger-scale"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Harmonized Threat Scale",
+			description:
+				"A single, shared threat threshold color scale calibrates both maps simultaneously so visual comparisons are statistically truthful.",
+			side: "left",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="compare-ledger-rankings"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Barangay Shift Rankings",
+			description:
+				"Rank barangays by incident rises, falls, or all movements. Hovering over any row highlights both maps, and clicking zooms both viewports directly to that barangay.",
 			side: "left",
 			align: "start",
 		},
@@ -595,6 +678,8 @@ export const reportsSteps: DriveStep[] = [
 // ─────────────────────────────────────────────────────────────────────────
 // Stage: System Settings (app/dashboard/config/page.tsx)
 // ─────────────────────────────────────────────────────────────────────────
+// Stage: System Settings (app/dashboard/config/page.tsx)
+// ─────────────────────────────────────────────────────────────────────────
 export const settingsSteps: DriveStep[] = [
 	{
 		element: '[data-tour="settings-nav"]',
@@ -603,6 +688,17 @@ export const settingsSteps: DriveStep[] = [
 			title: "System Configuration Hub",
 			description:
 				"Navigate administration and user preferences: manage profile credentials, security clearances, alert rules, and audit logs.",
+			side: "right",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="settings-account-preferences"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Account Preferences & Accessibility",
+			description:
+				"Personalize theme modes and customize accessibility settings including reduced motion, high contrast, and typography scaling.",
 			side: "right",
 			align: "start",
 		},
@@ -637,6 +733,67 @@ export const settingsSteps: DriveStep[] = [
 			description:
 				"Review credentials, adjust notification rules, audit batch data imports, and customize application preferences.",
 			side: "left",
+			align: "start",
+		},
+	},
+];
+
+// ─────────────────────────────────────────────────────────────────────────
+// Stage: Account Preferences & Accessibility (app/dashboard/config/preferences/page.tsx)
+// ─────────────────────────────────────────────────────────────────────────
+export const preferencesSteps: DriveStep[] = [
+	{
+		element: '[data-tour="preferences-theme"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Interface Theme",
+			description:
+				"Switch between Light and Dark display modes or enable System Sync for automatic theme adaptation based on your device.",
+			side: "bottom",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="preferences-accessibility"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Accessibility & Usability Controls",
+			description:
+				"Configure system-wide accessibility features that apply immediately across the entire platform without requiring a page reload or save.",
+			side: "bottom",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="a11y-motion-contrast"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Reduce Motion & High Contrast",
+			description:
+				"Toggle 'Reduce Motion' to suppress animations and transitions, or 'High Contrast' to sharpen borders and highlight focus outlines for tactical viewing.",
+			side: "top",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="a11y-text-size"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Dynamic Text Size",
+			description:
+				"Scale typography across Default, Large, and Larger sizing to ensure optimal legibility on mobile devices, tablets, and command monitors.",
+			side: "top",
+			align: "start",
+		},
+	},
+	{
+		element: '[data-tour="preferences-landing"]',
+		skipMissingElement: true,
+		popover: {
+			title: "Default Landing Page",
+			description:
+				"Select your preferred default module upon signing in — GIS Crime Map, Executive Overview, or Case Blotter.",
+			side: "top",
 			align: "start",
 		},
 	},
@@ -710,6 +867,12 @@ export interface TourStage {
 export const TOUR_STAGES: TourStage[] = [
 	{ id: "system-map", path: "/", steps: [...systemSteps, ...mapSteps] },
 	{
+		id: "compare",
+		path: "/compare",
+		steps: compareSteps,
+		readySelector: '[data-tour="compare-ledger"]',
+	},
+	{
 		id: "overview",
 		path: "/dashboard/overview",
 		steps: overviewSteps,
@@ -738,6 +901,12 @@ export const TOUR_STAGES: TourStage[] = [
 		path: "/dashboard/config",
 		steps: settingsSteps,
 		readySelector: '[data-tour="settings-nav"]',
+	},
+	{
+		id: "preferences",
+		path: "/dashboard/config/preferences",
+		steps: preferencesSteps,
+		readySelector: '[data-tour="preferences-accessibility"]',
 	},
 	{
 		id: "docs",
@@ -778,6 +947,12 @@ export function getTourStagesForRole(
 				steps: [...officerSystemSteps, ...officerMapSteps],
 			},
 			{
+				id: "compare",
+				path: "/compare",
+				steps: compareSteps,
+				readySelector: '[data-tour="compare-ledger"]',
+			},
+			{
 				id: "overview",
 				path: "/dashboard/overview",
 				steps: overviewSteps,
@@ -802,6 +977,12 @@ export function getTourStagesForRole(
 				readySelector: '[data-tour="reports-sections"]',
 			},
 			{
+				id: "preferences",
+				path: "/dashboard/config/preferences",
+				steps: preferencesSteps,
+				readySelector: '[data-tour="preferences-accessibility"]',
+			},
+			{
 				id: "docs",
 				path: "/docs",
 				steps: officerDocsSteps,
@@ -821,6 +1002,12 @@ export function getTourStagesForRole(
 				id: "system-map",
 				path: "/",
 				steps: [...privilegedSystemSteps, ...mapSteps],
+			});
+			stages.push({
+				id: "compare",
+				path: "/compare",
+				steps: compareSteps,
+				readySelector: '[data-tour="compare-ledger"]',
 			});
 			stages.push({
 				id: "overview",
@@ -855,6 +1042,13 @@ export function getTourStagesForRole(
 		}
 
 		stages.push({
+			id: "preferences",
+			path: "/dashboard/config/preferences",
+			steps: preferencesSteps,
+			readySelector: '[data-tour="preferences-accessibility"]',
+		});
+
+		stages.push({
 			id: "docs",
 			path: "/docs",
 			steps: privilegedDocsSteps,
@@ -870,6 +1064,12 @@ export function getTourStagesForRole(
 			id: "system-map",
 			path: "/",
 			steps: [...adminSystemSteps, ...mapSteps],
+		},
+		{
+			id: "compare",
+			path: "/compare",
+			steps: compareSteps,
+			readySelector: '[data-tour="compare-ledger"]',
 		},
 		{
 			id: "overview",
@@ -900,6 +1100,12 @@ export function getTourStagesForRole(
 			path: "/dashboard/config",
 			steps: settingsSteps,
 			readySelector: '[data-tour="settings-nav"]',
+		},
+		{
+			id: "preferences",
+			path: "/dashboard/config/preferences",
+			steps: preferencesSteps,
+			readySelector: '[data-tour="preferences-accessibility"]',
 		},
 		{
 			id: "docs",

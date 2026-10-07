@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth";
 import { getClientIp, getUserAgent } from "@/lib/request-context";
 import { prisma } from "@/backend/lib/prisma";
 
-const ALLOWED_LANDING_PAGES = ["map", "overview", "dashboard", "analytics"];
+const ALLOWED_LANDING_PAGES = ["map", "overview", "dashboard", "analytics", "cases"];
 
 export async function GET() {
   try {

@@ -113,6 +113,29 @@ export function DocsMap() {
             Clicking any barangay polygon opens the slide-out intelligence drawer. It details the barangay incident count, top offense category, safety index, clearance rate, and demographic population density, with direct links to filtered dashboards.
           </p>
         </div>
+
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+            Map Comparison Tool (/compare)
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+            Accessible via the main navigation bar, the Map Comparison tool presents a dual-viewport synchronized display:
+          </p>
+          <ul className="list-disc pl-5 mt-2 space-y-1.5 text-sm text-slate-600 dark:text-slate-400">
+            <li>
+              <strong>Dual Panes (Period A vs Period B):</strong> Select independent time spans and crime category filters on each pane.
+            </li>
+            <li>
+              <strong>Linked Navigation:</strong> Panning or zooming either map updates both simultaneously to maintain geographic parity.
+            </li>
+            <li>
+              <strong>Harmonized Threat Scale:</strong> A unified statistical threshold is applied to both maps for accurate visual comparison.
+            </li>
+            <li>
+              <strong>Live Change Ledger:</strong> The right-hand ledger reports municipal net volume shifts and ranks barangays by incident rises and falls with interactive hover-highlighting and click-to-focus.
+            </li>
+          </ul>
+        </div>
       </section>
 
       {/* Next Steps */}

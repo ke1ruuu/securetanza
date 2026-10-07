@@ -137,10 +137,11 @@ export default function ChangeLedger({
   return (
     <aside
       aria-labelledby="change-ledger-title"
+      data-tour="compare-ledger"
       className={`flex flex-col bg-white dark:bg-[#0F172A] ${className}`}
     >
       {/* ── Totals ── */}
-      <div className="border-b border-slate-200 px-5 pb-4 pt-5 dark:border-white/[0.06]">
+      <div data-tour="compare-ledger-totals" className="border-b border-slate-200 px-5 pb-4 pt-5 dark:border-white/[0.06]">
         <h2 id="change-ledger-title" className="font-heading text-[16px] font-semibold text-slate-900 dark:text-white">
           Change from A to B
         </h2>
@@ -173,7 +174,7 @@ export default function ChangeLedger({
       </div>
 
       {/* ── The shared scale ── */}
-      <div className="border-b border-slate-200 px-5 py-4 dark:border-white/[0.06]">
+      <div data-tour="compare-ledger-scale" className="border-b border-slate-200 px-5 py-4 dark:border-white/[0.06]">
         <p className={SECTION}>One scale on both maps</p>
         <ol className="mt-3 grid grid-cols-5 gap-2">
           {(thresholds ? bands(thresholds) : bands({ low: 0, moderate: 0, high: 0, critical: 0 })).map((band) => (
@@ -195,7 +196,7 @@ export default function ChangeLedger({
       </div>
 
       {/* ── Barangays ranked by change ── */}
-      <div className="flex flex-col xl:min-h-0 xl:flex-1">
+      <div data-tour="compare-ledger-rankings" className="flex flex-col xl:min-h-0 xl:flex-1">
         <div className="px-5 pt-4">
           <div
             role="group"

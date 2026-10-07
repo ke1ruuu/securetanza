@@ -18,11 +18,7 @@ import { MapProvider, useMapContext } from "@/context/MapContext";
 import { useAuth } from "@/context/AuthContext";
 import type { ThreatThresholds } from "@/lib/geo-threat";
 import { OVERLAY_BUTTON } from "@/lib/map-overlay";
-
-const canCompare = (permissions: string[]) =>
-  permissions.includes("admin") ||
-  permissions.includes("admin_operational_officer") ||
-  permissions.includes("privileged_map_view");
+import { hasMapAccess, getDefaultRouteForUser } from "@/lib/auth-routes";
 
 interface CompareState {
   reports: Partial<Record<Side, PaneReport>>;
@@ -39,7 +35,13 @@ function CompareContent() {
   const [{ reports, scale }, setCompare] = useState<CompareState>({ reports: {}, scale: null });
 
   useEffect(() => {
-    if (!authLoading && (!user || !canCompare(user.permissions))) router.replace("/login");
+    if (!authLoading) {
+      if (!user) {
+        router.replace("/login");
+      } else if (!hasMapAccess(user.permissions)) {
+        router.replace(getDefaultRouteForUser(user));
+      }
+    }
   }, [authLoading, user, router]);
 
   const onReport = useCallback((side: Side, report: PaneReport) => {
@@ -81,7 +83,7 @@ function CompareContent() {
     );
   }
 
-  if (!user || !canCompare(user.permissions)) return null;
+  if (!user || !hasMapAccess(user.permissions)) return null;
 
   const paneProps = {
     thresholds: scale,
@@ -111,7 +113,7 @@ function CompareContent() {
           <ComparePane side="A" className="h-[52vh] lg:h-[64vh] xl:h-auto" {...paneProps} />
           <ComparePane side="B" className="h-[52vh] lg:h-[64vh] xl:h-auto" {...paneProps}>
             {/* The maps move together, so one set of controls drives both. */}
-            <div role="group" aria-label="Both maps" className="flex flex-col gap-1.5">
+            <div role="group" aria-label="Both maps" data-tour="compare-sync-controls" className="flex flex-col gap-1.5">
               <button
                 type="button"
                 onClick={() => link.zoomIn()}

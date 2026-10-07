@@ -8,6 +8,7 @@ import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay
 import { MapProvider } from "@/context/MapContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import { getDefaultRouteForUser } from "@/lib/auth-routes";
 import { absoluteTime, isoTime, relativeTime } from "@/components/notifications/notification-meta";
 import { formatFileSize, uploadStatusMeta } from "@/components/upload/upload-meta";
 
@@ -54,8 +55,10 @@ function UploadLogsContent() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
+      if (!user) {
         router.replace("/login");
+      } else if (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin")) {
+        router.replace(getDefaultRouteForUser(user));
       }
     }
   }, [authLoading, user, router]);

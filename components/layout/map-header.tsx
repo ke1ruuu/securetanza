@@ -11,6 +11,7 @@ import { useTour } from "@/context/TourContext";
 import UploadModal from "./upload-modal";
 import UserMenu from "./user-menu";
 import NotificationBell from "@/components/notifications/notification-bell";
+import { getDefaultRouteForUser } from "@/lib/auth-routes";
 
 interface MapHeaderProps {
   isVisible: boolean;
@@ -80,13 +81,15 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
   // Filter navigation items based on user permissions
   const filteredNavItems = navItems.filter((item) => {
     if (!user) return false;
-    // Admin has access to everything
-    if (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin")) {
+    // Admin and operational officer have access to standard tabs
+    if (user.permissions.includes("admin_operational_officer") || user.permissions.includes("admin") || user.permissions.includes("operational_officer")) {
       return true;
     }
     // Check specific module permission
     return user.permissions.includes(item.permission);
   });
+
+  const brandHomeHref = getDefaultRouteForUser(user);
 
   return (
     <header 
@@ -97,7 +100,7 @@ export default function MapHeader({ isVisible }: MapHeaderProps) {
       <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
         {/* ── Logo + Brand ── */}
         <Link
-          href="/"
+          href={brandHomeHref}
           data-tour="brand"
           className="flex items-center gap-2 sm:gap-2.5 no-underline shrink-0 group"
         >

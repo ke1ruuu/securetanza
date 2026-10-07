@@ -7,6 +7,7 @@ import DashboardBarangaySelector from "@/components/dashboard/dashboard-barangay
 import { MapProvider } from "@/context/MapContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import { getDefaultRouteForUser } from "@/lib/auth-routes";
 import { FileSpreadsheet, CheckCircle2, XCircle, AlertCircle, Clock, Download, RefreshCw, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -35,8 +36,10 @@ function ImportLogsContent() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin"))) {
+      if (!user) {
         router.replace("/login");
+      } else if (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin")) {
+        router.replace(getDefaultRouteForUser(user));
       }
     }
   }, [authLoading, user, router]);

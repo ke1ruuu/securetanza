@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState, useCallback, Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { hasMapAccess, getDefaultRouteForUser } from "@/lib/auth-routes";
 
 import MapHeader from "@/components/layout/map-header";
 import UnifiedFilterBar from "@/components/layout/unified-filter-bar";
@@ -31,8 +32,12 @@ function HomeContent() {
 	const { setIsTimeFilterActive, setTimeFilter } = useMapContext();
 
 	useEffect(() => {
-		if (!authLoading && !user) {
-			router.replace("/login");
+		if (!authLoading) {
+			if (!user) {
+				router.replace("/login");
+			} else if (!hasMapAccess(user.permissions)) {
+				router.replace(getDefaultRouteForUser(user));
+			}
 		}
 	}, [authLoading, user, router]);
 
@@ -98,7 +103,7 @@ function HomeContent() {
 		);
 	}
 
-	if (!user) {
+	if (!user || !hasMapAccess(user.permissions)) {
 		return null;
 	}
 
