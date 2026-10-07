@@ -6,7 +6,7 @@
    keep, because they show the thing being chosen. */
 
 import React from "react";
-import { Monitor, Sun, Moon, LayoutDashboard, Map, Table2 } from "lucide-react";
+import { Monitor, Sun, Moon, LayoutDashboard, Map, Table2, Shield } from "lucide-react";
 
 const ThemePreviewLight = () => (
 	<div className="w-full rounded-md overflow-hidden border border-slate-200 bg-[#f8fafc]" style={{ height: 90 }}>
@@ -151,6 +151,32 @@ const LandingPreviewDashboard = () => (
 	</div>
 );
 
+// Cases preview — incident records list / data table mockup
+const LandingPreviewCases = () => (
+	<div className="w-full rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-[#f1f5f9] dark:bg-[#0f172a] flex flex-col" style={{ height: 96 }}>
+		<PreviewNav active="Cases" />
+		<div className="flex-1 p-1.5 flex flex-col gap-1 overflow-hidden">
+			{/* Search / filter bar mock */}
+			<div className="h-3 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center px-1">
+				<div className="w-8 h-1 rounded-sm bg-slate-200 dark:bg-slate-600" />
+			</div>
+			{/* Data rows with status pills */}
+			<div className="bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 p-1 flex-1 flex flex-col justify-around">
+				{[
+					["THEFT", "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400", "Investigating"],
+					["PHYSICAL INJURY", "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400", "Cleared"],
+					["ROBBERY", "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", "In Court"],
+				].map(([crime, badge, status], i) => (
+					<div key={i} className="flex items-center justify-between text-[4px] border-b border-slate-100 dark:border-slate-700/50 pb-0.5 last:border-0 last:pb-0">
+						<span className="font-semibold text-slate-700 dark:text-slate-200 truncate">{crime}</span>
+						<span className={`px-1 py-0.2 rounded-full font-medium ${badge}`}>{status}</span>
+					</div>
+				))}
+			</div>
+		</div>
+	</div>
+);
+
 // Analytics preview — 4 colored metric cards + bar chart
 const LandingPreviewAnalytics = () => (
 	<div className="w-full rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-[#f1f5f9] dark:bg-[#0f172a] flex flex-col" style={{ height: 96 }}>
@@ -183,5 +209,6 @@ const LandingPreviewAnalytics = () => (
 export const landingOptions = [
 	{ id: "map", label: "Map", description: "Geographic crime map", icon: Map, Preview: LandingPreviewMap },
 	{ id: "overview", label: "Overview", description: "General dashboard & stats", icon: LayoutDashboard, Preview: LandingPreviewDashboard },
+	{ id: "cases", label: "Cases", description: "Blotter & incident records", icon: Shield, Preview: LandingPreviewCases },
 	{ id: "analytics", label: "Analytics", description: "Crime trends & insights", icon: Table2, Preview: LandingPreviewAnalytics },
 ];

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft, Activity } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { getDefaultRouteForUser } from "@/lib/auth-routes";
 
 /* The nav is label-only. Each item's description lives on the title
    attribute rather than as a second rendered line — it explains on
@@ -35,6 +36,7 @@ export const NAV_GROUPS: NavGroup[] = [
 				label: "Account Preferences",
 				description: "Theme, accessibility & display settings",
 				adminOnly: false,
+				tour: "settings-account-preferences",
 			},
 		],
 	},
@@ -166,7 +168,7 @@ export default function SettingsShell({ children }: { children: React.ReactNode 
 			window.history.go(-(visited.current.length || 1));
 		} else {
 			// Settings was opened directly — there is nothing behind it to return to.
-			router.replace(landingPathFor(user?.defaultLandingPage));
+			router.replace(getDefaultRouteForUser(user));
 		}
 	};
 

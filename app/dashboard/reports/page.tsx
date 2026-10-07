@@ -12,6 +12,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 
 import { useAuth } from "@/context/AuthContext";
 import { Lock } from "lucide-react";
+import { hasAnalyticsAccess, getDefaultRouteForUser } from "@/lib/auth-routes";
 
 function ReportsContent() {
   const { user, loading: authLoading } = useAuth();
@@ -22,8 +23,10 @@ function ReportsContent() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin") && !user.permissions.includes("privileged_analytics_view"))) {
+      if (!user) {
         router.replace("/login");
+      } else if (!hasAnalyticsAccess(user.permissions)) {
+        router.replace(getDefaultRouteForUser(user));
       }
     }
   }, [authLoading, user, router]);
@@ -36,7 +39,7 @@ function ReportsContent() {
     );
   }
 
-  if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin") && !user.permissions.includes("privileged_analytics_view"))) {
+  if (!user || !hasAnalyticsAccess(user.permissions)) {
     return null;
   }
 

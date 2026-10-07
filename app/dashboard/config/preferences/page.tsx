@@ -16,6 +16,7 @@ import {
 } from "../_components/settings-ui";
 import { cn } from "@/lib/utils";
 import { landingOptions, themes } from "../_components/preview-thumbnails";
+import { hasMapAccess, hasCasesAccess, hasAnalyticsAccess } from "@/lib/auth-routes";
 
 const TEXT_SIZES: { id: TextSize; label: string }[] = [
 	{ id: "default", label: "Default" },
@@ -36,6 +37,22 @@ export default function PreferencesPage() {
 
 	const [landingState, setLandingState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 	
+	const availableLandingOptions = React.useMemo(() => {
+		if (!user) return landingOptions;
+		return landingOptions.filter((opt) => {
+			if (opt.id === "map" || opt.id === "overview") {
+				return hasMapAccess(user.permissions);
+			}
+			if (opt.id === "cases") {
+				return hasCasesAccess(user.permissions);
+			}
+			if (opt.id === "analytics") {
+				return hasAnalyticsAccess(user.permissions);
+			}
+			return true;
+		});
+	}, [user]);
+
 	const [savedLanding, setSavedLanding] = useState<string>(() => {
 		const raw = user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
 		if (raw === "dashboard") return "overview";
@@ -49,10 +66,27 @@ export default function PreferencesPage() {
 	}, [theme]);
 
 	React.useEffect(() => {
-		if (user && user.defaultLandingPage) {
-			const norm = user.defaultLandingPage === "dashboard" ? "overview" : user.defaultLandingPage;
-			setSavedLanding(norm);
-			setDraftLanding(norm);
+		if (user) {
+			const raw = user.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
+			const norm = raw === "dashboard" ? "overview" : raw;
+
+			const canUseNorm =
+				(norm === "map" && hasMapAccess(user.permissions)) ||
+				(norm === "overview" && hasMapAccess(user.permissions)) ||
+				(norm === "cases" && hasCasesAccess(user.permissions)) ||
+				(norm === "analytics" && hasAnalyticsAccess(user.permissions));
+
+			const fallback = hasMapAccess(user.permissions)
+				? "overview"
+				: hasCasesAccess(user.permissions)
+				? "cases"
+				: hasAnalyticsAccess(user.permissions)
+				? "analytics"
+				: "overview";
+
+			const chosen = canUseNorm && norm ? norm : fallback;
+			setSavedLanding(chosen);
+			setDraftLanding(chosen);
 		}
 	}, [user]);
 
@@ -151,105 +185,113 @@ export default function PreferencesPage() {
 
 			<SplitLayout>
 
-			<Section
-				title="Interface Theme"
-				description="Select a theme or sync with your system for automatic switching."
-			>
-				<div
-					role="radiogroup"
-					aria-label="Interface theme"
-					className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"
+			<div data-tour="preferences-theme">
+				<Section
+					title="Interface Theme"
+					description="Select a theme or sync with your system for automatic switching."
 				>
-					{themes.map(({ id, label, sublabel, Preview }) => (
-						<PickerTile
-							key={id}
-							selected={id === "system" ? draftSync : (!draftSync && draftTheme === id)}
-							label={label}
-							caption={sublabel}
-							onSelect={() => handleThemeSelect(id)}
-						>
-							<Preview />
-						</PickerTile>
-					))}
-				</div>
-			</Section>
-
-			<Section
-				title="Accessibility"
-				description="Applied immediately, app-wide — no need to save. Reduced motion and higher contrast also follow your system settings automatically until you choose one here."
-			>
-				<Rows>
-					<Row
-						label="Reduce Motion"
-						description="Turn off animations and transitions across the app."
-						htmlFor="a11y-reduce-motion"
+					<div
+						role="radiogroup"
+						aria-label="Interface theme"
+						className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3"
 					>
-						<Switch
-							id="a11y-reduce-motion"
-							checked={reduceMotion}
-							onCheckedChange={setReduceMotion}
-						/>
-					</Row>
-					<Row
-						label="High Contrast"
-						description="Stronger focus outlines and edge definition throughout the interface."
-						htmlFor="a11y-high-contrast"
-					>
-						<Switch
-							id="a11y-high-contrast"
-							checked={highContrast}
-							onCheckedChange={setHighContrast}
-						/>
-					</Row>
-				</Rows>
-
-				<div className="mt-5">
-					<span className="block text-[13px] font-medium text-slate-700 dark:text-slate-300">
-						Text Size
-					</span>
-					<div role="radiogroup" aria-label="Text size" className="mt-2 flex max-w-[380px] gap-1.5">
-						{TEXT_SIZES.map(({ id, label }) => (
-							<button
+						{themes.map(({ id, label, sublabel, Preview }) => (
+							<PickerTile
 								key={id}
-								type="button"
-								role="radio"
-								aria-checked={textSize === id}
-								onClick={() => setTextSize(id)}
-								className={`h-9 flex-1 rounded-md border text-[13px] font-medium transition-colors ${
-									textSize === id
-										? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
-										: "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-white/[0.12] dark:text-slate-300 dark:hover:border-white/25"
-								}`}
+								selected={id === "system" ? draftSync : (!draftSync && draftTheme === id)}
+								label={label}
+								caption={sublabel}
+								onSelect={() => handleThemeSelect(id)}
 							>
-								{label}
-							</button>
+								<Preview />
+							</PickerTile>
 						))}
 					</div>
-				</div>
-			</Section>
+				</Section>
+			</div>
 
-			<Section
-				title="Default Landing Page"
-				description="Choose which view opens automatically when you log in."
-			>
-				<div
-					role="radiogroup"
-					aria-label="Default landing page"
-					className="grid grid-cols-1 gap-3 border-t border-slate-200 pt-5 sm:grid-cols-3 dark:border-white/[0.07]"
+			<div data-tour="preferences-accessibility">
+				<Section
+					title="Accessibility"
+					description="Applied immediately, app-wide — no need to save. Reduced motion and higher contrast also follow your system settings automatically until you choose one here."
 				>
-					{landingOptions.map(({ id, label, description, Preview }) => (
-						<PickerTile
-							key={id}
-							selected={draftLanding === id}
-							label={label}
-							caption={description}
-							onSelect={() => handleLandingSelect(id)}
-						>
-							<Preview />
-						</PickerTile>
-					))}
-				</div>
-			</Section>
+					<div data-tour="a11y-motion-contrast">
+						<Rows>
+							<Row
+								label="Reduce Motion"
+								description="Turn off animations and transitions across the app."
+								htmlFor="a11y-reduce-motion"
+							>
+								<Switch
+									id="a11y-reduce-motion"
+									checked={reduceMotion}
+									onCheckedChange={setReduceMotion}
+								/>
+							</Row>
+							<Row
+								label="High Contrast"
+								description="Stronger focus outlines and edge definition throughout the interface."
+								htmlFor="a11y-high-contrast"
+							>
+								<Switch
+									id="a11y-high-contrast"
+									checked={highContrast}
+									onCheckedChange={setHighContrast}
+								/>
+							</Row>
+						</Rows>
+					</div>
+
+					<div data-tour="a11y-text-size" className="mt-5">
+						<span className="block text-[13px] font-medium text-slate-700 dark:text-slate-300">
+							Text Size
+						</span>
+						<div role="radiogroup" aria-label="Text size" className="mt-2 flex max-w-[380px] gap-1.5">
+							{TEXT_SIZES.map(({ id, label }) => (
+								<button
+									key={id}
+									type="button"
+									role="radio"
+									aria-checked={textSize === id}
+									onClick={() => setTextSize(id)}
+									className={`h-9 flex-1 rounded-md border text-[13px] font-medium transition-colors ${
+										textSize === id
+											? "border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900"
+											: "border-slate-200 text-slate-600 hover:border-slate-300 dark:border-white/[0.12] dark:text-slate-300 dark:hover:border-white/25"
+									}`}
+								>
+									{label}
+								</button>
+							))}
+						</div>
+					</div>
+				</Section>
+			</div>
+
+			<div data-tour="preferences-landing">
+				<Section
+					title="Default Landing Page"
+					description="Choose which view opens automatically when you log in."
+				>
+					<div
+						role="radiogroup"
+						aria-label="Default landing page"
+						className="grid grid-cols-1 gap-3 border-t border-slate-200 pt-5 sm:grid-cols-2 lg:grid-cols-4 dark:border-white/[0.07]"
+					>
+						{availableLandingOptions.map(({ id, label, description, Preview }) => (
+							<PickerTile
+								key={id}
+								selected={draftLanding === id}
+								label={label}
+								caption={description}
+								onSelect={() => handleLandingSelect(id)}
+							>
+								<Preview />
+							</PickerTile>
+						))}
+					</div>
+				</Section>
+			</div>
 
 			</SplitLayout>
 

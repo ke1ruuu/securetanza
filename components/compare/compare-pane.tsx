@@ -101,7 +101,11 @@ function PaneBody({
   const firstLoad = status === "loading" && total === 0 && Object.keys(counts).length === 0;
 
   return (
-    <section aria-label={`Map ${side}`} className={`relative isolate min-h-0 overflow-hidden ${className}`}>
+    <section
+      aria-label={`Map ${side}`}
+      data-tour={side === "A" ? "compare-pane-a" : "compare-pane-b"}
+      className={`relative isolate min-h-0 overflow-hidden ${className}`}
+    >
       <div className="absolute inset-0 z-0">
         {geoJsonData ? (
           <CompareMap
@@ -128,6 +132,7 @@ function PaneBody({
       <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex">
         <div
           ref={stripRef}
+          data-tour={side === "A" ? "compare-pane-controls" : undefined}
           className={`pointer-events-auto relative flex max-w-full flex-wrap items-center gap-0.5 p-1 ${OVERLAY_SURFACE}`}
         >
           <span

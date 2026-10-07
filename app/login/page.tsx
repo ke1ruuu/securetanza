@@ -7,6 +7,7 @@ import { Clock, Lock, User, AlertCircle, Loader2, Eye, EyeOff, ShieldOff } from 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { ForceChangePasswordModal } from "@/components/modals/ForceChangePasswordModal";
+import { getDefaultRouteForUser } from "@/lib/auth-routes";
 
 type SignedOutReason = "idle" | "expired" | "tab";
 
@@ -57,12 +58,8 @@ export default function LoginPage() {
     if (user && user.mustChangePassword) {
       setShowForceChange(true);
     } else if (user && !user.mustChangePassword && !authLoading) {
-      const pref = user.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
-      let target = "/";
-      if (pref === "overview" || pref === "dashboard") target = "/dashboard/overview";
-      if (pref === "analytics") target = "/dashboard/analytics";
-      if (pref === "map") target = "/";
-      
+      sessionStorage.setItem("tabSessionActive", "true");
+      const target = getDefaultRouteForUser(user);
       router.push(target);
     }
   }, [user, authLoading, router]);
@@ -97,12 +94,7 @@ export default function LoginPage() {
         setLoading(false);
       } else {
         sessionStorage.setItem("tabSessionActive", "true");
-        const pref = data.user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
-        let target = "/";
-        if (pref === "overview" || pref === "dashboard") target = "/dashboard/overview";
-        if (pref === "analytics") target = "/dashboard/analytics";
-        if (pref === "map") target = "/";
-        
+        const target = getDefaultRouteForUser(data.user);
         router.push(target);
         router.refresh();
       }
@@ -282,11 +274,8 @@ export default function LoginPage() {
         <ForceChangePasswordModal
           onSuccess={() => {
             setShowForceChange(false);
-            const pref = user?.defaultLandingPage || (typeof window !== "undefined" ? localStorage.getItem("landingPage") : null);
-            let target = "/";
-            if (pref === "dashboard") target = "/dashboard/overview";
-            if (pref === "analytics") target = "/dashboard/analytics";
-
+            sessionStorage.setItem("tabSessionActive", "true");
+            const target = getDefaultRouteForUser(user);
             router.push(target);
             router.refresh();
           }}

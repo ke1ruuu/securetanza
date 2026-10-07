@@ -11,6 +11,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useAuth } from "@/context/AuthContext";
 import { Lock } from "lucide-react";
+import { hasMapAccess, getDefaultRouteForUser } from "@/lib/auth-routes";
 
 function OverviewContent() {
 	const { user, loading: authLoading } = useAuth();
@@ -23,8 +24,10 @@ function OverviewContent() {
 
 	React.useEffect(() => {
 		if (!authLoading) {
-			if (!user || (!user.permissions.includes("admin_operational_officer") && !user.permissions.includes("admin") && !user.permissions.includes("privileged_map_view"))) {
+			if (!user) {
 				router.replace("/login");
+			} else if (!hasMapAccess(user.permissions)) {
+				router.replace(getDefaultRouteForUser(user));
 			}
 		}
 	}, [authLoading, user, router]);
@@ -37,12 +40,7 @@ function OverviewContent() {
 		);
 	}
 
-	if (
-		!user ||
-		(!user.permissions.includes("admin_operational_officer") &&
-		!user.permissions.includes("admin") &&
-		!user.permissions.includes("privileged_map_view"))
-	) {
+	if (!user || !hasMapAccess(user.permissions)) {
 		return null;
 	}
 

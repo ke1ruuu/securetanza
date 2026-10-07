@@ -15,6 +15,7 @@ import {
   Layers,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { getDefaultRouteForUser } from "@/lib/auth-routes";
 import DatabaseServiceView from "./components/DatabaseServiceView";
 import ProcessMemoryServiceView from "./components/ProcessMemoryServiceView";
 import CronTasksServiceView from "./components/CronTasksServiceView";
@@ -151,9 +152,9 @@ function PerformanceDashboardContent() {
   // Auth guard
   useEffect(() => {
     if (!authLoading && !isAuthorized) {
-      router.replace("/dashboard/overview");
+      router.replace(user ? getDefaultRouteForUser(user) : "/login");
     }
-  }, [authLoading, isAuthorized, router]);
+  }, [authLoading, isAuthorized, user, router]);
 
   // Telemetry fetcher
   const fetchTelemetry = useCallback(async (manual = false) => {
